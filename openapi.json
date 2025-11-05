@@ -1,0 +1,658 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ClipForge API",
+    "description": "AI video/audio clipping platform with B2B API",
+    "version": "1.0.0",
+    "contact": {
+      "name": "ClipForge Support",
+      "url": "https://clipforge.dev"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development"
+    },
+    {
+      "url": "https://api.clipforge.dev",
+      "description": "Production"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key"
+      },
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "/v1/auth/oauth/token",
+            "scopes": {
+              "projects:read": "Read projects",
+              "projects:write": "Create/update projects",
+              "exports:read": "Read exports",
+              "exports:write": "Create exports",
+              "admin": "Full access"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Organization": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "orgId": { "type": "string" },
+          "title": { "type": "string" },
+          "sourceUrl": { "type": "string", "nullable": true },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "INGESTING", "TRANSCRIBING", "DETECTING", "READY", "FAILED"]
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "assets": { "type": "array", "items": { "$ref": "#/components/schemas/Asset" } },
+          "moments": { "type": "array", "items": { "$ref": "#/components/schemas/Moment" } }
+        }
+      },
+      "Asset": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "projectId": { "type": "string" },
+          "kind": { "type": "string", "enum": ["ORIGINAL", "CLIP", "SRT", "VTT", "THUMBNAIL"] },
+          "url": { "type": "string" },
+          "duration": { "type": "number", "nullable": true },
+          "mimeType": { "type": "string", "nullable": true },
+          "size": { "type": "integer", "nullable": true }
+        }
+      },
+      "Moment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "projectId": { "type": "string" },
+          "tStart": { "type": "number", "description": "Start time in seconds" },
+          "tEnd": { "type": "number", "description": "End time in seconds" },
+          "duration": { "type": "number" },
+          "score": { "type": "number", "description": "Ranking score 0-1" },
+          "features": {
+            "type": "object",
+            "properties": {
+              "hook": { "type": "number" },
+              "novelty": { "type": "number" },
+              "structure": { "type": "number" },
+              "emotion": { "type": "number" },
+              "clarity": { "type": "number" },
+              "quote": { "type": "number" },
+              "vision_focus": { "type": "number" }
+            }
+          },
+          "reason": { "type": "string", "nullable": true }
+        }
+      },
+      "Export": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "projectId": { "type": "string" },
+          "momentId": { "type": "string" },
+          "status": { "type": "string", "enum": ["PENDING", "RENDERING", "COMPLETED", "FAILED"] },
+          "format": { "type": "string", "enum": ["MP4", "WEBM", "MOV"] },
+          "template": { "type": "string", "nullable": true },
+          "artifacts": {
+            "type": "object",
+            "properties": {
+              "mp4_url": { "type": "string" },
+              "srt_url": { "type": "string" },
+              "thumbnail_url": { "type": "string" }
+            }
+          },
+          "metrics": { "type": "object", "nullable": true },
+          "publishedTo": { "type": "array", "items": { "type": "string" } },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "BrandKit": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "orgId": { "type": "string" },
+          "name": { "type": "string" },
+          "fonts": {
+            "type": "object",
+            "properties": {
+              "primary": { "type": "string" },
+              "secondary": { "type": "string" },
+              "fallback": { "type": "string" }
+            }
+          },
+          "colors": {
+            "type": "object",
+            "properties": {
+              "primary": { "type": "string" },
+              "secondary": { "type": "string" },
+              "accent": { "type": "string" }
+            }
+          },
+          "logoUrl": { "type": "string", "nullable": true },
+          "captionStyle": { "type": "object" }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "rateLimit": { "type": "integer" },
+          "quotaMinutes": { "type": "integer" },
+          "quotaExports": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "Usage": {
+        "type": "object",
+        "properties": {
+          "period": { "type": "string", "description": "YYYY-MM format" },
+          "minutesProcessed": { "type": "number" },
+          "exportsCount": { "type": "integer" },
+          "quotaMinutes": { "type": "integer" },
+          "quotaExports": { "type": "integer" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "statusCode": { "type": "integer" },
+          "message": { "type": "string" },
+          "error": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/auth/register": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "name": { "type": "string" },
+                  "password": { "type": "string", "minLength": 8 }
+                },
+                "required": ["email", "name", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid input or user already exists" }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Login with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/v1/uploads/sign": {
+      "post": {
+        "tags": ["uploads"],
+        "summary": "Get presigned upload URL",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filename": { "type": "string" },
+                  "mimeType": { "type": "string" },
+                  "size": { "type": "integer" }
+                },
+                "required": ["filename", "mimeType", "size"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Presigned URL generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uploadUrl": { "type": "string" },
+                    "downloadUrl": { "type": "string" },
+                    "key": { "type": "string" },
+                    "expiresIn": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects": {
+      "post": {
+        "tags": ["projects"],
+        "summary": "Create a new project",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "sourceUrl": { "type": "string", "nullable": true }
+                },
+                "required": ["title"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Project" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["projects"],
+        "summary": "List projects",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "skip", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          { "name": "take", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Projects list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Project" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{id}": {
+      "get": {
+        "tags": ["projects"],
+        "summary": "Get project details",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Project" }
+              }
+            }
+          },
+          "404": { "description": "Project not found" }
+        }
+      },
+      "delete": {
+        "tags": ["projects"],
+        "summary": "Delete a project",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Project deleted" },
+          "404": { "description": "Project not found" }
+        }
+      }
+    },
+    "/v1/projects/{id}/ingest": {
+      "post": {
+        "tags": ["ingestion"],
+        "summary": "Ingest source (file/URL/script)",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sourceType": { "type": "string", "enum": ["file", "url", "script"] },
+                  "sourceUrl": { "type": "string", "nullable": true },
+                  "scriptText": { "type": "string", "nullable": true }
+                },
+                "required": ["sourceType"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ingestion started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobId": { "type": "string" },
+                    "status": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{id}/detect": {
+      "post": {
+        "tags": ["clips"],
+        "summary": "Run highlight detection (async)",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "202": {
+            "description": "Detection job queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobId": { "type": "string" },
+                    "status": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{id}/clips": {
+      "get": {
+        "tags": ["clips"],
+        "summary": "List ranked clips",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ranked clips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Moment" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/clips/{clipId}/export": {
+      "post": {
+        "tags": ["exports"],
+        "summary": "Render clip to MP4/SRT",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "clipId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "format": { "type": "string", "enum": ["MP4", "WEBM", "MOV"], "default": "MP4" },
+                  "template": { "type": "string", "nullable": true },
+                  "brandKitId": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Export job queued",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Export" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/exports/{id}": {
+      "get": {
+        "tags": ["exports"],
+        "summary": "Get export status",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Export details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Export" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/brand-kits": {
+      "post": {
+        "tags": ["brand-kits"],
+        "summary": "Create/update brand kit",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BrandKit" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Brand kit created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BrandKit" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["brand-kits"],
+        "summary": "List brand kits",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Brand kits list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BrandKit" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/usage": {
+      "get": {
+        "tags": ["usage"],
+        "summary": "Get usage metering",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          { "name": "period", "in": "query", "schema": { "type": "string", "description": "YYYY-MM" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Usage" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/webhooks/endpoints": {
+      "post": {
+        "tags": ["webhooks"],
+        "summary": "Register webhook endpoint",
+        "security": [{ "bearerAuth": [] }, { "apiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string", "format": "uri" },
+                  "events": {
+                    "type": "array",
+                    "items": { "type": "string", "enum": ["job.completed", "job.failed", "export.ready"] }
+                  }
+                },
+                "required": ["url", "events"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "url": { "type": "string" },
+                    "events": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+FROM node:18-slim
+
+WORKDIR /app
+
+# Install build dependencies and FFmpeg
+RUN apt-get update && apt-get install -y python3 make g++ ffmpeg && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY apps/api/package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY apps/api/src ./src
+COPY apps/api/tsconfig.json ./
+COPY apps/api/prisma ./prisma
+
+# Generate Prisma client with correct engine
+RUN npx prisma generate
+
+# Build
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

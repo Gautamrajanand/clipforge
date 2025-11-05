@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply box-border;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+}
+
+.container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Video player styles */
+.video-player {
+  @apply w-full bg-black rounded-lg overflow-hidden;
+}
+
+.video-player video {
+  @apply w-full h-auto;
+}
+
+/* Clip card styles */
+.clip-card {
+  @apply bg-white rounded-lg border border-slate-200 p-4 hover:shadow-lg transition-shadow;
+}
+
+.clip-card.active {
+  @apply border-blue-500 bg-blue-50;
+}
+
+/* Timeline styles */
+.timeline {
+  @apply relative h-16 bg-slate-100 rounded-lg overflow-hidden;
+}
+
+.timeline-clip {
+  @apply absolute h-full bg-blue-500 opacity-70 hover:opacity-100 transition-opacity cursor-pointer;
+}
+
+/* Loading skeleton */
+.skeleton {
+  @apply animate-pulse bg-slate-200 rounded;
+}

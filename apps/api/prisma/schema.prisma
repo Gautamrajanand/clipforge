@@ -1,0 +1,295 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ Users & Orgs ============
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // hashed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[]
+  apiKeys     ApiKey[]
+  webhooks    Webhook[]
+
+  @@index([email])
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[]
+  projects    Project[]
+  brandKits   BrandKit[]
+  apiKeys     ApiKey[]
+  webhooks    Webhook[]
+  usageLedger UsageLedger[]
+
+  @@index([name])
+}
+
+model Membership {
+  id    String @id @default(cuid())
+  role  Role   @default(EDITOR)
+  orgId String
+  userId String
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@index([orgId])
+  @@index([userId])
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  REVIEWER
+}
+
+// ============ Projects & Assets ============
+
+model Project {
+  id        String   @id @default(cuid())
+  orgId     String
+  title     String
+  sourceUrl String?
+  status    ProjectStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  assets      Asset[]
+  transcript  Transcript?
+  moments     Moment[]
+  exports     Export[]
+
+  @@index([orgId])
+  @@index([status])
+}
+
+enum ProjectStatus {
+  PENDING
+  INGESTING
+  TRANSCRIBING
+  DETECTING
+  READY
+  FAILED
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  projectId String
+  kind      AssetKind
+  url       String
+  duration  Float?   // seconds
+  mimeType  String?
+  size      BigInt?  // bytes
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([kind])
+}
+
+enum AssetKind {
+  ORIGINAL
+  CLIP
+  SRT
+  VTT
+  THUMBNAIL
+}
+
+// ============ Transcription & Diarization ============
+
+model Transcript {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  language  String   @default("en")
+  data      Json     // { words: [{text, start, end, speaker}], diarization: [...] }
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ============ Moments (Clips) ============
+
+model Moment {
+  id        String   @id @default(cuid())
+  projectId String
+  tStart    Float    // seconds
+  tEnd      Float    // seconds
+  duration  Float    // calculated
+  score     Float    @default(0.0)
+  features  Json     // { hook, novelty, structure, emotion, clarity, quote, vision_focus }
+  reason    String?  // human-readable explanation
+  createdAt DateTime @default(now())
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  exports Export[]
+
+  @@index([projectId])
+  @@index([score])
+}
+
+// ============ Brand Kits ============
+
+model BrandKit {
+  id            String   @id @default(cuid())
+  orgId         String
+  name          String
+  fonts         Json     // { primary: "font-family", secondary: "font-family", fallback: "sans-serif" }
+  colors        Json     // { primary: "#hex", secondary: "#hex", accent: "#hex" }
+  logoUrl       String?
+  captionStyle  Json     // { position: "bottom", fontSize: 24, emoji: true }
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+// ============ Exports ============
+
+model Export {
+  id            String   @id @default(cuid())
+  projectId     String
+  momentId      String
+  status        ExportStatus @default(PENDING)
+  format        ExportFormat @default(MP4)
+  template      String?  // template name
+  artifacts     Json     // { mp4_url, srt_url, thumbnail_url }
+  metrics       Json?    // { views, engagement, retention }
+  publishedTo   String[] @default([]) // ["youtube_shorts", "instagram_reels"]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  moment  Moment  @relation(fields: [momentId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([momentId])
+  @@index([status])
+}
+
+enum ExportStatus {
+  PENDING
+  RENDERING
+  COMPLETED
+  FAILED
+}
+
+enum ExportFormat {
+  MP4
+  WEBM
+  MOV
+}
+
+// ============ API Keys & Auth ============
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  orgId       String
+  userId      String
+  keyHash     String   @unique // bcrypt hash
+  name        String?
+  rateLimit   Int      @default(100) // requests per minute
+  quotaMinutes Int     @default(10000) // minutes per month
+  quotaExports Int     @default(1000) // exports per month
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([userId])
+}
+
+// ============ Webhooks ============
+
+model Webhook {
+  id       String   @id @default(cuid())
+  orgId    String
+  userId   String
+  url      String
+  secret   String   // for HMAC signing
+  events   String[] @default(["job.completed", "export.ready"])
+  active   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+// ============ Usage & Metering ============
+
+model UsageLedger {
+  id               String   @id @default(cuid())
+  orgId            String
+  minutesProcessed Float    @default(0.0)
+  exportsCount     Int      @default(0)
+  period           String   // "2024-01"
+  createdAt        DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, period])
+  @@index([orgId])
+}
+
+// ============ Jobs (for async processing) ============
+
+model Job {
+  id        String   @id @default(cuid())
+  type      JobType
+  projectId String
+  status    JobStatus @default(PENDING)
+  input     Json
+  output    Json?
+  error     String?
+  retries   Int       @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+}
+
+enum JobType {
+  INGEST
+  TRANSCRIBE
+  DETECT_HIGHLIGHTS
+  RENDER_EXPORT
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}

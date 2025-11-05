@@ -1,0 +1,305 @@
+### ClipForge API Sample Requests
+
+@baseUrl = http://localhost:3000
+@apiKey = your-api-key-here
+@token = your-jwt-token-here
+
+### ============ AUTH ============
+
+### Register
+POST {{baseUrl}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "name": "John Doe",
+  "password": "securepassword123"
+}
+
+### Login
+POST {{baseUrl}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+
+### Get Current User
+GET {{baseUrl}}/v1/auth/me
+Authorization: Bearer {{token}}
+
+### ============ UPLOADS ============
+
+### Get Presigned Upload URL
+POST {{baseUrl}}/v1/uploads/sign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "filename": "my-video.mp4",
+  "mimeType": "video/mp4",
+  "size": 104857600
+}
+
+### ============ PROJECTS ============
+
+### Create Project
+POST {{baseUrl}}/v1/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "My First Video",
+  "sourceUrl": "https://example.com/video.mp4"
+}
+
+### List Projects
+GET {{baseUrl}}/v1/projects?skip=0&take=20
+Authorization: Bearer {{token}}
+
+### Get Project Details
+GET {{baseUrl}}/v1/projects/project-id-here
+Authorization: Bearer {{token}}
+
+### ============ INGESTION ============
+
+### Ingest Source (File/URL)
+POST {{baseUrl}}/v1/projects/project-id-here/ingest
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sourceType": "url",
+  "sourceUrl": "https://example.com/video.mp4",
+  "mimeType": "video/mp4"
+}
+
+### ============ HIGHLIGHT DETECTION ============
+
+### Run Highlight Detection (Async)
+POST {{baseUrl}}/v1/projects/project-id-here/detect
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numClips": 6
+}
+
+### List Ranked Clips
+GET {{baseUrl}}/v1/projects/project-id-here/clips
+Authorization: Bearer {{token}}
+
+### ============ EXPORTS ============
+
+### Create Export (Render Clip)
+POST {{baseUrl}}/v1/clips/clip-id-here/export
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "format": "MP4",
+  "aspectRatio": "9:16",
+  "template": "default",
+  "brandKitId": "kit-id-optional"
+}
+
+### Get Export Status
+GET {{baseUrl}}/v1/exports/export-id-here
+Authorization: Bearer {{token}}
+
+### List Exports for Project
+GET {{baseUrl}}/v1/projects/project-id-here/exports
+Authorization: Bearer {{token}}
+
+### ============ BRAND KITS ============
+
+### Create Brand Kit
+POST {{baseUrl}}/v1/brand-kits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "My Brand",
+  "fonts": {
+    "primary": "Montserrat",
+    "secondary": "Open Sans",
+    "fallback": "sans-serif"
+  },
+  "colors": {
+    "primary": "#1F2937",
+    "secondary": "#3B82F6",
+    "accent": "#EC4899"
+  },
+  "logoUrl": "https://example.com/logo.png",
+  "captionStyle": {
+    "position": "bottom",
+    "fontSize": 24,
+    "emoji": true,
+    "backgroundColor": "rgba(0,0,0,0.7)"
+  }
+}
+
+### List Brand Kits
+GET {{baseUrl}}/v1/brand-kits
+Authorization: Bearer {{token}}
+
+### Get Brand Kit
+GET {{baseUrl}}/v1/brand-kits/kit-id-here
+Authorization: Bearer {{token}}
+
+### Update Brand Kit
+PUT {{baseUrl}}/v1/brand-kits/kit-id-here
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Brand",
+  "colors": {
+    "primary": "#000000",
+    "secondary": "#FFFFFF",
+    "accent": "#FF0000"
+  }
+}
+
+### Delete Brand Kit
+DELETE {{baseUrl}}/v1/brand-kits/kit-id-here
+Authorization: Bearer {{token}}
+
+### ============ WEBHOOKS ============
+
+### Register Webhook
+POST {{baseUrl}}/v1/webhooks/endpoints
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "url": "https://example.com/webhooks/clipforge",
+  "events": ["job.completed", "export.ready"]
+}
+
+### List Webhooks
+GET {{baseUrl}}/v1/webhooks/endpoints
+Authorization: Bearer {{token}}
+
+### Delete Webhook
+DELETE {{baseUrl}}/v1/webhooks/endpoints/webhook-id-here
+Authorization: Bearer {{token}}
+
+### ============ USAGE & METERING ============
+
+### Get Current Usage
+GET {{baseUrl}}/v1/usage
+Authorization: Bearer {{token}}
+
+### Get Usage for Specific Period
+GET {{baseUrl}}/v1/usage?period=2024-11
+Authorization: Bearer {{token}}
+
+### ============ ML WORKERS ============
+
+### ASR: Transcribe Audio
+POST http://localhost:8000/v1/asr/transcribe
+Content-Type: application/json
+
+{
+  "projectId": "project-1",
+  "assetUrl": "https://s3.example.com/video.mp4",
+  "language": "en"
+}
+
+### ASR: Get Transcription Status
+GET http://localhost:8000/v1/asr/status/project-1
+
+### Ranker: Detect Highlights
+POST http://localhost:8000/v1/ranker/detect
+Content-Type: application/json
+
+{
+  "projectId": "project-1",
+  "transcriptId": "transcript-1",
+  "numClips": 6
+}
+
+### Ranker: Get Detection Status
+GET http://localhost:8000/v1/ranker/status/project-1
+
+### Render: Export Clip
+POST http://localhost:8000/v1/render/export
+Content-Type: application/json
+
+{
+  "exportId": "export-1",
+  "projectId": "project-1",
+  "momentId": "moment-1",
+  "sourceUrl": "https://s3.example.com/video.mp4",
+  "tStart": 10.5,
+  "tEnd": 65.5,
+  "format": "MP4",
+  "aspectRatio": "9:16",
+  "brandKitId": "kit-1"
+}
+
+### Render: Get Export Status
+GET http://localhost:8000/v1/render/status/export-1
+
+### Publish: YouTube Shorts
+POST http://localhost:8000/v1/publish/youtube-shorts
+Content-Type: application/json
+
+{
+  "exportId": "export-1",
+  "platform": "youtube_shorts",
+  "videoUrl": "https://s3.example.com/export-1.mp4",
+  "title": "Amazing Product Launch",
+  "description": "Check out our new product!",
+  "tags": ["product", "launch", "tech"]
+}
+
+### ============ WEBHOOK EXAMPLES ============
+
+### Webhook: Job Completed Event
+POST https://example.com/webhooks/clipforge
+Content-Type: application/json
+X-Signature: hmac-sha256-signature-here
+
+{
+  "event": "job.completed",
+  "timestamp": "2024-11-04T18:00:00Z",
+  "data": {
+    "jobId": "job-1",
+    "projectId": "project-1",
+    "type": "DETECT_HIGHLIGHTS",
+    "status": "COMPLETED",
+    "output": {
+      "clips": [
+        {
+          "tStart": 10.5,
+          "tEnd": 65.5,
+          "score": 0.92,
+          "reason": "Strong hook • Emotional"
+        }
+      ]
+    }
+  }
+}
+
+### Webhook: Export Ready Event
+POST https://example.com/webhooks/clipforge
+Content-Type: application/json
+X-Signature: hmac-sha256-signature-here
+
+{
+  "event": "export.ready",
+  "timestamp": "2024-11-04T18:05:00Z",
+  "data": {
+    "exportId": "export-1",
+    "projectId": "project-1",
+    "status": "COMPLETED",
+    "artifacts": {
+      "mp4_url": "https://s3.example.com/export-1.mp4",
+      "srt_url": "https://s3.example.com/export-1.srt",
+      "thumbnail_url": "https://s3.example.com/export-1_thumb.jpg"
+    }
+  }
+}
