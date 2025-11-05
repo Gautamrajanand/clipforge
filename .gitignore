@@ -35,3 +35,16 @@ logs/
 # Temporary
 tmp/
 temp/
+
+# Next.js
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.turbo/

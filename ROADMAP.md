@@ -9,6 +9,76 @@
 
 Build an AI-powered video clipping platform that automatically detects and exports the most engaging moments from long-form content, optimized for social media distribution.
 
+## 🎨 Design Philosophy & UI/UX Inspiration
+
+**Primary Inspiration:** Podcastle (https://podcastle.ai)
+
+### Key Design Principles
+- **Clean & Minimal:** Lots of white space, uncluttered interface
+- **Soft Color Palette:** Pastel colors (pink, blue, mint green) for feature cards
+- **Rounded Corners:** Soft, friendly aesthetic with rounded buttons and cards
+- **Clear Hierarchy:** Bold headings, clear navigation, organized content
+- **Professional Yet Approachable:** Balance between enterprise-grade and user-friendly
+- **Consistent Spacing:** Generous padding and margins throughout
+- **Icon-First Navigation:** Clear icons paired with labels in sidebar
+- **Card-Based Layout:** Feature cards with icons and soft backgrounds
+- **Subtle Shadows:** Light shadows for depth without being heavy
+- **Teal/Turquoise Accent:** Primary action color (Create button, CTAs)
+
+### Specific Elements to Emulate
+1. **Sidebar Navigation**
+   - Left-aligned vertical nav
+   - Icon + text labels
+   - Teal "Create" button at top
+   - Clean, minimal styling
+   - Workspace selector at top
+
+2. **Project Cards**
+   - Soft pastel backgrounds (pink, blue, mint)
+   - Icon + label layout
+   - Rounded corners
+   - Hover states
+
+3. **Empty States**
+   - Centered illustration
+   - Clear message
+   - Single CTA button
+   - Generous white space
+
+4. **Typography**
+   - Clean sans-serif font
+   - Bold headings
+   - Good contrast
+   - Readable body text
+
+5. **Buttons**
+   - Rounded corners
+   - Clear hierarchy (primary/secondary)
+   - Icon + text combinations
+   - Teal for primary actions
+
+6. **Plan/Usage Widget**
+   - Bottom-left corner card
+   - Clean table layout
+   - Progress indicators
+   - Upgrade CTA
+
+### Color Palette (Inspired by Podcastle)
+- **Primary (Teal):** `#14B8A6` or similar
+- **Pink Card:** `#FDE2E4` or `#FFE4E6`
+- **Blue Card:** `#DBEAFE` or `#BFDBFE`
+- **Mint Card:** `#D1FAE5` or `#A7F3D0`
+- **Gray Text:** `#6B7280`
+- **Dark Text:** `#1F2937`
+- **Background:** `#FFFFFF` and `#F9FAFB`
+
+### Reference Screenshots
+- Dashboard with project cards
+- Sidebar navigation
+- Editor interface
+- Brand Kit page
+- Empty states
+
 ---
 
 ## ✅ Version 0.1.0 - MVP Foundation (COMPLETED)
