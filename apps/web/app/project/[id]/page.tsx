@@ -269,12 +269,15 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                     </div>
 
                     <div className="flex-1">
-                      {/* Header */}
-                      <div className="flex items-start justify-between gap-3 mb-4">
-                        <div>
+                      {/* Title and Score */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {clip.title || 'Untitled Clip'}
+                          </h3>
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="text-2xl font-bold text-primary-600">{clip.score}%</span>
-                            <span className="text-base font-semibold text-gray-800">{clip.reason}</span>
+                            <span className="text-lg font-bold text-primary-600">{clip.score}%</span>
+                            <span className="text-sm font-medium text-gray-600">{clip.reason}</span>
                           </div>
                           <p className="text-sm text-gray-500">
                             {clip.tStart?.toFixed(1)}s - {clip.tEnd?.toFixed(1)}s • {clip.duration}s duration
@@ -282,6 +285,18 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                         </div>
                         <Sparkles className="w-6 h-6 text-yellow-500 flex-shrink-0" />
                       </div>
+
+                      {/* Description */}
+                      {clip.description && (
+                        <div className="mb-4 pb-4 border-b border-gray-100">
+                          <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+                            Scene Analysis
+                          </p>
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {clip.description}
+                          </p>
+                        </div>
+                      )}
 
                       {/* Feature Breakdown */}
                       {clip.features && (

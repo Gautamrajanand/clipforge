@@ -134,15 +134,17 @@ model Transcript {
 // ============ Moments (Clips) ============
 
 model Moment {
-  id        String   @id @default(cuid())
-  projectId String
-  tStart    Float    // seconds
-  tEnd      Float    // seconds
-  duration  Float    // calculated
-  score     Float    @default(0.0)
-  features  Json     // { hook, novelty, structure, emotion, clarity, quote, vision_focus }
-  reason    String?  // human-readable explanation
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  projectId   String
+  tStart      Float    // seconds
+  tEnd        Float    // seconds
+  duration    Float    // calculated
+  score       Float    @default(0.0)
+  features    Json     // { hook, novelty, structure, emotion, clarity, quote, vision_focus }
+  reason      String?  // human-readable explanation
+  title       String?  // AI-generated title for the clip
+  description String?  // AI-generated description/summary
+  createdAt   DateTime @default(now())
 
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   exports Export[]

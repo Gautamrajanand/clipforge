@@ -2,14 +2,31 @@
 
 import { X, Upload, Video as VideoIcon } from 'lucide-react';
 import { useState, useRef } from 'react';
+import UploadProgress from '../progress/UploadProgress';
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (file: File, title: string) => void;
+  isUploading?: boolean;
+  uploadProgress?: number;
+  uploadStage?: 'uploading' | 'transcribing' | 'detecting' | 'complete' | 'error';
+  uploadMessage?: string;
+  uploadEta?: string;
+  uploadError?: string;
 }
 
-export default function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
+export default function UploadModal({ 
+  isOpen, 
+  onClose, 
+  onUpload,
+  isUploading = false,
+  uploadProgress = 0,
+  uploadStage = 'uploading',
+  uploadMessage,
+  uploadEta,
+  uploadError,
+}: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -36,9 +53,8 @@ export default function UploadModal({ isOpen, onClose, onUpload }: UploadModalPr
   const handleSubmit = () => {
     if (file && title) {
       onUpload(file, title);
-      setFile(null);
-      setTitle('');
-      onClose();
+      // Don't close modal or clear form during upload
+      // The parent component will handle closing after upload completes
     }
   };
 
@@ -63,71 +79,88 @@ export default function UploadModal({ isOpen, onClose, onUpload }: UploadModalPr
 
         {/* Content */}
         <div className="p-6">
-          {/* Upload Area */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`bg-card-pink rounded-xl p-12 flex flex-col items-center justify-center min-h-[300px] cursor-pointer transition-all ${
-              isDragging ? 'border-2 border-primary-500 bg-card-pink/50' : 'border-2 border-transparent'
-            }`}
-          >
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4">
-              <Upload className="w-10 h-10 text-gray-400" />
+          {/* Progress Indicator */}
+          {isUploading && (
+            <div className="mb-6">
+              <UploadProgress
+                stage={uploadStage}
+                progress={uploadProgress}
+                message={uploadMessage}
+                eta={uploadEta}
+                error={uploadError}
+              />
             </div>
-            {file ? (
-              <div className="text-center">
-                <p className="text-lg font-semibold text-gray-800 mb-2">{file.name}</p>
-                <p className="text-sm text-gray-600">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFile(null);
-                  }}
-                  className="mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Choose different file
-                </button>
-              </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-lg font-semibold text-gray-800 mb-2">Click to upload</p>
-                <p className="text-sm text-gray-600">or drag and drop your video here</p>
-                <p className="text-xs text-gray-500 mt-2">MP4, MOV, AVI up to 500MB</p>
-              </div>
-            )}
-          </div>
+          )}
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="video/*"
-            onChange={(e) => {
-              const selectedFile = e.target.files?.[0];
-              if (selectedFile) handleFileSelect(selectedFile);
-            }}
-            className="hidden"
-          />
+          {/* Upload Area */}
+          {!isUploading && (
+            <>
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`bg-card-pink rounded-xl p-12 flex flex-col items-center justify-center min-h-[300px] cursor-pointer transition-all ${
+                  isDragging ? 'border-2 border-primary-500 bg-card-pink/50' : 'border-2 border-transparent'
+                }`}
+              >
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4">
+                  <Upload className="w-10 h-10 text-gray-400" />
+                </div>
+                {file ? (
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-gray-800 mb-2">{file.name}</p>
+                    <p className="text-sm text-gray-600">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFile(null);
+                      }}
+                      className="mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Choose different file
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-gray-800 mb-2">Click to upload</p>
+                    <p className="text-sm text-gray-600">or drag and drop your video here</p>
+                    <p className="text-xs text-gray-500 mt-2">MP4, MOV, AVI up to 500MB</p>
+                  </div>
+                )}
+              </div>
 
-          {/* Project Title */}
-          <div className="mt-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Project Title
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter project title"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-          </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const selectedFile = e.target.files?.[0];
+                  if (selectedFile) handleFileSelect(selectedFile);
+                }}
+                className="hidden"
+              />
+
+              {/* Project Title */}
+              <div className="mt-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Project Title
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter project title"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* Footer */}

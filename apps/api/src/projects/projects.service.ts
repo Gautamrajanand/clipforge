@@ -3,6 +3,8 @@ import { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { VideoService } from '../video/video.service';
+import { AIService } from '../ai/ai.service';
+import { TranscriptionService } from '../transcription/transcription.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -13,6 +15,8 @@ export class ProjectsService {
     private prisma: PrismaService,
     private storage: StorageService,
     private video: VideoService,
+    private ai: AIService,
+    private transcription: TranscriptionService,
   ) {}
 
   // Helper to convert BigInt to number for JSON serialization
@@ -95,41 +99,110 @@ export class ProjectsService {
     };
   }
 
+  /**
+   * Extract transcript text for a specific time range
+   */
+  private extractTranscriptText(
+    transcript: any,
+    startTime: number,
+    endTime: number,
+  ): string {
+    if (!transcript || !transcript.data) {
+      return '';
+    }
+
+    try {
+      const words = transcript.data.words || [];
+      
+      // Find words in this time range
+      const clipWords = words.filter(
+        (w: any) => w.start >= startTime && w.end <= endTime,
+      );
+
+      if (clipWords.length === 0) {
+        return '';
+      }
+
+      // Get the text
+      return clipWords.map((w: any) => w.text).join(' ');
+    } catch (error) {
+      console.error('Error extracting transcript text:', error);
+      return '';
+    }
+  }
+
   private async simulateDetection(projectId: string) {
     // Wait 3 seconds to simulate processing
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     try {
+      // Get transcript for this project
+      const transcript = await this.prisma.transcript.findUnique({
+        where: { projectId },
+      });
+
+      // Generate moments with titles/descriptions from transcript
+      const moments = [
+        {
+          projectId,
+          score: 92,
+          reason: 'Strong hook • Emotional',
+          tStart: 10.5,
+          tEnd: 65.5,
+          duration: 55,
+          features: { hook: 0.9, emotion: 0.85, structure: 0.8, novelty: 0.7, clarity: 0.75, quote: 0.6, vision_focus: 0.7 },
+        },
+        {
+          projectId,
+          score: 87,
+          reason: 'Well-structured • Novel',
+          tStart: 120,
+          tEnd: 175,
+          duration: 55,
+          features: { structure: 0.95, novelty: 0.85, clarity: 0.8, hook: 0.7, emotion: 0.6, quote: 0.5, vision_focus: 0.65 },
+        },
+        {
+          projectId,
+          score: 81,
+          reason: 'Novel content • Clarity',
+          tStart: 200,
+          tEnd: 255,
+          duration: 55,
+          features: { novelty: 0.9, clarity: 0.85, structure: 0.75, hook: 0.65, emotion: 0.6, quote: 0.55, vision_focus: 0.7 },
+        },
+      ];
+
+      // Get project for context
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+      });
+
+      // Generate AI-powered titles and descriptions for each moment
+      const momentsWithTitles = await Promise.all(
+        moments.map(async (moment) => {
+          // Extract transcript text for this clip
+          const clipText = this.extractTranscriptText(
+            transcript,
+            moment.tStart,
+            moment.tEnd,
+          );
+
+          // Generate professional title and description using AI
+          const { title, description } = await this.ai.generateClipMetadata(
+            clipText,
+            {
+              videoTitle: project?.title,
+              duration: moment.duration,
+              score: moment.score,
+            },
+          );
+
+          return { ...moment, title, description };
+        }),
+      );
+
       await this.prisma.moment.createMany({
-        data: [
-          {
-            projectId,
-            score: 92,
-            reason: 'Strong hook • Emotional',
-            tStart: 10.5,
-            tEnd: 65.5,
-            duration: 55,
-            features: { hook: 0.9, emotion: 0.85, structure: 0.8, novelty: 0.7, clarity: 0.75, quote: 0.6, vision_focus: 0.7 },
-          },
-          {
-            projectId,
-            score: 87,
-            reason: 'Well-structured • Novel',
-            tStart: 120,
-            tEnd: 175,
-            duration: 55,
-            features: { structure: 0.95, novelty: 0.85, clarity: 0.8, hook: 0.7, emotion: 0.6, quote: 0.5, vision_focus: 0.65 },
-          },
-          {
-            projectId,
-            score: 81,
-            reason: 'Novel content • Clarity',
-            tStart: 200,
-            tEnd: 255,
-            duration: 55,
-            features: { novelty: 0.9, clarity: 0.85, structure: 0.75, hook: 0.65, emotion: 0.6, quote: 0.55, vision_focus: 0.7 },
-          },
-        ],
+        data: momentsWithTitles,
       });
 
       // Update project status to READY
@@ -187,6 +260,16 @@ export class ProjectsService {
         size: BigInt(file.size),
       },
     });
+
+    // Trigger transcription asynchronously (don't wait for it)
+    if (this.transcription.isAvailable()) {
+      console.log(`🎙️  Triggering transcription for project: ${projectId}`);
+      this.transcription.transcribeProject(projectId).catch((error) => {
+        console.error('Transcription failed:', error);
+      });
+    } else {
+      console.warn('⚠️  Transcription not available - skipping');
+    }
 
     return {
       message: 'Video uploaded successfully',

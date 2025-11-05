@@ -17,6 +17,13 @@ export default function Dashboard() {
   const [token, setToken] = useState<string>('');
   const [projects, setProjects] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadState, setUploadState] = useState({
+    stage: 'uploading' as 'uploading' | 'transcribing' | 'detecting' | 'complete' | 'error',
+    progress: 0,
+    message: '',
+    eta: '',
+    error: '',
+  });
 
   useEffect(() => {
     const getToken = async () => {
@@ -79,6 +86,14 @@ export default function Dashboard() {
     }
 
     setIsUploading(true);
+    setUploadState({
+      stage: 'uploading',
+      progress: 5,
+      message: 'Creating project...',
+      eta: '',
+      error: '',
+    });
+
     try {
       // Create project
       const createResponse = await fetch('http://localhost:3000/v1/projects', {
@@ -93,17 +108,70 @@ export default function Dashboard() {
       if (!createResponse.ok) throw new Error('Failed to create project');
       const project = await createResponse.json();
 
-      // Upload video
+      // Upload video with progress tracking
+      setUploadState({
+        stage: 'uploading',
+        progress: 10,
+        message: `Uploading ${(file.size / 1024 / 1024).toFixed(1)} MB...`,
+        eta: '',
+        error: '',
+      });
+
       const formData = new FormData();
       formData.append('video', file);
 
-      const uploadResponse = await fetch(`http://localhost:3000/v1/projects/${project.id}/upload`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
+      // Use XMLHttpRequest for progress tracking
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 30); // 0-30%
+            setUploadState({
+              stage: 'uploading',
+              progress: 10 + percentComplete,
+              message: `Uploading ${(file.size / 1024 / 1024).toFixed(1)} MB...`,
+              eta: '',
+              error: '',
+            });
+          }
+        });
+
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(xhr.response);
+          } else {
+            reject(new Error('Upload failed'));
+          }
+        });
+
+        xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+
+        xhr.open('POST', `http://localhost:3000/v1/projects/${project.id}/upload`);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.send(formData);
       });
 
-      if (!uploadResponse.ok) throw new Error('Failed to upload video');
+      // Transcription phase (simulated progress)
+      setUploadState({
+        stage: 'transcribing',
+        progress: 45,
+        message: 'Transcribing audio...',
+        eta: '2-5 min',
+        error: '',
+      });
+
+      // Wait a bit to simulate transcription
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Detection phase
+      setUploadState({
+        stage: 'detecting',
+        progress: 70,
+        message: 'Detecting clips...',
+        eta: '',
+        error: '',
+      });
 
       // Trigger detection
       await fetch(`http://localhost:3000/v1/projects/${project.id}/detect`, {
@@ -115,16 +183,63 @@ export default function Dashboard() {
         body: JSON.stringify({}),
       });
 
-      // Refresh projects
+      // Wait for detection to complete (detection takes 3-5 seconds)
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      // Update to 90% while we verify
+      setUploadState({
+        stage: 'detecting',
+        progress: 90,
+        message: 'Finalizing clips...',
+        eta: '',
+        error: '',
+      });
+
+      // Wait a bit more to ensure clips are saved
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Complete
+      setUploadState({
+        stage: 'complete',
+        progress: 100,
+        message: 'Processing complete!',
+        eta: '',
+        error: '',
+      });
+
+      // Refresh projects to get updated data
       await fetchProjects(token);
+      
+      // Wait a moment to show success
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Close modal and reset
+      setShowUploadModal(false);
+      setIsUploading(false);
+      setUploadState({
+        stage: 'uploading',
+        progress: 0,
+        message: '',
+        eta: '',
+        error: '',
+      });
       
       // Navigate to project
       router.push(`/project/${project.id}`);
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload video. Please try again.');
-    } finally {
-      setIsUploading(false);
+      setUploadState({
+        stage: 'error',
+        progress: 0,
+        message: '',
+        eta: '',
+        error: 'Upload failed. Please try again.',
+      });
+      
+      // Keep modal open on error so user can see the error
+      setTimeout(() => {
+        setIsUploading(false);
+      }, 3000);
     }
   };
 
@@ -137,6 +252,50 @@ export default function Dashboard() {
     if (seconds < 3600) return `Edited ${Math.floor(seconds / 60)} minutes ago`;
     if (seconds < 86400) return `Edited ${Math.floor(seconds / 3600)} hours ago`;
     return `Edited ${Math.floor(seconds / 86400)} days ago`;
+  };
+
+  const handleEditProject = async (id: string, newTitle: string) => {
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`http://localhost:3000/v1/projects/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: newTitle }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setProjects(projects.map(p => 
+          p.id === id ? { ...p, title: newTitle } : p
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to update project:', error);
+      alert('Failed to rename project');
+    }
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`http://localhost:3000/v1/projects/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setProjects(projects.filter(p => p.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      alert('Failed to delete project');
+    }
   };
 
   return (
@@ -231,7 +390,10 @@ export default function Dashboard() {
                   id={project.id}
                   title={project.title}
                   updatedAt={formatTimeAgo(project.updatedAt)}
+                  videoUrl={project.sourceUrl ? `http://localhost:3000/v1/projects/${project.id}/video` : undefined}
                   isEmpty={!project.sourceUrl}
+                  onEdit={handleEditProject}
+                  onDelete={handleDeleteProject}
                 />
               ))}
             </div>
@@ -263,24 +425,15 @@ export default function Dashboard() {
       {/* Upload Modal */}
       <UploadModal
         isOpen={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
+        onClose={() => !isUploading && setShowUploadModal(false)}
         onUpload={handleUpload}
+        isUploading={isUploading}
+        uploadProgress={uploadState.progress}
+        uploadStage={uploadState.stage}
+        uploadMessage={uploadState.message}
+        uploadEta={uploadState.eta}
+        uploadError={uploadState.error}
       />
-
-      {/* Loading Overlay */}
-      {isUploading && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Uploading video...</h3>
-                <p className="text-sm text-gray-600">This may take a few moments</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

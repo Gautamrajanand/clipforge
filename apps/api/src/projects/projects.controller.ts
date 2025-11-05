@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Delete,
@@ -127,6 +128,20 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     return this.projectsService.downloadExport(exportId, orgId, res);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update project' })
+  async update(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() dto: { title?: string },
+  ) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.update(id, orgId, dto);
   }
 
   @Delete(':id')
