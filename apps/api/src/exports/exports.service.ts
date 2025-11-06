@@ -1,9 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../prisma/prisma.service';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ExportsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(ExportsService.name);
+  private readonly workerUrl = process.env.ML_WORKER_URL || 'http://localhost:8000';
+
+  constructor(
+    private prisma: PrismaService,
+    private httpService: HttpService,
+  ) {}
 
   async create(momentId: string, orgId: string, dto: any) {
     // Verify org owns moment
@@ -61,5 +69,80 @@ export class ExportsService {
       where: { projectId },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  /**
+   * Process export with aspect ratio conversion via Python worker
+   * Delegates to ML worker for FFmpeg processing
+   */
+  async processExport(exportId: string, orgId: string): Promise<void> {
+    const exportRecord = await this.findOne(exportId, orgId);
+    const moment = await this.prisma.moment.findUnique({
+      where: { id: exportRecord.momentId },
+      include: { project: true },
+    });
+
+    if (!moment) {
+      throw new NotFoundException('Moment not found');
+    }
+
+    // Update status to processing
+    await this.prisma.export.update({
+      where: { id: exportId },
+      data: {
+        processingStatus: 'PROCESSING',
+        processingStartedAt: new Date(),
+      },
+    });
+
+    try {
+      // Call Python worker to render clip
+      this.logger.log(`Calling ML worker to render export ${exportId}`);
+      
+      const renderRequest = {
+        exportId: exportRecord.id,
+        projectId: moment.projectId,
+        momentId: moment.id,
+        sourceUrl: moment.project.sourceUrl,
+        tStart: moment.tStart,
+        tEnd: moment.tEnd,
+        format: exportRecord.format,
+        aspectRatio: moment.aspectRatio,
+        template: exportRecord.template,
+        brandKitId: null, // TODO: Get from project/org
+      };
+
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `${this.workerUrl}/v1/render/export`,
+          renderRequest,
+        ),
+      );
+
+      this.logger.log(`ML worker queued render: ${response.data.status}`);
+      
+      // Worker will update export status when complete
+      // For now, mark as queued
+      await this.prisma.export.update({
+        where: { id: exportId },
+        data: {
+          processingStatus: 'QUEUED',
+        },
+      });
+
+    } catch (error) {
+      this.logger.error(`Failed to queue export ${exportId}:`, error);
+      
+      await this.prisma.export.update({
+        where: { id: exportId },
+        data: {
+          processingStatus: 'FAILED',
+          processingError: error.message,
+          processingCompletedAt: new Date(),
+        },
+      });
+
+      throw error;
+    }
   }
 }

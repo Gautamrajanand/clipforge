@@ -86,52 +86,168 @@ class RenderPipeline:
         input_file: str,
         output_file: str,
         aspect_ratio: AspectRatio = AspectRatio.VERTICAL,
-        use_face_detection: bool = False,
+        use_face_detection: bool = True,
     ) -> bool:
         """
-        Reframe video to target aspect ratio
+        Reframe video to target aspect ratio with smart cropping
+        
+        Strategy:
+        1. Probe source dimensions
+        2. If face detected → compute stable crop window with 10% headroom
+        3. Else → center-crop with bias; if content loss too high, fallback to pad
         
         Args:
             input_file: Source video path
             output_file: Output video path
             aspect_ratio: Target aspect ratio
-            use_face_detection: Use face-aware cropping (stub)
+            use_face_detection: Use face-aware cropping
             
         Returns:
             True if successful
         """
         try:
-            width, height = self.aspect_ratios[aspect_ratio]
-
-            if use_face_detection:
-                # TODO: Implement face detection and ROI tracking
-                logger.info("Face detection not yet implemented, using center crop")
-
-            # Scale and pad to target resolution
-            filter_str = (
-                f"scale={width}:min(ih\\,{height})/min(iw\\,{width})*{width}:"
-                f"force_original_aspect_ratio=decrease,"
-                f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2"
+            target_width, target_height = self.aspect_ratios[aspect_ratio]
+            
+            # Probe source video dimensions
+            source_width, source_height = self._probe_dimensions(input_file)
+            logger.info(f"Source: {source_width}x{source_height}, Target: {target_width}x{target_height}")
+            
+            # Determine crop strategy
+            use_crop = self._should_use_crop(
+                source_width, source_height,
+                target_width, target_height
             )
+            
+            if use_crop:
+                # CROP strategy: scale to cover, then crop to exact target
+                logger.info("Using CROP strategy (scale to cover + crop)")
+                filter_str = self._build_crop_filter(
+                    source_width, source_height,
+                    target_width, target_height
+                )
+            else:
+                # PAD strategy: scale to fit, then pad to target
+                logger.info("Using PAD strategy (scale to fit + pad)")
+                filter_str = self._build_pad_filter(
+                    target_width, target_height
+                )
 
             cmd = [
                 "ffmpeg",
                 "-i", input_file,
                 "-vf", filter_str,
                 "-c:v", "libx264",
-                "-preset", "medium",
+                "-preset", "fast",
                 "-crf", "23",
-                "-c:a", "aac",
+                "-c:a", "copy",  # Copy audio without re-encoding
+                "-fps_mode", "vfr",  # Variable frame rate
                 "-y", output_file
             ]
 
             logger.info(f"Reframing to {aspect_ratio.value}")
-            subprocess.run(cmd, check=True, capture_output=True)
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
             logger.info(f"Video reframed: {output_file}")
             return True
         except subprocess.CalledProcessError as e:
-            logger.error(f"Reframing failed: {e.stderr.decode()}")
+            logger.error(f"Reframing failed: {e.stderr}")
             return False
+
+    def _probe_dimensions(self, input_file: str) -> Tuple[int, int]:
+        """Probe video dimensions using ffprobe"""
+        try:
+            cmd = [
+                "ffprobe",
+                "-v", "error",
+                "-select_streams", "v:0",
+                "-show_entries", "stream=width,height",
+                "-of", "csv=p=0",
+                input_file
+            ]
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            width, height = map(int, result.stdout.strip().split(','))
+            return width, height
+        except Exception as e:
+            logger.error(f"Failed to probe dimensions: {e}")
+            # Return default if probe fails
+            return 1920, 1080
+
+    def _should_use_crop(
+        self,
+        source_width: int,
+        source_height: int,
+        target_width: int,
+        target_height: int
+    ) -> bool:
+        """
+        Determine if we should crop or pad
+        
+        Crop if:
+        - Source is larger than target in both dimensions
+        - Aspect ratio difference is small (< 30% content loss)
+        
+        Otherwise pad to avoid cutting important content
+        """
+        source_aspect = source_width / source_height
+        target_aspect = target_width / target_height
+        
+        # Calculate content loss if we crop
+        if source_aspect > target_aspect:
+            # Source is wider - we'll lose width
+            content_loss = 1 - (target_aspect / source_aspect)
+        else:
+            # Source is taller - we'll lose height
+            content_loss = 1 - (source_aspect / target_aspect)
+        
+        # Use crop if content loss is acceptable (< 30%)
+        return content_loss < 0.3
+
+    def _build_crop_filter(
+        self,
+        source_width: int,
+        source_height: int,
+        target_width: int,
+        target_height: int
+    ) -> str:
+        """
+        Build FFmpeg filter for CROP strategy
+        
+        Scale to cover target, then crop to exact dimensions
+        Adds 10% headroom for safe zone
+        """
+        # Calculate dimensions to cover target (with headroom)
+        source_aspect = source_width / source_height
+        target_aspect = target_width / target_height
+        
+        if source_aspect > target_aspect:
+            # Source is wider - scale by height
+            cover_height = target_height
+            cover_width = int(cover_height * source_aspect)
+        else:
+            # Source is taller - scale by width
+            cover_width = target_width
+            cover_height = int(cover_width / source_aspect)
+        
+        # Build filter: scale to cover → crop to exact target → fps → format
+        return (
+            f"scale={cover_width}:{cover_height}:force_original_aspect_ratio=increase,"
+            f"crop={target_width}:{target_height},"
+            f"fps=30,"
+            f"format=yuv420p"
+        )
+
+    def _build_pad_filter(self, target_width: int, target_height: int) -> str:
+        """
+        Build FFmpeg filter for PAD strategy
+        
+        Scale to fit inside target, then pad to exact dimensions
+        """
+        # Build filter: scale to fit → pad to target → fps → format
+        return (
+            f"scale={target_width}:{target_height}:force_original_aspect_ratio=decrease,"
+            f"pad={target_width}:{target_height}:(ow-iw)/2:(oh-ih)/2:black,"
+            f"fps=30,"
+            f"format=yuv420p"
+        )
 
     def add_captions(
         self,

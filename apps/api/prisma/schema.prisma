@@ -177,17 +177,25 @@ model BrandKit {
 // ============ Exports ============
 
 model Export {
-  id            String   @id @default(cuid())
-  projectId     String
-  momentId      String
-  status        ExportStatus @default(PENDING)
-  format        ExportFormat @default(MP4)
-  template      String?  // template name
-  artifacts     Json     // { mp4_url, srt_url, thumbnail_url }
-  metrics       Json?    // { views, engagement, retention }
-  publishedTo   String[] @default([]) // ["youtube_shorts", "instagram_reels"]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  projectId             String
+  momentId              String
+  status                ExportStatus @default(PENDING)
+  format                ExportFormat @default(MP4)
+  template              String?  // template name
+  artifacts             Json     // { mp4_url, srt_url, thumbnail_url }
+  metrics               Json?    // { views, engagement, retention }
+  publishedTo           String[] @default([]) // ["youtube_shorts", "instagram_reels"]
+  
+  // Video processing fields (for aspect ratio conversion)
+  processingStatus      String?  // PENDING, PROCESSING, COMPLETED, FAILED
+  processedUrl          String?  // URL to processed video
+  processingError       String?  // Error message if failed
+  processingStartedAt   DateTime?
+  processingCompletedAt DateTime?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   moment  Moment  @relation(fields: [momentId], references: [id], onDelete: Cascade)
