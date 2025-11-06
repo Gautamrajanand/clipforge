@@ -194,6 +194,10 @@ model Export {
   processingStartedAt   DateTime?
   processingCompletedAt DateTime?
   
+  // Caption styling fields
+  captionStyle          String?  @default("karaoke") // Caption preset ID
+  captionsEnabled       Boolean  @default(true)
+  
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

@@ -110,6 +110,8 @@ export class ExportsService {
         aspectRatio: moment.aspectRatio,
         template: exportRecord.template,
         brandKitId: null, // TODO: Get from project/org
+        captionStyle: exportRecord.captionStyle || 'karaoke',
+        captionsEnabled: exportRecord.captionsEnabled ?? true,
       };
 
       const response = await firstValueFrom(
