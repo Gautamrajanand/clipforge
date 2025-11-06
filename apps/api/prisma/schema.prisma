@@ -66,13 +66,14 @@ enum Role {
 // ============ Projects & Assets ============
 
 model Project {
-  id        String   @id @default(cuid())
-  orgId     String
-  title     String
-  sourceUrl String?
-  status    ProjectStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  orgId        String
+  title        String
+  sourceUrl    String?
+  status       ProjectStatus @default(PENDING)
+  clipSettings Json?    // Store clip generation preferences
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   assets      Asset[]
@@ -134,17 +135,19 @@ model Transcript {
 // ============ Moments (Clips) ============
 
 model Moment {
-  id          String   @id @default(cuid())
-  projectId   String
-  tStart      Float    // seconds
-  tEnd        Float    // seconds
-  duration    Float    // calculated
-  score       Float    @default(0.0)
-  features    Json     // { hook, novelty, structure, emotion, clarity, quote, vision_focus }
-  reason      String?  // human-readable explanation
-  title       String?  // AI-generated title for the clip
-  description String?  // AI-generated description/summary
-  createdAt   DateTime @default(now())
+  id             String   @id @default(cuid())
+  projectId      String
+  tStart         Float    // seconds
+  tEnd           Float    // seconds
+  duration       Float    // calculated
+  score          Float    @default(0.0)
+  features       Json     // { hook, novelty, structure, emotion, clarity, quote, vision_focus }
+  reason         String?  // human-readable explanation
+  title          String?  // AI-generated title for the clip
+  description    String?  // AI-generated description/summary
+  aspectRatio    String   @default("16:9") // 9:16, 16:9, 1:1, 4:5
+  targetPlatform String?  // youtube-shorts, tiktok, instagram-reels, etc.
+  createdAt      DateTime @default(now())
 
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   exports Export[]

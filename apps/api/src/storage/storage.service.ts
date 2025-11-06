@@ -66,6 +66,14 @@ export class StorageService {
   }
 
   /**
+   * Get signed URL for a file (alias for generatePresignedDownloadUrl)
+   * Used by transcription service
+   */
+  async getSignedUrl(key: string, expiresIn = 7200): Promise<string> {
+    return this.generatePresignedDownloadUrl(key, expiresIn);
+  }
+
+  /**
    * Upload file to S3
    */
   async uploadFile(

@@ -79,7 +79,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleUpload = async (file: File, title: string) => {
+  const handleUpload = async (file: File, title: string, clipSettings?: any) => {
     if (!token) {
       alert('Please wait for authentication...');
       return;
@@ -173,14 +173,14 @@ export default function Dashboard() {
         error: '',
       });
 
-      // Trigger detection
+      // Trigger detection with clip settings
       await fetch(`http://localhost:3000/v1/projects/${project.id}/detect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ settings: clipSettings }),
       });
 
       // Wait for detection to complete (detection takes 3-5 seconds)

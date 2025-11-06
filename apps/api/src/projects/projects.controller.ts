@@ -20,6 +20,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagg
 import { Response } from 'express';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { DetectClipsDto } from './dto/clip-settings.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -63,8 +64,8 @@ export class ProjectsController {
   }
 
   @Post(':id/detect')
-  @ApiOperation({ summary: 'Run highlight detection (async)' })
-  async detect(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
+  @ApiOperation({ summary: 'Run highlight detection with custom settings (async)' })
+  async detect(@Request() req: any, @Param('id') id: string, @Body() dto: DetectClipsDto) {
     const orgId = req.user.memberships[0]?.org?.id;
     if (!orgId) {
       throw new Error('No organization found');

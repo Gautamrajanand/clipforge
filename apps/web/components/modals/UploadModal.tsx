@@ -1,13 +1,15 @@
 'use client';
 
-import { X, Upload, Video as VideoIcon } from 'lucide-react';
+import { X, Upload, Video as VideoIcon, Settings } from 'lucide-react';
 import { useState, useRef } from 'react';
 import UploadProgress from '../progress/UploadProgress';
+import ClipSettingsModal from './ClipSettingsModal';
+import { ClipSettings } from '@/lib/platform-presets';
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (file: File, title: string) => void;
+  onUpload: (file: File, title: string, clipSettings?: ClipSettings) => void;
   isUploading?: boolean;
   uploadProgress?: number;
   uploadStage?: 'uploading' | 'transcribing' | 'detecting' | 'complete' | 'error';
@@ -30,6 +32,8 @@ export default function UploadModal({
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [showClipSettings, setShowClipSettings] = useState(false);
+  const [clipSettings, setClipSettings] = useState<ClipSettings | undefined>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -52,10 +56,14 @@ export default function UploadModal({
 
   const handleSubmit = () => {
     if (file && title) {
-      onUpload(file, title);
+      onUpload(file, title, clipSettings);
       // Don't close modal or clear form during upload
       // The parent component will handle closing after upload completes
     }
+  };
+
+  const handleSaveSettings = (settings: ClipSettings) => {
+    setClipSettings(settings);
   };
 
   return (
@@ -159,6 +167,24 @@ export default function UploadModal({
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
+
+              {/* Clip Settings Button */}
+              {file && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowClipSettings(true)}
+                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 text-gray-700 font-medium rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Settings className="w-5 h-5" />
+                    {clipSettings ? 'Edit Clip Settings' : 'Customize Clip Settings'}
+                    {clipSettings && (
+                      <span className="ml-2 px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
+                        {clipSettings.aspectRatio} • {clipSettings.clipLength}s • {clipSettings.numberOfClips} clips
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -180,6 +206,14 @@ export default function UploadModal({
           </button>
         </div>
       </div>
+
+      {/* Clip Settings Modal */}
+      <ClipSettingsModal
+        isOpen={showClipSettings}
+        onClose={() => setShowClipSettings(false)}
+        onSave={handleSaveSettings}
+        videoDuration={300}
+      />
     </div>
   );
 }

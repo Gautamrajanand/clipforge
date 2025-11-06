@@ -82,20 +82,38 @@ export class ProjectsService {
   async detect(projectId: string, orgId: string, dto: any) {
     const project = await this.findOne(projectId, orgId);
 
-    // Update project status to DETECTING
+    // Extract clip settings from dto
+    const settings = dto?.settings || {};
+    console.log('🎬 Received clip settings:', JSON.stringify(settings, null, 2));
+    
+    const clipSettings = {
+      aspectRatio: settings.aspectRatio || '16:9',
+      clipLength: settings.clipLength || 60,
+      numberOfClips: settings.numberOfClips || 3,
+      timeframe: settings.timeframe,
+      targetPlatform: settings.targetPlatform,
+    };
+    
+    console.log('🎬 Processed clip settings:', JSON.stringify(clipSettings, null, 2));
+
+    // Update project status to DETECTING and save settings
     await this.prisma.project.update({
       where: { id: projectId },
-      data: { status: 'DETECTING' },
+      data: { 
+        status: 'DETECTING',
+        clipSettings: clipSettings as any,
+      },
     });
 
     // Simulate ML detection - create some mock moments asynchronously
     // In production, this would enqueue a job to the ML workers
-    this.simulateDetection(projectId);
+    this.simulateDetection(projectId, clipSettings);
 
     return {
       projectId,
       status: 'detecting',
-      message: 'Highlight detection started',
+      message: 'Highlight detection started with custom settings',
+      settings: clipSettings,
     };
   }
 
@@ -131,51 +149,76 @@ export class ProjectsService {
     }
   }
 
-  private async simulateDetection(projectId: string) {
+  private async simulateDetection(projectId: string, settings?: any) {
     // Wait 3 seconds to simulate processing
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     try {
-      // Get transcript for this project
-      const transcript = await this.prisma.transcript.findUnique({
-        where: { projectId },
-      });
+      // Get transcript and project for this project
+      const [transcript, projectData] = await Promise.all([
+        this.prisma.transcript.findUnique({
+          where: { projectId },
+        }),
+        this.prisma.project.findUnique({
+          where: { id: projectId },
+        }),
+      ]);
 
-      // Generate moments with titles/descriptions from transcript
-      const moments = [
-        {
-          projectId,
-          score: 92,
-          reason: 'Strong hook • Emotional',
-          tStart: 10.5,
-          tEnd: 65.5,
-          duration: 55,
-          features: { hook: 0.9, emotion: 0.85, structure: 0.8, novelty: 0.7, clarity: 0.75, quote: 0.6, vision_focus: 0.7 },
-        },
-        {
-          projectId,
-          score: 87,
-          reason: 'Well-structured • Novel',
-          tStart: 120,
-          tEnd: 175,
-          duration: 55,
-          features: { structure: 0.95, novelty: 0.85, clarity: 0.8, hook: 0.7, emotion: 0.6, quote: 0.5, vision_focus: 0.65 },
-        },
-        {
-          projectId,
-          score: 81,
-          reason: 'Novel content • Clarity',
-          tStart: 200,
-          tEnd: 255,
-          duration: 55,
-          features: { novelty: 0.9, clarity: 0.85, structure: 0.75, hook: 0.65, emotion: 0.6, quote: 0.55, vision_focus: 0.7 },
-        },
+      // Extract settings
+      const clipLength = settings?.clipLength || 60;
+      const numberOfClips = settings?.numberOfClips || 3;
+      const aspectRatio = settings?.aspectRatio || '16:9';
+      const targetPlatform = settings?.targetPlatform;
+      const timeframe = settings?.timeframe;
+
+      // Generate moments based on settings
+      // Dynamically create the requested number of clips
+      const reasons = [
+        'Strong hook • Emotional',
+        'Well-structured • Novel',
+        'Novel content • Clarity',
+        'Engaging story • Clear',
+        'Emotional impact • Hook',
+        'Great pacing • Structure',
+        'Compelling narrative',
+        'High engagement potential',
+        'Clear message • Impact',
+        'Strong storytelling',
       ];
 
-      // Get project for context
-      const project = await this.prisma.project.findUnique({
-        where: { id: projectId },
-      });
+      const baseMoments = [];
+      const startTime = timeframe?.start || 10;
+      const spacing = 10; // seconds between clips
+
+      for (let i = 0; i < numberOfClips; i++) {
+        const score = 92 - (i * 3); // Decreasing scores
+        const tStart = startTime + (i * (clipLength + spacing));
+        
+        baseMoments.push({
+          projectId,
+          score,
+          reason: reasons[i % reasons.length],
+          tStart,
+          duration: clipLength,
+          features: { 
+            hook: 0.9 - (i * 0.05), 
+            emotion: 0.85 - (i * 0.05), 
+            structure: 0.8, 
+            novelty: 0.7, 
+            clarity: 0.75, 
+            quote: 0.6, 
+            vision_focus: 0.7 
+          },
+          aspectRatio,
+          targetPlatform,
+        });
+      }
+
+      // Map to add tEnd
+      const moments = baseMoments.map(m => ({
+        ...m,
+        tEnd: m.tStart + m.duration,
+      }));
 
       // Generate AI-powered titles and descriptions for each moment
       const momentsWithTitles = await Promise.all(
@@ -191,7 +234,7 @@ export class ProjectsService {
           const { title, description } = await this.ai.generateClipMetadata(
             clipText,
             {
-              videoTitle: project?.title,
+              videoTitle: projectData?.title,
               duration: moment.duration,
               score: moment.score,
             },
