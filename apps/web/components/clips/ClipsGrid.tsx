@@ -18,6 +18,9 @@ interface Clip {
 
 interface ClipsGridProps {
   clips: Clip[];
+  selectedClips?: string[];
+  onClipSelect?: (clipId: string) => void;
+  onClipPlay?: (clip: Clip) => void;
   onExport?: (clipId: string) => void;
   onShare?: (clipId: string) => void;
   className?: string;

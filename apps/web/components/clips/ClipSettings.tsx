@@ -4,9 +4,18 @@ import { useState, useEffect, useCallback } from "react";
 import { AlertCircle } from "lucide-react";
 
 interface ClipSettingsProps {
+  settings?: {
+    clipLength: number;
+    clipCount: number;
+    minLength: number;
+    maxLength: number;
+  };
   initialLength?: number; // seconds
   initialCount?: number;
+  onChange?: (settings: any) => void;
   onSettingsChange?: (settings: { length: number; count: number }) => void;
+  onDetect?: () => void;
+  isDetecting?: boolean;
   className?: string;
 }
 
