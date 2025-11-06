@@ -121,15 +121,20 @@ enum AssetKind {
 // ============ Transcription & Diarization ============
 
 model Transcript {
-  id        String   @id @default(cuid())
-  projectId String   @unique
-  language  String   @default("en")
-  data      Json     // { words: [{text, start, end, speaker}], diarization: [...] }
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  projectId   String   @unique
+  externalId  String?  @unique // AssemblyAI transcript ID
+  status      String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  language    String   @default("en")
+  data        Json     // { words: [{text, start, end, speaker}], segments: [...], wpm, confidence }
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
+  @@index([externalId])
+  @@index([status])
 }
 
 // ============ Moments (Clips) ============

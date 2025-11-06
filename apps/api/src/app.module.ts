@@ -13,6 +13,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { UsageModule } from './usage/usage.module';
 import { JobsModule } from './jobs/jobs.module';
 import { StorageModule } from './storage/storage.module';
+import { ProxyModule } from './proxy/proxy.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { StorageModule } from './storage/storage.module';
     UsageModule,
     JobsModule,
     StorageModule,
+    ProxyModule,
   ],
 })
 export class AppModule {}
