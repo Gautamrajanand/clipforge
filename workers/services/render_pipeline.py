@@ -456,8 +456,6 @@ class RenderPipeline:
         input_file: str,
         output_file: str,
         time: float = 0.0,
-        width: int = 1280,
-        height: int = 720,
     ) -> bool:
         """
         Generate thumbnail from video
@@ -465,9 +463,7 @@ class RenderPipeline:
         Args:
             input_file: Source video path
             output_file: Output thumbnail path
-            time: Time to extract frame from (seconds)
-            width: Thumbnail width
-            height: Thumbnail height
+            time: Time in seconds to extract frame
             
         Returns:
             True if successful
@@ -475,10 +471,10 @@ class RenderPipeline:
         try:
             cmd = [
                 "ffmpeg",
-                "-i", input_file,
                 "-ss", str(time),
+                "-i", input_file,
                 "-vframes", "1",
-                "-vf", f"scale={width}:{height}:force_original_aspect_ratio=decrease",
+                "-q:v", "2",
                 "-y", output_file
             ]
 
@@ -488,6 +484,54 @@ class RenderPipeline:
             return True
         except subprocess.CalledProcessError as e:
             logger.error(f"Thumbnail generation failed: {e.stderr.decode()}")
+            return False
+
+    def generate_proxy_video(
+        self,
+        input_file: str,
+        output_file: str,
+        max_height: int = 720,
+    ) -> bool:
+        """
+        Generate lightweight proxy video for in-page playback
+        
+        Creates a smaller, web-optimized version:
+        - Max 720p resolution
+        - CRF 23 (good quality/size balance)
+        - Fast preset for quick encoding
+        - AAC audio
+        
+        Args:
+            input_file: Source video path
+            output_file: Output proxy video path
+            max_height: Maximum height (maintains aspect ratio)
+            
+        Returns:
+            True if successful
+        """
+        try:
+            # Scale to max height, maintain aspect ratio
+            scale_filter = f"scale=-2:{max_height}:force_original_aspect_ratio=decrease"
+            
+            cmd = [
+                "ffmpeg",
+                "-i", input_file,
+                "-vf", scale_filter,
+                "-c:v", "libx264",
+                "-preset", "fast",
+                "-crf", "23",
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-movflags", "+faststart",  # Enable streaming
+                "-y", output_file
+            ]
+
+            logger.info(f"Generating proxy video (max {max_height}p)")
+            subprocess.run(cmd, check=True, capture_output=True)
+            logger.info(f"Proxy video generated: {output_file}")
+            return True
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Proxy video generation failed: {e.stderr.decode()}")
             return False
 
     def get_video_info(self, input_file: str) -> Optional[Dict]:

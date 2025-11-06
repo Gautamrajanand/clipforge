@@ -103,6 +103,16 @@ export class ProjectsController {
     return this.projectsService.streamVideo(id, orgId, res);
   }
 
+  @Get(':id/transcript')
+  @ApiOperation({ summary: 'Get project transcript' })
+  async getTranscript(@Request() req: any, @Param('id') id: string) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.getTranscript(id, orgId);
+  }
+
   @Post(':id/export')
   @ApiOperation({ summary: 'Export selected moments as video clips' })
   async exportMoments(

@@ -10,6 +10,7 @@ import json
 from services.render_pipeline import RenderPipeline, AspectRatio
 from services.caption_engine import CaptionEngine, CaptionFormat
 from services.caption_presets import CaptionPreset
+from services.boundary_detector import BoundaryDetector
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -75,16 +76,51 @@ async def _render_worker(request: RenderRequest):
         # Initialize services
         pipeline = RenderPipeline()
         caption_engine = CaptionEngine()
+        boundary_detector = BoundaryDetector()
         
         # Download source
         logger.info(f"Downloading source from {request.sourceUrl}")
         source_path = f"{temp_dir}/source.mp4"
         _download_file(request.sourceUrl, source_path)
         
-        # Extract clip
-        logger.info(f"Extracting clip {request.tStart}-{request.tEnd}")
+        # Fetch transcript from database for boundary detection
+        transcript_words = []
+        try:
+            # Fetch transcript from API
+            transcript_response = requests.get(
+                f"{os.getenv('API_BASE_URL', 'http://localhost:3000')}/v1/projects/{request.projectId}/transcript"
+            )
+            if transcript_response.status_code == 200:
+                transcript_data = transcript_response.json()
+                transcript_words = transcript_data.get('data', {}).get('words', [])
+                logger.info(f"Fetched {len(transcript_words)} words from transcript")
+            else:
+                logger.warning(f"Failed to fetch transcript: {transcript_response.status_code}")
+        except Exception as e:
+            logger.error(f"Error fetching transcript: {e}")
+        
+        # Adjust boundaries for natural start/end (only if transcript available)
+        if transcript_words:
+            logger.info("Adjusting clip boundaries using transcript")
+            adjusted_start, adjusted_end = boundary_detector.adjust_boundaries(
+                source_path,
+                request.tStart,
+                request.tEnd,
+                transcript_words,
+                min_duration=15.0,
+                max_duration=180.0
+            )
+        else:
+            logger.warning("No transcript available, using original boundaries")
+            adjusted_start = request.tStart
+            adjusted_end = request.tEnd
+        
+        logger.info(f"Boundaries adjusted: {request.tStart:.2f}-{request.tEnd:.2f} → {adjusted_start:.2f}-{adjusted_end:.2f}")
+        
+        # Extract clip with adjusted boundaries
+        logger.info(f"Extracting clip {adjusted_start:.2f}-{adjusted_end:.2f}")
         clip_path = f"{temp_dir}/clip.mp4"
-        pipeline.extract_clip(source_path, clip_path, request.tStart, request.tEnd)
+        pipeline.extract_clip(source_path, clip_path, adjusted_start, adjusted_end)
         
         # Map aspect ratio
         aspect_ratio_map = {

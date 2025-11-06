@@ -459,4 +459,26 @@ export class ProjectsService {
       where: { id: projectId },
     });
   }
+
+  async getTranscript(projectId: string, orgId: string) {
+    // Verify org owns project
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project || project.orgId !== orgId) {
+      throw new NotFoundException('Project not found');
+    }
+
+    // Fetch transcript
+    const transcript = await this.prisma.transcript.findUnique({
+      where: { projectId },
+    });
+
+    if (!transcript) {
+      throw new NotFoundException('Transcript not found');
+    }
+
+    return transcript;
+  }
 }
