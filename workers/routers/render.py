@@ -9,6 +9,7 @@ import requests
 import json
 from services.render_pipeline import RenderPipeline, AspectRatio
 from services.caption_engine import CaptionEngine, CaptionFormat
+from services.caption_presets import CaptionPreset
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -24,6 +25,8 @@ class RenderRequest(BaseModel):
     aspectRatio: str = "9:16"
     template: Optional[str] = None
     brandKitId: Optional[str] = None
+    captionStyle: Optional[str] = "karaoke"  # Caption preset name
+    captionsEnabled: bool = True
 
 class RenderResponse(BaseModel):
     exportId: str
@@ -101,8 +104,8 @@ async def _render_worker(request: RenderRequest):
         normalized_path = f"{temp_dir}/normalized.mp4"
         pipeline.normalize_audio(reframed_path, normalized_path)
         
-        # Generate captions
-        logger.info("Generating captions")
+        # Generate captions with preset styling
+        logger.info(f"Generating captions with style: {request.captionStyle}")
         srt_path = f"{temp_dir}/captions.srt"
         ass_path = f"{temp_dir}/captions.ass"
         
@@ -116,12 +119,23 @@ async def _render_worker(request: RenderRequest):
         captions = caption_engine.from_transcript(sample_words, words_per_caption=3)
         
         # Generate SRT
-        with open(srt_path, 'w') as f:
+        with open(srt_path, 'w', encoding='utf-8') as f:
             f.write(caption_engine.generate_srt(captions, use_emojis=True))
         
-        # Generate ASS with styling
-        with open(ass_path, 'w') as f:
-            f.write(caption_engine.generate_ass(captions, use_emojis=True))
+        # Generate ASS with preset styling
+        try:
+            preset = CaptionPreset(request.captionStyle or "karaoke")
+        except ValueError:
+            logger.warning(f"Invalid preset {request.captionStyle}, using karaoke")
+            preset = CaptionPreset.KARAOKE
+        
+        with open(ass_path, 'w', encoding='utf-8') as f:
+            f.write(caption_engine.generate_ass_with_preset(
+                captions, 
+                preset=preset,
+                brand_font=None,  # TODO: Get from brandKitId
+                keyword_paint=True
+            ))
         
         # Add captions
         logger.info("Adding captions to video")

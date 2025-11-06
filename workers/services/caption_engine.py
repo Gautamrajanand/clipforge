@@ -1,5 +1,6 @@
 """
-Caption Engine - SRT/VTT generation with emoji/keyword painting and Indic font support
+Caption Engine - SRT/VTT/ASS generation with emoji/keyword painting and Indic font support
+Enhanced with preset styles from caption_presets.py
 """
 
 import re
@@ -7,6 +8,7 @@ import logging
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
+from .caption_presets import CaptionPreset, CaptionStyle, get_preset, apply_brand_font
 
 logger = logging.getLogger(__name__)
 
@@ -293,6 +295,155 @@ class CaptionEngine:
             )
 
         return "\n".join(lines)
+
+    def generate_ass_with_preset(
+        self,
+        captions: List[Caption],
+        preset: CaptionPreset,
+        brand_font: Optional[str] = None,
+        keyword_paint: bool = True,
+    ) -> str:
+        """
+        Generate ASS format captions with preset styling
+        
+        Args:
+            captions: List of Caption objects
+            preset: Caption preset to use
+            brand_font: Optional brand kit font override
+            keyword_paint: Enable keyword color painting
+            
+        Returns:
+            ASS formatted string with preset styling
+        """
+        style = get_preset(preset)
+        
+        # Apply brand font if provided
+        if brand_font:
+            style = apply_brand_font(style, brand_font)
+        
+        # Build ASS header
+        lines = [
+            "[Script Info]",
+            f"Title: ClipForge - {style.name}",
+            "ScriptType: v4.00+",
+            "WrapStyle: 0",
+            "ScaledBorderAndShadow: yes",
+            "YCbCr Matrix: TV.709",
+            "",
+            "[V4+ Styles]",
+            "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
+        ]
+        
+        # Build style line
+        style_line = (
+            f"Style: Default,"
+            f"{style.font_name},"
+            f"{style.font_size},"
+            f"{style.primary_color},"
+            f"{style.secondary_color},"
+            f"{style.outline_color},"
+            f"{style.back_color},"
+            f"{'-1' if style.bold else '0'},"
+            f"{'-1' if style.italic else '0'},"
+            f"0,0,"  # Underline, StrikeOut
+            f"{style.scale_x:.0f},"
+            f"{style.scale_y:.0f},"
+            f"{style.spacing},"
+            f"0,"  # Angle
+            f"{style.border_style},"
+            f"{style.outline},"
+            f"{style.shadow},"
+            f"{style.alignment},"
+            f"{style.margin_l},"
+            f"{style.margin_r},"
+            f"{style.margin_v},"
+            f"1"  # Encoding
+        )
+        lines.append(style_line)
+        lines.append("")
+        
+        # Add events
+        lines.append("[Events]")
+        lines.append("Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text")
+        
+        for caption in captions:
+            text = caption.text
+            
+            # Apply keyword painting if enabled
+            if keyword_paint and style.keyword_paint:
+                text = self._apply_keyword_paint(text, style.secondary_color)
+            
+            # Apply karaoke effect if enabled
+            if style.karaoke_effect:
+                text = self._apply_karaoke_effect(text, caption)
+            
+            # Apply fade effects
+            effects = ""
+            if style.fade_in > 0 or style.fade_out > 0:
+                effects = f"{{\\fad({style.fade_in},{style.fade_out})}}"
+            
+            start = self._format_timestamp_ass(caption.start)
+            end = self._format_timestamp_ass(caption.end)
+            
+            lines.append(
+                f"Dialogue: 0,{start},{end},Default,,0,0,0,,{effects}{text}"
+            )
+        
+        return "\n".join(lines)
+
+    def _apply_keyword_paint(self, text: str, color: str) -> str:
+        """
+        Apply color to keywords (numbers, proper nouns, emphasized words)
+        
+        Args:
+            text: Text to process
+            color: ASS color code for keywords
+            
+        Returns:
+            Text with ASS color tags for keywords
+        """
+        # Patterns for keywords
+        patterns = [
+            (r'\b(\d+)\b', 'number'),  # Numbers
+            (r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b', 'proper_noun'),  # Proper nouns
+            (r'\b(amazing|awesome|incredible|fantastic|perfect|best|worst|never|always)\b', 'emphasis'),  # Emphasized words
+        ]
+        
+        result = text
+        for pattern, _ in patterns:
+            result = re.sub(
+                pattern,
+                lambda m: f"{{\\c{color}}}{m.group(1)}{{\\c}}",
+                result,
+                flags=re.IGNORECASE
+            )
+        
+        return result
+
+    def _apply_karaoke_effect(self, text: str, caption: Caption) -> str:
+        """
+        Apply karaoke word-by-word highlight effect
+        
+        Args:
+            text: Caption text
+            caption: Caption object with timing
+            
+        Returns:
+            Text with karaoke timing tags
+        """
+        words = text.split()
+        if not words:
+            return text
+        
+        duration = caption.end - caption.start
+        time_per_word = (duration / len(words)) * 100  # Centiseconds
+        
+        # Build karaoke string with k-timings
+        karaoke_text = ""
+        for word in words:
+            karaoke_text += f"{{\\k{int(time_per_word)}}}{word} "
+        
+        return karaoke_text.strip()
 
     def _format_timestamp(self, seconds: float) -> str:
         """Format timestamp for SRT (HH:MM:SS,mmm)"""
