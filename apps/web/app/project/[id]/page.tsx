@@ -302,7 +302,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           {/* Video Player Modal */}
           {selectedClipForPlayback && (
             <VideoPlayer
-              src={selectedClipForPlayback.proxyUrl || ''}
+              src={selectedClipForPlayback.proxyUrl || videoUrl || ''}
               onClose={() => setSelectedClipForPlayback(null)}
             />
           )}

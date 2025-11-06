@@ -33,11 +33,22 @@ interface ClipsGridProps {
  */
 export default function ClipsGrid({
   clips,
+  selectedClips,
+  onClipSelect,
+  onClipPlay,
   onExport,
   onShare,
   className = "",
 }: ClipsGridProps) {
   const [playingClipId, setPlayingClipId] = useState<string | null>(null);
+  
+  const handlePlayClick = (clip: Clip) => {
+    if (onClipPlay) {
+      onClipPlay(clip);
+    } else {
+      setPlayingClipId(clip.id);
+    }
+  };
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -72,7 +83,7 @@ export default function ClipsGrid({
 
               {/* Play overlay */}
               <div
-                onClick={() => setPlayingClipId(clip.id)}
+                onClick={() => handlePlayClick(clip)}
                 className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
               >
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
@@ -104,8 +115,16 @@ export default function ClipsGrid({
 
               {/* Actions */}
               <div className="flex items-center gap-2">
+                {onClipSelect && (
+                  <input
+                    type="checkbox"
+                    checked={selectedClips?.includes(clip.id) || false}
+                    onChange={() => onClipSelect(clip.id)}
+                    className="w-4 h-4 text-blue-500 rounded"
+                  />
+                )}
                 <button
-                  onClick={() => setPlayingClipId(clip.id)}
+                  onClick={() => handlePlayClick(clip)}
                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded transition-colors"
                 >
                   <Play className="w-4 h-4" />
