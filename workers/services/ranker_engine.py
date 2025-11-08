@@ -302,36 +302,43 @@ class RankerEngine:
             return []
         
         # Try to find 2-4 segments that work well together
+        # Strategy: Prefer consecutive or nearby high-scoring segments for coherence
         for num_segments in [3, 2, 4]:
             if len(available_segments) < num_segments:
                 continue
             
-            # Try combinations of top segments (not just consecutive)
-            # Take top 20 segments and try to find good combinations
-            top_segments = available_segments[:min(20, len(available_segments))]
+            # First, try to find consecutive high-scoring segments (best for coherence)
+            for i in range(len(available_segments) - num_segments + 1):
+                candidate_segments = available_segments[i:i + num_segments]
+                if self._is_valid_combination(candidate_segments, min_duration, max_duration):
+                    logger.info(f"Found {num_segments} consecutive segments")
+                    return self._create_clip_segments(candidate_segments)
             
-            # Try different combinations by selecting segments that are well-spaced
+            # If no consecutive segments work, try nearby combinations
+            # Take top 15 segments and try combinations that are close in time
+            top_segments = available_segments[:min(15, len(available_segments))]
+            
             for i in range(len(top_segments)):
                 if num_segments == 2:
-                    # For 2 segments, try pairing first with others
-                    for j in range(i + 1, len(top_segments)):
+                    # For 2 segments, try pairing with nearby segments
+                    for j in range(i + 1, min(i + 8, len(top_segments))):
                         candidate_segments = [top_segments[i], top_segments[j]]
                         if self._is_valid_combination(candidate_segments, min_duration, max_duration):
                             return self._create_clip_segments(candidate_segments)
                 
                 elif num_segments == 3:
-                    # For 3 segments, try different triplets
-                    for j in range(i + 1, len(top_segments)):
-                        for k in range(j + 1, len(top_segments)):
+                    # For 3 segments, try nearby triplets
+                    for j in range(i + 1, min(i + 8, len(top_segments))):
+                        for k in range(j + 1, min(j + 8, len(top_segments))):
                             candidate_segments = [top_segments[i], top_segments[j], top_segments[k]]
                             if self._is_valid_combination(candidate_segments, min_duration, max_duration):
                                 return self._create_clip_segments(candidate_segments)
                 
                 elif num_segments == 4:
-                    # For 4 segments, try quartets
-                    for j in range(i + 1, min(i + 10, len(top_segments))):  # Limit search space
-                        for k in range(j + 1, min(j + 10, len(top_segments))):
-                            for l in range(k + 1, min(k + 10, len(top_segments))):
+                    # For 4 segments, try nearby quartets
+                    for j in range(i + 1, min(i + 6, len(top_segments))):
+                        for k in range(j + 1, min(j + 6, len(top_segments))):
+                            for l in range(k + 1, min(k + 6, len(top_segments))):
                                 candidate_segments = [top_segments[i], top_segments[j], top_segments[k], top_segments[l]]
                                 if self._is_valid_combination(candidate_segments, min_duration, max_duration):
                                     return self._create_clip_segments(candidate_segments)
@@ -344,7 +351,7 @@ class RankerEngine:
         min_duration: float,
         max_duration: float
     ) -> bool:
-        """Check if a segment combination is valid"""
+        """Check if a segment combination is valid and coherent"""
         # Calculate total duration
         total_duration = sum(seg.duration for seg, _, _ in candidate_segments)
         
@@ -352,12 +359,20 @@ class RankerEngine:
         if not (min_duration <= total_duration <= max_duration):
             return False
         
-        # Check if segments are well-spaced (at least 3s apart for more flexibility)
+        # Sort segments by time
         segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
         
+        # Check gaps between segments
         for j in range(len(segments_sorted) - 1):
             gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
-            if gap < 3.0:  # Reduced from 5s to 3s for more flexibility
+            
+            # Segments must be at least 3s apart (avoid overlap)
+            if gap < 3.0:
+                return False
+            
+            # Prefer segments that are closer together (within 2 minutes)
+            # Segments more than 2 minutes apart are likely different topics
+            if gap > 120.0:  # 2 minutes
                 return False
         
         return True
