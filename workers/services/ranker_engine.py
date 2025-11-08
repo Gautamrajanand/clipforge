@@ -301,34 +301,78 @@ class RankerEngine:
         if not available_segments:
             return []
         
-        # Strategy: Use AI to validate coherence instead of strict time constraints
-        # This allows segments from different parts of video if they're topically related
-        # Better for longer videos (podcasts, interviews, etc.)
+        # Strategy: Try top-scoring consecutive segments first, then use AI for non-consecutive
+        # This balances speed (consecutive is fast) with quality (AI for non-consecutive)
         
-        # Build list of candidate segment groups
-        candidate_groups = []
-        for i in range(len(available_segments)):
-            for num_segments in [4, 3, 2]:  # Try longer clips first
-                if i + num_segments > len(available_segments):
+        # First, try consecutive segments (fast, no AI needed)
+        for num_segments in [3, 2, 4]:
+            # Only check top 20 segments to limit search space
+            top_segments = available_segments[:min(20, len(available_segments))]
+            
+            for i in range(len(top_segments) - num_segments + 1):
+                candidate_segments = top_segments[i:i + num_segments]
+                
+                # Check if consecutive in time (within 60s gaps)
+                segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
+                is_consecutive = True
+                for j in range(len(segments_sorted) - 1):
+                    gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
+                    if gap > 60.0:
+                        is_consecutive = False
+                        break
+                
+                # If consecutive, skip AI check (guaranteed coherent)
+                if is_consecutive:
+                    if self._is_valid_combination_fast(candidate_segments, min_duration, max_duration):
+                        logger.info(f"Found {num_segments} consecutive segments (no AI check needed)")
+                        return self._create_clip_segments(candidate_segments)
+        
+        # If no consecutive segments found, try AI-validated combinations (slower)
+        # Limit to top 10 segments and only try a few combinations
+        logger.info("No consecutive segments found, trying AI-validated combinations...")
+        top_10 = available_segments[:min(10, len(available_segments))]
+        
+        for num_segments in [3, 2]:  # Only try 2-3 segments for AI validation
+            for i in range(min(5, len(top_10))):  # Only try first 5 positions
+                if i + num_segments > len(top_10):
                     continue
+                    
+                candidate_segments = top_10[i:i + num_segments]
                 
-                candidate_segments = available_segments[i:i + num_segments]
-                
-                # Check if combination is valid (duration, gaps, coherence)
+                # Use AI validation for non-consecutive segments
                 if self._is_valid_combination(candidate_segments, min_duration, max_duration):
-                    # Calculate average score for this group
-                    avg_score = sum(score for _, _, score in candidate_segments) / len(candidate_segments)
-                    candidate_groups.append((candidate_segments, avg_score))
-        
-        # Return the highest-scoring valid group
-        if candidate_groups:
-            candidate_groups.sort(key=lambda x: x[1], reverse=True)
-            best_group = candidate_groups[0][0]
-            logger.info(f"Found {len(best_group)} segments with avg score {candidate_groups[0][1]:.2f}")
-            return self._create_clip_segments(best_group)
+                    logger.info(f"Found {num_segments} AI-validated segments")
+                    return self._create_clip_segments(candidate_segments)
         
         logger.info("No valid segment combinations found")
         return []
+    
+    def _is_valid_combination_fast(
+        self,
+        candidate_segments: List[Tuple],
+        min_duration: float,
+        max_duration: float
+    ) -> bool:
+        """Fast validation for consecutive segments (no AI check)"""
+        # Calculate total duration
+        total_duration = sum(seg.duration for seg, _, _ in candidate_segments)
+        
+        # Check if duration is acceptable
+        if not (min_duration <= total_duration <= max_duration):
+            return False
+        
+        # Sort segments by time
+        segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
+        
+        # Check gaps between segments
+        for j in range(len(segments_sorted) - 1):
+            gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
+            
+            # Segments must be at least 3s apart (avoid overlap)
+            if gap < 3.0:
+                return False
+        
+        return True
     
     def _is_valid_combination(
         self,
@@ -336,7 +380,7 @@ class RankerEngine:
         min_duration: float,
         max_duration: float
     ) -> bool:
-        """Check if a segment combination is valid and coherent"""
+        """Check if a segment combination is valid and coherent (with AI check)"""
         # Calculate total duration
         total_duration = sum(seg.duration for seg, _, _ in candidate_segments)
         
