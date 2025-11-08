@@ -1,6 +1,6 @@
 # 🗺️ ClipForge Product Roadmap
-**Last Updated:** November 8, 2025  
-**Version:** 2.0
+**Last Updated:** November 9, 2025  
+**Version:** 2.1
 
 ---
 
@@ -130,9 +130,18 @@ Every feature must:
 
 ---
 
-## ✅ PHASE 1: Foundation (COMPLETED - Nov 8, 2025)
+## ✅ PHASE 1: Foundation (COMPLETED - Nov 9, 2025)
 
 ### Status: **Production-Ready** 🚀
+
+### Recent Updates (Nov 9, 2025):
+- ✅ **Smart Clips** (renamed from Pro Clips) - Available to all users
+- ✅ **Auto-generation** - Smart Clips generate automatically on page load
+- ✅ **Duplicate prevention** - SessionStorage tracking prevents multiple generations
+- ✅ **Redesigned UI** - Podcastle-inspired clean card layout without thumbnails
+- ✅ **Duration accuracy** - Exported clips match displayed duration
+- ✅ **Zero padding** - Exact segment boundaries for precise cuts
+- ✅ **Removed settings panel** - Cleaner UI, auto-generates with optimal settings
 
 ### FREE TIER - Basic Clips
 
@@ -177,24 +186,25 @@ Every feature must:
    - Overlap detection
    - Foundation for transcript visualization
 
-### PRO TIER - Pro Clips
+### SMART CLIPS (Formerly Pro Clips)
 
 #### **Core Features:**
 
 1. ✅ **Multi-Segment Detection Algorithm**
    - Combines 2-4 high-value segments from different video parts
-   - Well-spaced segments (5s+ apart)
-   - Duration matching (±30% tolerance)
+   - Consecutive segments with 90s max gap tolerance
+   - Flexible duration (8-120s range)
    - Chronological ordering
    - Score-based selection
-   - Avoids reusing segments across clips
+   - Proper duplicate prevention with segment tracking
 
 2. ✅ **FFmpeg Multi-Segment Stitching**
    - **Simple Mode:** Fast concat without re-encoding (~1-2s)
-   - **Crossfade Mode:** Professional 300ms transitions (~10-30s)
+   - Zero padding for exact segment boundaries
    - Automatic temp file cleanup
    - Quality-preserved encoding (CRF 23)
    - H.264 video, AAC audio
+   - Duration accuracy (exported = displayed)
 
 3. ✅ **Transcript Visualization UI**
    - Expandable/collapsible interface
@@ -209,13 +219,15 @@ Every feature must:
    - Orchestrates ML worker + FFmpeg
    - Saves to database with metadata
    - Sets `isProClip` flag
+   - Auto-generates on page load
 
-5. ✅ **UI Button**
-   - Purple "✨ Pro Clips" button
-   - Located between Share and Export
-   - Disabled when no transcript
-   - Shows loading state
-   - Success alert with count
+5. ✅ **Redesigned UI**
+   - **No manual button** - Auto-generates in background
+   - **Clean card design** - Podcastle-inspired layout
+   - **No thumbnails** - Information-focused cards
+   - **Smart badge** - Purple "✨ SMART" indicator
+   - **Score & duration badges** - Top of card
+   - **SessionStorage tracking** - Prevents duplicate generation
 
 ### **Why This Matters:**
 - ✅ Matches Opus Clip core functionality
