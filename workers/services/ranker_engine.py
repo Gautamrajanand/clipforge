@@ -407,11 +407,11 @@ class RankerEngine:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a video editing assistant. Determine if the following segments from a video transcript would form a coherent, engaging clip when stitched together. The segments should be about the same topic or tell a related story. Answer with ONLY 'YES' or 'NO'."
+                        "content": "You are a video editing assistant. Determine if the following segments from a video transcript could work together in a short-form video clip. The segments don't need to be perfect - they just need to be related enough that a viewer wouldn't be confused. Be lenient - if there's ANY thematic connection or if they're part of the same general conversation, answer YES. Only answer NO if the segments are completely unrelated topics (e.g., cooking + sports + politics). Answer with ONLY 'YES' or 'NO'."
                     },
                     {
                         "role": "user",
-                        "content": f"Would these segments form a coherent clip?\n\n{combined_text}"
+                        "content": f"Could these segments work together in a clip?\n\n{combined_text}"
                     }
                 ],
                 max_tokens=10,
