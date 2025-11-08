@@ -261,7 +261,9 @@ class RankerEngine:
             # Mark original segments as used BEFORE creating the clip
             for seg, _, _ in original_segments:
                 used_segments.add((seg.start, seg.end))
-                logger.debug(f"Marked segment as used: {seg.start:.2f}-{seg.end:.2f}")
+                logger.info(f"🔒 Marked segment as used: {seg.start:.2f}-{seg.end:.2f}")
+            
+            logger.info(f"📊 Total used segments: {len(used_segments)}")
             
             # Create multi-segment clip
             multi_clip = self._create_multi_segment_clip(

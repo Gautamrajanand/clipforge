@@ -65,9 +65,13 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         }
         
         // Auto-generate Smart Clips if none exist and transcript is available
+        // Only do this once per session to avoid duplicate generations
         const hasSmartClips = data.moments?.some((m: any) => m.features?.isProClip);
-        if (!hasSmartClips && data.transcript && data.moments?.length > 0) {
+        const hasAttemptedGeneration = sessionStorage.getItem(`smart-clips-generated-${params.id}`);
+        
+        if (!hasSmartClips && !hasAttemptedGeneration && data.transcript && data.moments?.length > 0) {
           console.log('No Smart Clips found, auto-generating...');
+          sessionStorage.setItem(`smart-clips-generated-${params.id}`, 'true');
           // Generate Smart Clips in background (don't await)
           generateSmartClipsInBackground(authToken);
         }
