@@ -255,8 +255,9 @@ class RankerEngine:
                 logger.warning(f"Could not find segment combination for clip {clip_idx + 1}")
                 continue
             
-            # Mark segments as used
-            for seg in clip_segments:
+            # Mark segments as used (use original times before padding)
+            for seg, _, _ in [(s, f, sc) for s, f, sc in segment_scores 
+                             if any(cs.text == s.text for cs in clip_segments)]:
                 used_segments.add((seg.start, seg.end))
             
             # Create multi-segment clip
@@ -288,11 +289,10 @@ class RankerEngine:
         3. Tell a coherent story
         4. Sum to approximately target_duration
         """
-        # Tolerance for duration - accept any reasonable length
-        # Pro Clips value comes from multi-segment stitching, not exact duration
-        # Just ensure clips aren't too long
-        min_duration = 10.0  # At least 10 seconds (absolute minimum)
-        max_duration = 120.0  # At most 2 minutes (absolute maximum)
+        # Tolerance for duration - aim for target but be flexible
+        # Use wider range than regular clips since multi-segment is harder
+        min_duration = max(15.0, target_duration * 0.5)  # At least 50% of target or 15s
+        max_duration = min(120.0, target_duration * 2.0)  # At most 200% of target or 2min
         
         # Get top unused segments
         available_segments = [
