@@ -236,6 +236,7 @@ class RankerEngine:
         
         # Sort segments by score
         segment_scores.sort(key=lambda x: x[2], reverse=True)
+        logger.info(f"Scored {len(segment_scores)} segments, top score: {segment_scores[0][2] if segment_scores else 0:.2f}")
         
         # Generate multi-segment clips
         multi_clips = []
@@ -287,11 +288,11 @@ class RankerEngine:
         3. Tell a coherent story
         4. Sum to approximately target_duration
         """
-        # Tolerance for duration - very flexible to ensure we find clips
-        # Pro Clips are premium multi-segment clips - finding good combinations is hard
-        # Better to have clips that are somewhat off-target than no clips at all
-        min_duration = target_duration * 0.4  # At least 40% of target (18s for 45s)
-        max_duration = target_duration * 2.0  # At most 200% of target (90s for 45s)
+        # Tolerance for duration - accept any reasonable length
+        # Pro Clips value comes from multi-segment stitching, not exact duration
+        # Just ensure clips aren't too long
+        min_duration = 10.0  # At least 10 seconds (absolute minimum)
+        max_duration = 120.0  # At most 2 minutes (absolute maximum)
         
         # Get top unused segments
         available_segments = [
@@ -301,7 +302,10 @@ class RankerEngine:
         ]
         
         if not available_segments:
+            logger.warning("No available segments to combine")
             return []
+        
+        logger.info(f"Searching through {len(available_segments)} available segments")
         
         # Strategy: ONLY use consecutive segments (simple and reliable)
         # Consecutive segments are naturally coherent (same conversation)
@@ -327,9 +331,12 @@ class RankerEngine:
                 
                 # If consecutive and valid duration, use it
                 if is_consecutive:
+                    total_dur = sum(seg.duration for seg, _, _ in candidate_segments)
                     if self._is_valid_combination_fast(candidate_segments, min_duration, max_duration):
-                        logger.info(f"Found {num_segments} consecutive segments (gaps within 90s)")
+                        logger.info(f"✅ Found {num_segments} consecutive segments (total: {total_dur:.1f}s, target: {min_duration:.1f}-{max_duration:.1f}s)")
                         return self._create_clip_segments(candidate_segments)
+                    else:
+                        logger.debug(f"❌ Consecutive segments rejected - duration {total_dur:.1f}s outside range {min_duration:.1f}-{max_duration:.1f}s")
         
         logger.info("No consecutive segment combinations found")
         return []
