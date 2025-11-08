@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { Play, Download, Share2, MoreVertical } from "lucide-react";
 import VideoPlayer from "../video/VideoPlayer";
+import TranscriptViewer from "./TranscriptViewer";
+
+interface TranscriptSegment {
+  start: number;
+  end: number;
+  text: string;
+  speaker?: string;
+  order?: number;
+}
 
 interface Clip {
   id: string;
@@ -21,6 +30,7 @@ interface Clip {
     novelty?: number;
     quote?: number;
     structure?: number;
+    segments?: TranscriptSegment[];
   };
 }
 
@@ -171,6 +181,20 @@ export default function ClipsGrid({
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Transcript Viewer for multi-segment clips */}
+              {clip.features?.segments && clip.features.segments.length > 0 && (
+                <div className="mb-3">
+                  <TranscriptViewer
+                    segments={clip.features.segments}
+                    clipDuration={clip.duration}
+                    onSegmentClick={(segment) => {
+                      console.log('Segment clicked:', segment);
+                      // Future: Jump to segment in video player
+                    }}
+                  />
                 </div>
               )}
 
