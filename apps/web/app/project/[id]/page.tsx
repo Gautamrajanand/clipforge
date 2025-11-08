@@ -193,7 +193,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         },
         body: JSON.stringify({
           numClips: 3,
-          withCrossfade: false, // Disable crossfade for now (complex filter issues)
+          withCrossfade: true, // Enable crossfade for smoother transitions
         }),
       });
 

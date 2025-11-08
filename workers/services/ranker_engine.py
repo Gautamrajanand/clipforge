@@ -301,48 +301,43 @@ class RankerEngine:
         if not available_segments:
             return []
         
-        # Try to find 2-4 segments that work well together
-        # Strategy: Prefer consecutive or nearby high-scoring segments for coherence
-        for num_segments in [3, 2, 4]:
-            if len(available_segments) < num_segments:
-                continue
-            
-            # First, try to find consecutive high-scoring segments (best for coherence)
-            for i in range(len(available_segments) - num_segments + 1):
-                candidate_segments = available_segments[i:i + num_segments]
-                if self._is_valid_combination(candidate_segments, min_duration, max_duration):
-                    logger.info(f"Found {num_segments} consecutive segments")
-                    return self._create_clip_segments(candidate_segments)
-            
-            # If no consecutive segments work, try nearby combinations
-            # Take top 15 segments and try combinations that are close in time
-            top_segments = available_segments[:min(15, len(available_segments))]
-            
-            for i in range(len(top_segments)):
-                if num_segments == 2:
-                    # For 2 segments, try pairing with nearby segments
-                    for j in range(i + 1, min(i + 8, len(top_segments))):
-                        candidate_segments = [top_segments[i], top_segments[j]]
-                        if self._is_valid_combination(candidate_segments, min_duration, max_duration):
-                            return self._create_clip_segments(candidate_segments)
-                
-                elif num_segments == 3:
-                    # For 3 segments, try nearby triplets
-                    for j in range(i + 1, min(i + 8, len(top_segments))):
-                        for k in range(j + 1, min(j + 8, len(top_segments))):
-                            candidate_segments = [top_segments[i], top_segments[j], top_segments[k]]
-                            if self._is_valid_combination(candidate_segments, min_duration, max_duration):
-                                return self._create_clip_segments(candidate_segments)
-                
-                elif num_segments == 4:
-                    # For 4 segments, try nearby quartets
-                    for j in range(i + 1, min(i + 6, len(top_segments))):
-                        for k in range(j + 1, min(j + 6, len(top_segments))):
-                            for l in range(k + 1, min(k + 6, len(top_segments))):
-                                candidate_segments = [top_segments[i], top_segments[j], top_segments[k], top_segments[l]]
-                                if self._is_valid_combination(candidate_segments, min_duration, max_duration):
-                                    return self._create_clip_segments(candidate_segments)
+        # Strategy: ONLY use consecutive segments for perfect coherence
+        # This ensures Pro Clips are high-quality and make sense
+        # Better to return 0 clips than incoherent ones (paid feature)
         
+        # Build list of consecutive segment groups
+        consecutive_groups = []
+        for i in range(len(available_segments)):
+            for num_segments in [4, 3, 2]:  # Try longer clips first
+                if i + num_segments > len(available_segments):
+                    continue
+                
+                candidate_segments = available_segments[i:i + num_segments]
+                
+                # Check if these segments are actually consecutive in time
+                segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
+                is_consecutive = True
+                
+                for j in range(len(segments_sorted) - 1):
+                    gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
+                    # Segments must be within 30 seconds to be "consecutive"
+                    if gap > 30.0:
+                        is_consecutive = False
+                        break
+                
+                if is_consecutive and self._is_valid_combination(candidate_segments, min_duration, max_duration):
+                    # Calculate average score for this group
+                    avg_score = sum(score for _, _, score in candidate_segments) / len(candidate_segments)
+                    consecutive_groups.append((candidate_segments, avg_score))
+        
+        # Return the highest-scoring consecutive group
+        if consecutive_groups:
+            consecutive_groups.sort(key=lambda x: x[1], reverse=True)
+            best_group = consecutive_groups[0][0]
+            logger.info(f"Found {len(best_group)} consecutive segments with avg score {consecutive_groups[0][1]:.2f}")
+            return self._create_clip_segments(best_group)
+        
+        logger.info("No consecutive high-quality segments found")
         return []
     
     def _is_valid_combination(
@@ -369,15 +364,9 @@ class RankerEngine:
             # Segments must be at least 3s apart (avoid overlap)
             if gap < 3.0:
                 return False
-            
-            # Prefer segments that are closer together (within 2 minutes)
-            # Segments more than 2 minutes apart are likely different topics
-            if gap > 120.0:  # 2 minutes
-                return False
         
-        # Check semantic coherence using AI
-        if not self._check_semantic_coherence(segments_sorted):
-            return False
+        # No need for AI coherence check since we only use consecutive segments
+        # Consecutive segments are guaranteed to be coherent (same conversation)
         
         return True
     
