@@ -91,59 +91,35 @@ export default function ClipsGrid({
           return (
           <div
             key={clip.id}
-            className={`bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all ${
-              isProClip 
-                ? 'border-2 border-purple-300 hover:border-purple-400 ring-2 ring-purple-100' 
-                : 'border border-gray-200'
-            }`}
+            className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-200 p-5"
           >
-            {/* Thumbnail */}
-            <div className="relative aspect-video bg-gray-900 group cursor-pointer">
-              {clip.thumbnailUrl ? (
-                <img
-                  src={clip.thumbnailUrl}
-                  alt={clip.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-gray-500 text-sm">No thumbnail</div>
-                </div>
-              )}
-
-              {/* Play overlay */}
-              <div
-                onClick={() => handlePlayClick(clip)}
-                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-              >
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                  <Play className="w-8 h-8 text-black ml-1" />
-                </div>
+            {/* Header with badges */}
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                {/* Score badge */}
+                <button
+                  onClick={() => toggleScoreBreakdown(clip.id)}
+                  className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-md transition-colors cursor-pointer"
+                >
+                  {Math.round(clip.score)}%
+                </button>
+                
+                {/* Duration */}
+                <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-md">
+                  {formatDuration(clip.duration)}
+                </span>
               </div>
 
-              {/* Duration badge */}
-              <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
-                {formatDuration(clip.duration)}
-              </div>
-
-              {/* SMART badge for multi-segment clips */}
+              {/* SMART badge */}
               {clip.features?.isProClip && (
-                <div className="absolute top-2 right-2 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg">
+                <div className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
                   ✨ SMART
                 </div>
               )}
-
-              {/* Score badge - clickable */}
-              <button
-                onClick={() => toggleScoreBreakdown(clip.id)}
-                className="absolute top-2 left-2 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-medium transition-colors cursor-pointer"
-              >
-                {Math.round(clip.score)}% ▼
-              </button>
             </div>
 
-            {/* Info */}
-            <div className="p-4">
+            {/* Title and Description */}
+            <div className="mb-4">
               <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
                 {clip.title}
               </h3>
