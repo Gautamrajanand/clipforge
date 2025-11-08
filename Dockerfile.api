@@ -2,8 +2,14 @@ FROM node:18-slim
 
 WORKDIR /app
 
-# Install build dependencies and FFmpeg
-RUN apt-get update && apt-get install -y python3 make g++ ffmpeg && rm -rf /var/lib/apt/lists/*
+# Install build dependencies, FFmpeg, and system utilities
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    ffmpeg \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY apps/api/package*.json ./
