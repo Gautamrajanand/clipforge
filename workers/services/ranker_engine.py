@@ -492,7 +492,9 @@ class RankerEngine:
             return None
         
         # Calculate combined metrics
-        total_duration = sum(seg.duration for seg in clip_segments)
+        # Use actual segment durations (end - start) not padded durations
+        # This matches what FFmpeg will export when concatenating segments
+        total_duration = sum(seg.end - seg.start for seg in clip_segments)
         combined_score = sum(seg.score for seg in clip_segments) / len(clip_segments)
         
         # Combine text
