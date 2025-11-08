@@ -64,9 +64,42 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         if (data?.sourceUrl) {
           await loadVideoBlob(authToken);
         }
+        
+        // Auto-generate Smart Clips if none exist and transcript is available
+        const hasSmartClips = data.moments?.some((m: any) => m.features?.isProClip);
+        if (!hasSmartClips && data.transcript && data.moments?.length > 0) {
+          console.log('No Smart Clips found, auto-generating...');
+          // Generate Smart Clips in background (don't await)
+          generateSmartClipsInBackground(authToken);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch project:', error);
+    }
+  };
+  
+  const generateSmartClipsInBackground = async (authToken: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/clips/pro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          numClips: clipSettings.clipCount,
+          targetDuration: clipSettings.clipLength,
+          withCrossfade: false,
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('Smart Clips generated in background');
+        // Refresh to show new Smart Clips
+        await fetchProjectData(authToken);
+      }
+    } catch (error) {
+      console.error('Background Smart Clips generation failed:', error);
     }
   };
 
