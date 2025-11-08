@@ -15,10 +15,11 @@ export default function Dashboard() {
   const router = useRouter();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [token, setToken] = useState<string>('');
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadState, setUploadState] = useState({
-    stage: 'uploading' as 'uploading' | 'transcribing' | 'detecting' | 'complete' | 'error',
+    stage: 'uploading' as 'uploading' | 'processing' | 'transcribing' | 'detecting' | 'complete' | 'error',
     progress: 0,
     message: '',
     eta: '',
@@ -40,6 +41,7 @@ export default function Dashboard() {
         if (loginResponse.ok) {
           const data = await loginResponse.json();
           setToken(data.access_token);
+          setIsAuthReady(true);
           fetchProjects(data.access_token);
         } else {
           const registerResponse = await fetch('http://localhost:3000/v1/auth/register', {
@@ -55,6 +57,7 @@ export default function Dashboard() {
           if (registerResponse.ok) {
             const data = await registerResponse.json();
             setToken(data.access_token);
+            setIsAuthReady(true);
             fetchProjects(data.access_token);
           }
         }
@@ -79,8 +82,60 @@ export default function Dashboard() {
     }
   };
 
+  const pollProjectStatus = async (projectId: string) => {
+    const maxAttempts = 60; // 2 minutes max (2s interval)
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      try {
+        const response = await fetch(`http://localhost:3000/v1/projects/${projectId}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const project = await response.json();
+          
+          // Update status message
+          if (project.status === 'PENDING') {
+            setUploadState(prev => ({
+              ...prev,
+              message: 'Transcribing audio...',
+              eta: `${Math.max(1, Math.floor((maxAttempts - attempts) * 2 / 60))} min remaining`,
+            }));
+          } else if (project.status === 'DETECTING') {
+            setUploadState(prev => ({
+              ...prev,
+              message: 'Detecting highlights...',
+              eta: `${Math.max(1, Math.floor((maxAttempts - attempts) * 2 / 60))} min remaining`,
+            }));
+          } else if (project.status === 'READY') {
+            setUploadState(prev => ({
+              ...prev,
+              stage: 'complete',
+              message: 'Processing complete!',
+              eta: '',
+            }));
+            return; // Success!
+          } else if (project.status === 'FAILED') {
+            throw new Error('Processing failed');
+          }
+        }
+
+        // Wait 2 seconds before next poll
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+      } catch (error) {
+        console.error('Polling error:', error);
+        throw error;
+      }
+    }
+
+    // Timeout
+    throw new Error('Processing timeout - please refresh the page');
+  };
+
   const handleUpload = async (file: File, title: string, clipSettings?: any) => {
-    if (!token) {
+    if (!token || !isAuthReady) {
       alert('Please wait for authentication...');
       return;
     }
@@ -95,14 +150,18 @@ export default function Dashboard() {
     });
 
     try {
-      // Create project
+      // Create project with clip settings
+      console.log('📤 Sending clip settings:', clipSettings);
       const createResponse = await fetch('http://localhost:3000/v1/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ 
+          title,
+          settings: clipSettings 
+        }),
       });
 
       if (!createResponse.ok) throw new Error('Failed to create project');
@@ -152,79 +211,21 @@ export default function Dashboard() {
         xhr.send(formData);
       });
 
-      // Transcription phase (simulated progress)
+      // Upload complete - now wait for processing
       setUploadState({
-        stage: 'transcribing',
-        progress: 45,
-        message: 'Transcribing audio...',
-        eta: '2-5 min',
-        error: '',
-      });
-
-      // Wait a bit to simulate transcription
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Detection phase
-      setUploadState({
-        stage: 'detecting',
-        progress: 70,
-        message: 'Detecting clips...',
-        eta: '',
-        error: '',
-      });
-
-      // Trigger detection with clip settings
-      await fetch(`http://localhost:3000/v1/projects/${project.id}/detect`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ settings: clipSettings }),
-      });
-
-      // Wait for detection to complete (detection takes 3-5 seconds)
-      await new Promise(resolve => setTimeout(resolve, 5000));
-
-      // Update to 90% while we verify
-      setUploadState({
-        stage: 'detecting',
-        progress: 90,
-        message: 'Finalizing clips...',
-        eta: '',
-        error: '',
-      });
-
-      // Wait a bit more to ensure clips are saved
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Complete
-      setUploadState({
-        stage: 'complete',
+        stage: 'processing',
         progress: 100,
-        message: 'Processing complete!',
-        eta: '',
+        message: 'Upload complete! Processing video...',
+        eta: 'This may take 1-2 minutes',
         error: '',
       });
-
-      // Refresh projects to get updated data
-      await fetchProjects(token);
       
-      // Wait a moment to show success
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Poll for project completion
+      await pollProjectStatus(project.id);
       
-      // Close modal and reset
+      // Close modal and navigate
       setShowUploadModal(false);
       setIsUploading(false);
-      setUploadState({
-        stage: 'uploading',
-        progress: 0,
-        message: '',
-        eta: '',
-        error: '',
-      });
-      
-      // Navigate to project
       router.push(`/project/${project.id}`);
     } catch (error) {
       console.error('Upload error:', error);

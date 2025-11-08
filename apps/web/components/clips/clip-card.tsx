@@ -34,7 +34,7 @@ export function ClipCard({ clip, isSelected, onSelect }: ClipCardProps) {
           <div className="flex items-center gap-2 mb-2">
             <Zap className="w-4 h-4 text-yellow-500" />
             <span className="font-semibold text-sm">
-              {(clip.score * 100).toFixed(0)}% Match
+              {Math.round(clip.score)}% Match
             </span>
           </div>
           <p className="text-sm text-slate-600 mb-2">{clip.reason}</p>

@@ -14,6 +14,14 @@ interface Clip {
   score: number;
   aspectRatio: string;
   createdAt: string;
+  features?: {
+    hook?: number;
+    emotion?: number;
+    clarity?: number;
+    novelty?: number;
+    quote?: number;
+    structure?: number;
+  };
 }
 
 interface ClipsGridProps {
@@ -41,6 +49,7 @@ export default function ClipsGrid({
   className = "",
 }: ClipsGridProps) {
   const [playingClipId, setPlayingClipId] = useState<string | null>(null);
+  const [expandedScoreId, setExpandedScoreId] = useState<string | null>(null);
   
   const handlePlayClick = (clip: Clip) => {
     if (onClipPlay) {
@@ -48,6 +57,10 @@ export default function ClipsGrid({
     } else {
       setPlayingClipId(clip.id);
     }
+  };
+
+  const toggleScoreBreakdown = (clipId: string) => {
+    setExpandedScoreId(expandedScoreId === clipId ? null : clipId);
   };
 
   const formatDuration = (seconds: number) => {
@@ -96,10 +109,13 @@ export default function ClipsGrid({
                 {formatDuration(clip.duration)}
               </div>
 
-              {/* Score badge */}
-              <div className="absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs rounded font-medium">
-                {Math.round(clip.score * 100)}%
-              </div>
+              {/* Score badge - clickable */}
+              <button
+                onClick={() => toggleScoreBreakdown(clip.id)}
+                className="absolute top-2 left-2 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-medium transition-colors cursor-pointer"
+              >
+                {Math.round(clip.score)}% ▼
+              </button>
             </div>
 
             {/* Info */}
@@ -111,6 +127,51 @@ export default function ClipsGrid({
                 <p className="text-sm text-gray-500 mb-3 line-clamp-2">
                   {clip.description}
                 </p>
+              )}
+
+              {/* Score Breakdown - Expandable */}
+              {expandedScoreId === clip.id && clip.features && (
+                <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-xs font-semibold text-gray-700 mb-2">Score Breakdown</div>
+                  <div className="space-y-1">
+                    {clip.features.hook !== undefined && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">🎣 Hook</span>
+                        <span className="font-medium">{Math.round(clip.features.hook * 100)}%</span>
+                      </div>
+                    )}
+                    {clip.features.emotion !== undefined && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">😊 Emotion</span>
+                        <span className="font-medium">{Math.round(clip.features.emotion * 100)}%</span>
+                      </div>
+                    )}
+                    {clip.features.clarity !== undefined && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">🔊 Clarity</span>
+                        <span className="font-medium">{Math.round(clip.features.clarity * 100)}%</span>
+                      </div>
+                    )}
+                    {clip.features.quote !== undefined && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">💬 Quote</span>
+                        <span className="font-medium">{Math.round(clip.features.quote * 100)}%</span>
+                      </div>
+                    )}
+                    {clip.features.novelty !== undefined && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">✨ Novelty</span>
+                        <span className="font-medium">{Math.round(clip.features.novelty * 100)}%</span>
+                      </div>
+                    )}
+                    {clip.features.structure !== undefined && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">📐 Structure</span>
+                        <span className="font-medium">{Math.round(clip.features.structure * 100)}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* Actions */}

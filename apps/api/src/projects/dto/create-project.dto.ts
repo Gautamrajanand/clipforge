@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsObject } from 'class-validator';
 
 export class CreateProjectDto {
   @IsString()
@@ -7,4 +7,8 @@ export class CreateProjectDto {
   @IsOptional()
   @IsUrl()
   sourceUrl?: string;
+
+  @IsOptional()
+  @IsObject()
+  settings?: any;
 }

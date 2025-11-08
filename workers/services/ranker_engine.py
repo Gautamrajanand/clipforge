@@ -139,6 +139,8 @@ class RankerEngine:
         
         # Expand seeds to clips with windowing
         clips = []
+        seen_clips = set()  # Track (start, end) to avoid duplicates
+        
         for seed_segment, seed_features, seed_score in seed_points:
             clip = self._expand_to_clip(
                 seed_segment,
@@ -148,12 +150,18 @@ class RankerEngine:
                 seed_score
             )
             if clip:
-                clips.append(clip)
+                # Check for duplicates (same start/end within 1 second)
+                clip_key = (round(clip.start), round(clip.end))
+                if clip_key not in seen_clips:
+                    clips.append(clip)
+                    seen_clips.add(clip_key)
+                else:
+                    logger.debug(f"Skipping duplicate clip: {clip.start:.1f}s - {clip.end:.1f}s")
         
         # Sort by score descending
         clips.sort(key=lambda c: c.score, reverse=True)
         
-        logger.info(f"Generated {len(clips)} clips")
+        logger.info(f"Generated {len(clips)} unique clips (removed duplicates)")
         return clips[:num_clips]
     
     def _build_segments(
@@ -359,28 +367,51 @@ class RankerEngine:
         features: Dict[str, float],
         score: float
     ) -> Optional[ClipScore]:
-        """Expand seed segment to full clip with windowing"""
+        """Expand seed segment to full clip with intelligent boundaries"""
+        # Target duration is the midpoint between min and max
+        target_duration = (self.min_clip_duration + self.max_clip_duration) / 2
+        
         # Start with seed
         clip_start = seed.start
         clip_end = seed.end
+        seed_index = segments.index(seed)
         
-        # Expand backwards
-        for seg in reversed(segments):
-            if seg.end <= clip_start and (clip_start - seg.start) < self.max_clip_duration:
-                clip_start = seg.start
-            else:
-                break
+        # Calculate how much we need to expand
+        current_duration = clip_end - clip_start
+        needed_expansion = target_duration - current_duration
         
-        # Expand forwards
-        for seg in segments:
-            if seg.start >= clip_end and (seg.end - clip_start) < self.max_clip_duration:
-                clip_end = seg.end
-            else:
-                break
+        if needed_expansion > 0:
+            # Expand roughly equally in both directions
+            expand_before = needed_expansion / 2
+            expand_after = needed_expansion / 2
+            
+            # Expand backwards to sentence boundaries
+            for i in range(seed_index - 1, -1, -1):
+                seg = segments[i]
+                potential_start = seg.start
+                expansion = clip_start - potential_start
+                
+                if expansion <= expand_before:
+                    clip_start = potential_start
+                    expand_before -= expansion
+                else:
+                    break
+            
+            # Expand forwards to sentence boundaries
+            for i in range(seed_index + 1, len(segments)):
+                seg = segments[i]
+                potential_end = seg.end
+                expansion = potential_end - clip_end
+                
+                if expansion <= expand_after:
+                    clip_end = potential_end
+                    expand_after -= expansion
+                else:
+                    break
         
         duration = clip_end - clip_start
         
-        # Validate duration
+        # Enforce strict duration constraints
         if duration < self.min_clip_duration or duration > self.max_clip_duration:
             return None
         
@@ -388,11 +419,32 @@ class RankerEngine:
         clip_start = self._snap_to_silence(clip_start, words)
         clip_end = self._snap_to_silence(clip_end, words)
         
-        # Get clip text
+        # Get clip text and track segments used
         clip_text = ' '.join(
             w.text for w in words
             if clip_start <= w.start < clip_end
         )
+        
+        # Track which segments are included in this clip
+        segments_used = []
+        for seg in segments:
+            # Check if segment overlaps with clip
+            if not (seg.end <= clip_start or seg.start >= clip_end):
+                # Calculate overlap
+                overlap_start = max(seg.start, clip_start)
+                overlap_end = min(seg.end, clip_end)
+                overlap_duration = overlap_end - overlap_start
+                
+                if overlap_duration > 0.5:  # At least 0.5s overlap
+                    segments_used.append({
+                        'start': seg.start,
+                        'end': seg.end,
+                        'text': seg.text[:100],  # First 100 chars
+                        'speaker': seg.speaker
+                    })
+        
+        # Add segments to features
+        features_with_segments = {**features, 'segments': segments_used}
         
         # Generate reason
         reason = self._generate_reason(features)
@@ -402,31 +454,81 @@ class RankerEngine:
             end=clip_end,
             duration=clip_end - clip_start,
             score=score,
-            features=features,
+            features=features_with_segments,
             reason=reason,
             text=clip_text
         )
     
     def _snap_to_silence(self, time: float, words: List[Word]) -> float:
-        """Snap time to nearest silence (gap between words)"""
-        # Find nearest gap
-        gaps = []
+        """Snap time to nearest natural pause (silence, sentence end, breath)"""
+        # Find all potential cut points with quality scores
+        cut_points = []
+        
         for i in range(len(words) - 1):
             gap_start = words[i].end
             gap_end = words[i + 1].start
             gap_duration = gap_end - gap_start
             
-            if gap_duration > 0.2:  # At least 200ms gap
-                gaps.append((gap_start, gap_end, gap_duration))
+            # Only consider gaps of at least 150ms
+            if gap_duration < 0.15:
+                continue
+            
+            # Calculate quality score for this cut point
+            quality = 0
+            
+            # Longer gaps are better (natural pauses)
+            if gap_duration > 0.5:
+                quality += 10  # Long pause (breath, sentence end)
+            elif gap_duration > 0.3:
+                quality += 7   # Medium pause
+            elif gap_duration > 0.2:
+                quality += 4   # Short pause
+            else:
+                quality += 1   # Minimal pause
+            
+            # Check if previous word ends with punctuation (sentence boundary)
+            prev_word_text = words[i].text.strip()
+            if prev_word_text.endswith(('.', '!', '?')):
+                quality += 15  # Strong sentence boundary
+            elif prev_word_text.endswith((',', ';', ':')):
+                quality += 8   # Clause boundary
+            
+            # Check if next word starts with capital (sentence start)
+            next_word_text = words[i + 1].text.strip()
+            if next_word_text and next_word_text[0].isupper():
+                quality += 5
+            
+            # Avoid cutting between articles and nouns, prepositions, etc.
+            weak_cut_words = ['the', 'a', 'an', 'to', 'of', 'in', 'on', 'at', 'for', 'with']
+            if prev_word_text.lower() in weak_cut_words or next_word_text.lower() in weak_cut_words:
+                quality -= 5
+            
+            cut_points.append({
+                'time': gap_start,
+                'duration': gap_duration,
+                'quality': quality,
+                'distance': abs(gap_start - time)
+            })
         
-        if not gaps:
+        if not cut_points:
             return time
         
-        # Find closest gap
-        closest_gap = min(gaps, key=lambda g: abs(g[0] - time))
+        # Find best cut point within 2 seconds of target time
+        nearby_cuts = [cp for cp in cut_points if cp['distance'] <= 2.0]
         
-        # Snap to gap start
-        return closest_gap[0]
+        if not nearby_cuts:
+            # If no cuts within 2s, just use closest
+            return min(cut_points, key=lambda cp: cp['distance'])['time']
+        
+        # Score each cut point: balance quality vs distance
+        for cp in nearby_cuts:
+            # Prefer closer cuts, but quality matters more
+            distance_penalty = cp['distance'] * 3  # 3 points per second away
+            cp['final_score'] = cp['quality'] - distance_penalty
+        
+        # Return the best cut point
+        best_cut = max(nearby_cuts, key=lambda cp: cp['final_score'])
+        return best_cut['time']
     
     def _get_speaker_at_time(self, time: float, diarization: List[Dict]) -> Optional[str]:
         """Get speaker at given time from diarization"""

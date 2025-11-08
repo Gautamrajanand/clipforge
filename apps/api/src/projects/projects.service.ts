@@ -33,11 +33,23 @@ export class ProjectsService {
   }
 
   async create(orgId: string, dto: CreateProjectDto) {
+    // Process clip settings if provided
+    const clipSettings = dto.settings ? {
+      aspectRatio: dto.settings.aspectRatio || '16:9',
+      clipLength: dto.settings.clipLength || 60,
+      numberOfClips: dto.settings.numberOfClips || 5,
+      timeframe: dto.settings.timeframe,
+      targetPlatform: dto.settings.targetPlatform,
+    } : null;
+
+    console.log('📝 Creating project with settings:', JSON.stringify(clipSettings, null, 2));
+
     return this.prisma.project.create({
       data: {
         orgId,
         title: dto.title,
         sourceUrl: dto.sourceUrl,
+        clipSettings: clipSettings as any,
       },
     });
   }
@@ -105,9 +117,8 @@ export class ProjectsService {
       },
     });
 
-    // Simulate ML detection - create some mock moments asynchronously
-    // In production, this would enqueue a job to the ML workers
-    this.simulateDetection(projectId, clipSettings);
+    // Call ML worker for real detection
+    this.callMLWorkerDetection(projectId, clipSettings);
 
     return {
       projectId,
@@ -146,6 +157,52 @@ export class ProjectsService {
     } catch (error) {
       console.error('Error extracting transcript text:', error);
       return '';
+    }
+  }
+
+  /**
+   * Call ML worker for real clip detection
+   */
+  private async callMLWorkerDetection(projectId: string, settings?: any) {
+    try {
+      // Get transcript for this project
+      const transcript = await this.prisma.transcript.findUnique({
+        where: { projectId },
+      });
+
+      if (!transcript) {
+        console.error(`No transcript found for project ${projectId}`);
+        await this.prisma.project.update({
+          where: { id: projectId },
+          data: { status: 'FAILED' },
+        });
+        return;
+      }
+
+      // Call ML worker detection endpoint
+      const mlWorkerUrl = process.env.ML_WORKER_URL || 'http://ml-workers:8000';
+      const response = await fetch(`${mlWorkerUrl}/v1/ranker/detect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          transcriptId: transcript.id,
+          numClips: settings?.numberOfClips || 6,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`ML worker returned ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(`✅ Detection queued for project ${projectId}:`, result);
+    } catch (error) {
+      console.error(`❌ ML worker detection failed for ${projectId}:`, error);
+      await this.prisma.project.update({
+        where: { id: projectId },
+        data: { status: 'FAILED' },
+      });
     }
   }
 
@@ -335,8 +392,8 @@ export class ProjectsService {
     const stream = this.storage.getFileStream(project.sourceUrl);
 
     res.set({
-      'Content-Type': metadata.contentType || 'video/mp4',
-      'Content-Length': metadata.contentLength,
+      'Content-Type': metadata.ContentType || 'video/mp4',
+      'Content-Length': metadata.ContentLength,
       'Accept-Ranges': 'bytes',
     });
 
@@ -442,7 +499,7 @@ export class ProjectsService {
 
     res.set({
       'Content-Type': 'video/mp4',
-      'Content-Length': metadata.contentLength,
+      'Content-Length': metadata.ContentLength,
       'Content-Disposition': `attachment; filename="clip-${exportRecord.momentId}.mp4"`,
     });
 

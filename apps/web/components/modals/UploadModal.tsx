@@ -12,7 +12,7 @@ interface UploadModalProps {
   onUpload: (file: File, title: string, clipSettings?: ClipSettings) => void;
   isUploading?: boolean;
   uploadProgress?: number;
-  uploadStage?: 'uploading' | 'transcribing' | 'detecting' | 'complete' | 'error';
+  uploadStage?: 'uploading' | 'processing' | 'transcribing' | 'detecting' | 'complete' | 'error';
   uploadMessage?: string;
   uploadEta?: string;
   uploadError?: string;
@@ -33,7 +33,12 @@ export default function UploadModal({
   const [title, setTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [showClipSettings, setShowClipSettings] = useState(false);
-  const [clipSettings, setClipSettings] = useState<ClipSettings | undefined>();
+  const [clipSettings, setClipSettings] = useState<ClipSettings>({
+    clipLength: 45,
+    numberOfClips: 5,
+    aspectRatio: '16:9',
+    targetPlatform: 'youtube',
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
