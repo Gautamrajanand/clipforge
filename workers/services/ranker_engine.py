@@ -287,56 +287,95 @@ class RankerEngine:
         3. Tell a coherent story
         4. Sum to approximately target_duration
         """
-        # Tolerance for duration (±30%)
-        min_duration = target_duration * 0.7
-        max_duration = target_duration * 1.3
+        # Tolerance for duration (±50% for more flexibility)
+        min_duration = target_duration * 0.5
+        max_duration = target_duration * 1.5
+        
+        # Get top unused segments
+        available_segments = [
+            (seg, features, score)
+            for seg, features, score in segment_scores
+            if (seg.start, seg.end) not in used_segments
+        ]
+        
+        if not available_segments:
+            return []
         
         # Try to find 2-4 segments that work well together
         for num_segments in [3, 2, 4]:
-            # Get top unused segments
-            available_segments = [
-                (seg, features, score)
-                for seg, features, score in segment_scores
-                if (seg.start, seg.end) not in used_segments
-            ]
-            
             if len(available_segments) < num_segments:
                 continue
             
-            # Try different combinations
-            for i in range(len(available_segments) - num_segments + 1):
-                candidate_segments = available_segments[i:i + num_segments]
+            # Try combinations of top segments (not just consecutive)
+            # Take top 20 segments and try to find good combinations
+            top_segments = available_segments[:min(20, len(available_segments))]
+            
+            # Try different combinations by selecting segments that are well-spaced
+            for i in range(len(top_segments)):
+                if num_segments == 2:
+                    # For 2 segments, try pairing first with others
+                    for j in range(i + 1, len(top_segments)):
+                        candidate_segments = [top_segments[i], top_segments[j]]
+                        if self._is_valid_combination(candidate_segments, min_duration, max_duration):
+                            return self._create_clip_segments(candidate_segments)
                 
-                # Calculate total duration
-                total_duration = sum(seg.duration for seg, _, _ in candidate_segments)
+                elif num_segments == 3:
+                    # For 3 segments, try different triplets
+                    for j in range(i + 1, len(top_segments)):
+                        for k in range(j + 1, len(top_segments)):
+                            candidate_segments = [top_segments[i], top_segments[j], top_segments[k]]
+                            if self._is_valid_combination(candidate_segments, min_duration, max_duration):
+                                return self._create_clip_segments(candidate_segments)
                 
-                # Check if duration is acceptable
-                if min_duration <= total_duration <= max_duration:
-                    # Check if segments are well-spaced (at least 5s apart)
-                    segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
-                    well_spaced = True
-                    
-                    for j in range(len(segments_sorted) - 1):
-                        gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
-                        if gap < 5.0:  # Segments too close together
-                            well_spaced = False
-                            break
-                    
-                    if well_spaced:
-                        # Create ClipSegment objects
-                        clip_segments = []
-                        for order, (seg, features, score) in enumerate(segments_sorted, 1):
-                            clip_segments.append(ClipSegment(
-                                start=seg.start,
-                                end=seg.end,
-                                duration=seg.duration,
-                                score=score,
-                                text=seg.text,
-                                order=order
-                            ))
-                        return clip_segments
+                elif num_segments == 4:
+                    # For 4 segments, try quartets
+                    for j in range(i + 1, min(i + 10, len(top_segments))):  # Limit search space
+                        for k in range(j + 1, min(j + 10, len(top_segments))):
+                            for l in range(k + 1, min(k + 10, len(top_segments))):
+                                candidate_segments = [top_segments[i], top_segments[j], top_segments[k], top_segments[l]]
+                                if self._is_valid_combination(candidate_segments, min_duration, max_duration):
+                                    return self._create_clip_segments(candidate_segments)
         
         return []
+    
+    def _is_valid_combination(
+        self,
+        candidate_segments: List[Tuple],
+        min_duration: float,
+        max_duration: float
+    ) -> bool:
+        """Check if a segment combination is valid"""
+        # Calculate total duration
+        total_duration = sum(seg.duration for seg, _, _ in candidate_segments)
+        
+        # Check if duration is acceptable
+        if not (min_duration <= total_duration <= max_duration):
+            return False
+        
+        # Check if segments are well-spaced (at least 3s apart for more flexibility)
+        segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
+        
+        for j in range(len(segments_sorted) - 1):
+            gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
+            if gap < 3.0:  # Reduced from 5s to 3s for more flexibility
+                return False
+        
+        return True
+    
+    def _create_clip_segments(self, candidate_segments: List[Tuple]) -> List[ClipSegment]:
+        """Create ClipSegment objects from candidate segments"""
+        segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
+        clip_segments = []
+        for order, (seg, features, score) in enumerate(segments_sorted, 1):
+            clip_segments.append(ClipSegment(
+                start=seg.start,
+                end=seg.end,
+                duration=seg.duration,
+                score=score,
+                text=seg.text,
+                order=order
+            ))
+        return clip_segments
     
     def _create_multi_segment_clip(
         self,
