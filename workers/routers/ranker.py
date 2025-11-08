@@ -17,6 +17,12 @@ class RankerRequest(BaseModel):
     numClips: Optional[int] = 6
     clipLength: Optional[int] = 60
 
+class ProClipRequest(BaseModel):
+    projectId: str
+    transcriptId: str
+    numClips: Optional[int] = 3
+    targetDuration: Optional[float] = 45.0
+
 class ClipScoreResponse(BaseModel):
     tStart: float
     tEnd: float
@@ -607,6 +613,66 @@ def _generate_clip_description(text: str, title: str) -> str:
         return truncated[:last_space] + '...'
     
     return truncated + '...'
+
+@router.post("/detect-pro")
+async def detect_pro_clips(request: ProClipRequest):
+    """
+    Detect multi-segment Pro Clips
+    
+    Combines 2-4 high-value segments from different parts of the video
+    into cohesive clips, similar to Opus Clip.
+    """
+    try:
+        logger.info(f"🎬 Starting Pro Clip detection for project {request.projectId}")
+        
+        # Get transcript from database
+        db = DatabaseService()
+        transcript_data = db.get_transcript(request.projectId)
+        
+        if not transcript_data:
+            raise HTTPException(status_code=404, detail="Transcript not found")
+        
+        # Initialize ranker
+        ranker = RankerEngine()
+        
+        # Detect multi-segment clips
+        multi_clips = ranker.detect_multi_segment_clips(
+            words=transcript_data.get('words', []),
+            diarization=transcript_data.get('utterances', []),
+            num_clips=request.numClips,
+            target_duration=request.targetDuration,
+        )
+        
+        logger.info(f"✅ Detected {len(multi_clips)} Pro Clips")
+        
+        # Format response
+        result = []
+        for clip in multi_clips:
+            result.append({
+                'segments': [
+                    {
+                        'start': seg.start,
+                        'end': seg.end,
+                        'duration': seg.duration,
+                        'score': seg.score,
+                        'text': seg.text,
+                        'order': seg.order
+                    }
+                    for seg in clip.segments
+                ],
+                'total_duration': clip.total_duration,
+                'combined_score': clip.combined_score,
+                'features': clip.features,
+                'reason': clip.reason,
+                'full_text': clip.full_text
+            })
+        
+        db.close()
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Pro Clip detection failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/status/{projectId}")
 async def get_status(projectId: str):

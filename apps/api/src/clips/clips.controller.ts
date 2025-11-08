@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ClipsService } from './clips.service';
@@ -28,5 +28,25 @@ export class ClipsController {
       throw new Error('No organization found');
     }
     return this.clipsService.findOne(id, orgId);
+  }
+
+  @Post('pro')
+  @ApiOperation({ summary: 'Generate Pro Clips (multi-segment)' })
+  async generateProClips(
+    @Request() req,
+    @Param('projectId') projectId: string,
+    @Body() body: { numClips?: number; withCrossfade?: boolean },
+  ) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    
+    return this.clipsService.generateProClips(
+      projectId,
+      orgId,
+      body.numClips || 3,
+      body.withCrossfade || false,
+    );
   }
 }
