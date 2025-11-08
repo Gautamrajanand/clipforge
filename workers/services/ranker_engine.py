@@ -258,12 +258,17 @@ class RankerEngine:
             # Mark segments as used (track by original segment start/end before padding)
             # Find the original segments that match these clip segments
             for clip_seg in clip_segments:
-                # Find matching segment in segment_scores by looking for similar start times
-                # (accounting for the padding we added)
+                # Find matching segment in segment_scores
+                # The clip_seg has padding added (0.05s), so we need to reverse it
                 for seg, _, _ in segment_scores:
-                    # Check if this segment matches (within padding tolerance of 0.05s)
-                    if abs(seg.start - (clip_seg.start + 0.05)) < 0.15 or abs(seg.end - (clip_seg.end - 0.05)) < 0.15:
+                    # Check if this is the same segment (both start AND end must match)
+                    # Account for the 0.05s padding we added
+                    start_matches = abs(seg.start - (clip_seg.start + 0.05)) < 0.2
+                    end_matches = abs(seg.end - (clip_seg.end - 0.05)) < 0.2
+                    
+                    if start_matches and end_matches:
                         used_segments.add((seg.start, seg.end))
+                        logger.debug(f"Marked segment as used: {seg.start:.2f}-{seg.end:.2f}")
                         break
             
             # Create multi-segment clip
