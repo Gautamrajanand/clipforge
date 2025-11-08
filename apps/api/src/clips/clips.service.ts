@@ -93,7 +93,7 @@ export class ClipsService {
       throw new Error(`ML worker returned ${response.status}`);
     }
 
-    const multiClips = await response.json();
+    const multiClips = (await response.json()) as any[];
     
     this.logger.log(`✅ Detected ${multiClips.length} multi-segment clips`);
 
