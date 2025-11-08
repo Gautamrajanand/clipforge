@@ -627,18 +627,28 @@ async def detect_pro_clips(request: ProClipRequest):
         
         # Get transcript from database
         db = DatabaseService()
-        transcript_data = db.get_transcript(request.projectId)
+        transcript = db.get_transcript(project_id=request.projectId)
         
-        if not transcript_data:
+        if not transcript:
             raise HTTPException(status_code=404, detail="Transcript not found")
+        
+        # Extract words and diarization from transcript data
+        transcript_data = transcript.get('data', {})
+        words = transcript_data.get('words', [])
+        diarization = transcript_data.get('diarization', [])
+        
+        if not words:
+            raise HTTPException(status_code=400, detail="No words in transcript")
+        
+        logger.info(f"📝 Processing {len(words)} words from transcript")
         
         # Initialize ranker
         ranker = RankerEngine()
         
         # Detect multi-segment clips
         multi_clips = ranker.detect_multi_segment_clips(
-            words=transcript_data.get('words', []),
-            diarization=transcript_data.get('utterances', []),
+            words=words,
+            diarization=diarization,
             num_clips=request.numClips,
             target_duration=request.targetDuration,
         )
@@ -671,7 +681,9 @@ async def detect_pro_clips(request: ProClipRequest):
         return result
         
     except Exception as e:
+        import traceback
         logger.error(f"❌ Pro Clip detection failed: {str(e)}")
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/status/{projectId}")

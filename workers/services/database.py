@@ -31,14 +31,23 @@ class DatabaseService:
             logger.error(f"❌ Database connection failed: {e}")
             raise
     
-    def get_transcript(self, transcript_id: str) -> Optional[Dict[str, Any]]:
-        """Fetch transcript by ID"""
+    def get_transcript(self, transcript_id: str = None, project_id: str = None) -> Optional[Dict[str, Any]]:
+        """Fetch transcript by ID or projectId"""
         try:
             with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute(
-                    'SELECT * FROM "Transcript" WHERE id = %s',
-                    (transcript_id,)
-                )
+                if transcript_id:
+                    cur.execute(
+                        'SELECT * FROM "Transcript" WHERE id = %s',
+                        (transcript_id,)
+                    )
+                elif project_id:
+                    cur.execute(
+                        'SELECT * FROM "Transcript" WHERE "projectId" = %s',
+                        (project_id,)
+                    )
+                else:
+                    return None
+                    
                 result = cur.fetchone()
                 if result:
                     return dict(result)
