@@ -255,10 +255,16 @@ class RankerEngine:
                 logger.warning(f"Could not find segment combination for clip {clip_idx + 1}")
                 continue
             
-            # Mark segments as used (use original times before padding)
-            for seg, _, _ in [(s, f, sc) for s, f, sc in segment_scores 
-                             if any(cs.text == s.text for cs in clip_segments)]:
-                used_segments.add((seg.start, seg.end))
+            # Mark segments as used (track by original segment start/end before padding)
+            # Find the original segments that match these clip segments
+            for clip_seg in clip_segments:
+                # Find matching segment in segment_scores by looking for similar start times
+                # (accounting for the padding we added)
+                for seg, _, _ in segment_scores:
+                    # Check if this segment matches (within padding tolerance of 0.05s)
+                    if abs(seg.start - (clip_seg.start + 0.05)) < 0.15 or abs(seg.end - (clip_seg.end - 0.05)) < 0.15:
+                        used_segments.add((seg.start, seg.end))
+                        break
             
             # Create multi-segment clip
             multi_clip = self._create_multi_segment_clip(
@@ -457,9 +463,9 @@ class RankerEngine:
         segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
         clip_segments = []
         
-        # Add 0.1s padding before/after each segment to avoid abrupt cuts
-        # Minimal padding for tight, precise cuts
-        PADDING = 0.1
+        # Add 0.05s padding before/after each segment to avoid abrupt cuts
+        # Ultra-minimal padding for very tight, precise cuts
+        PADDING = 0.05
         
         for order, (seg, features, score) in enumerate(segments_sorted, 1):
             # Add padding, but don't go below 0

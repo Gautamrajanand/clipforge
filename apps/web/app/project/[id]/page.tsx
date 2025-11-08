@@ -26,7 +26,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     maxLength: 180,
   });
   const [isDetecting, setIsDetecting] = useState(false);
-  const [isGeneratingSmartClips, setIsGeneratingSmartClips] = useState(false);
 
   useEffect(() => {
     const getToken = async () => {
@@ -215,39 +214,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     }
   };
 
-  const handleGenerateSmartClips = async () => {
-    setIsGeneratingSmartClips(true);
-    try {
-      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/clips/pro`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          numClips: clipSettings.clipCount,
-          targetDuration: clipSettings.clipLength, // Use the actual clip length from settings
-          withCrossfade: false, // Disable crossfade (FFmpeg complex filter issues)
-        }),
-      });
-
-      if (response.ok) {
-        const proClips = await response.json();
-        console.log('Smart Clips generated:', proClips);
-        // Refresh project data to get new Smart Clips
-        await fetchProjectData(token);
-        alert(`✨ ${proClips.length} Smart Clips generated successfully!`);
-      } else {
-        const error = await response.text();
-        alert(`Failed to generate Smart Clips: ${error}`);
-      }
-    } catch (error) {
-      console.error('Smart Clips generation error:', error);
-      alert('Failed to generate Smart Clips');
-    } finally {
-      setIsGeneratingSmartClips(false);
-    }
-  };
 
   const handleDownloadExport = async (exportId: string) => {
     try {
@@ -314,15 +280,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               <button className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
                 <Share2 className="w-4 h-4" />
                 Share
-              </button>
-              <button
-                onClick={handleGenerateSmartClips}
-                disabled={isGeneratingSmartClips || !project?.transcript}
-                className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                title="Generate Smart Clips with multi-segment stitching"
-              >
-                <Sparkles className="w-4 h-4" />
-                {isGeneratingSmartClips ? 'Generating Smart Clips...' : '✨ Smart Clips'}
               </button>
               <button
                 onClick={handleExport}
