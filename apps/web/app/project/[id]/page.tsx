@@ -193,7 +193,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         },
         body: JSON.stringify({
           numClips: 3,
-          withCrossfade: true, // Enable crossfade for smoother transitions
+          targetDuration: 45, // Use the clip length setting from UI
+          withCrossfade: false, // Disable crossfade (FFmpeg complex filter issues)
         }),
       });
 

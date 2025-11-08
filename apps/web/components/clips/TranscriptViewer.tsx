@@ -63,7 +63,7 @@ export default function TranscriptViewer({
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-gray-600" />
           <span className="font-medium text-gray-900">
-            {isMultiSegment ? "Multi-Segment Clip" : "Clip Transcript"}
+            Transcript
           </span>
           <span className="text-sm text-gray-500">
             ({segments.length} {segments.length === 1 ? "segment" : "segments"}, {formatDuration(clipDuration)})

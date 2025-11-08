@@ -320,8 +320,9 @@ class RankerEngine:
                 
                 for j in range(len(segments_sorted) - 1):
                     gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
-                    # Segments must be within 30 seconds to be "consecutive"
-                    if gap > 30.0:
+                    # Segments must be within 60 seconds to be "consecutive"
+                    # Relaxed from 30s to allow for longer videos with related topics
+                    if gap > 60.0:
                         is_consecutive = False
                         break
                 
