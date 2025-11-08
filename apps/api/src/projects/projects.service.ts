@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
 import { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -11,6 +11,8 @@ import * as path from 'path';
 
 @Injectable()
 export class ProjectsService {
+  private readonly logger = new Logger(ProjectsService.name);
+
   constructor(
     private prisma: PrismaService,
     private storage: StorageService,
@@ -436,19 +438,39 @@ export class ProjectsService {
     const exports = [];
 
     for (const moment of moments) {
-      // Cut the video segment
-      const outputPath = this.video.getTempFilePath('.mp4');
-      await this.video.cutVideoSegment(
-        sourcePath,
-        outputPath,
-        moment.tStart,
-        moment.tEnd,
-      );
+      let clipKey: string;
+      
+      // Check if this is a Pro Clip (multi-segment)
+      const features = moment.features as any;
+      const isProClip = features?.isProClip && moment.proxyUrl;
+      
+      if (isProClip) {
+        // Pro Clip: Use the already-generated multi-segment video
+        this.logger.log(`Exporting Pro Clip ${moment.id} (multi-segment)`);
+        clipKey = `projects/${projectId}/exports/${moment.id}.mp4`;
+        
+        // Copy the Pro Clip from proxyUrl to exports location
+        const proClipBuffer = await this.storage.downloadFile(moment.proxyUrl);
+        await this.storage.uploadFile(clipKey, proClipBuffer, 'video/mp4');
+      } else {
+        // Regular clip: Cut from source video
+        this.logger.log(`Exporting regular clip ${moment.id}`);
+        const outputPath = this.video.getTempFilePath('.mp4');
+        await this.video.cutVideoSegment(
+          sourcePath,
+          outputPath,
+          moment.tStart,
+          moment.tEnd,
+        );
 
-      // Upload the clip to MinIO
-      const clipBuffer = await fs.readFile(outputPath);
-      const clipKey = `projects/${projectId}/exports/${moment.id}.mp4`;
-      await this.storage.uploadFile(clipKey, clipBuffer, 'video/mp4');
+        // Upload the clip to MinIO
+        const clipBuffer = await fs.readFile(outputPath);
+        clipKey = `projects/${projectId}/exports/${moment.id}.mp4`;
+        await this.storage.uploadFile(clipKey, clipBuffer, 'video/mp4');
+
+        // Cleanup temp file
+        await this.video.cleanupTempFile(outputPath);
+      }
 
       // Create export record
       const exportRecord = await this.prisma.export.create({
@@ -464,9 +486,6 @@ export class ProjectsService {
       });
 
       exports.push(exportRecord);
-
-      // Cleanup temp file
-      await this.video.cleanupTempFile(outputPath);
     }
 
     // Cleanup source temp file
