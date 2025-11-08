@@ -48,6 +48,29 @@ class ClipScore:
     text: str
 
 
+@dataclass
+class ClipSegment:
+    """Individual segment within a multi-segment clip"""
+    start: float
+    end: float
+    duration: float
+    score: float
+    text: str
+    order: int  # Order in the final clip (1, 2, 3...)
+
+
+@dataclass
+class MultiSegmentClip:
+    """Multi-segment clip composed of multiple non-contiguous segments"""
+    segments: List[ClipSegment]
+    total_duration: float
+    combined_score: float
+    features: Dict[str, float]
+    reason: str
+    full_text: str
+    is_multi_segment: bool = True
+
+
 class RankerEngine:
     """Heuristic-based highlight detection"""
     
@@ -163,6 +186,193 @@ class RankerEngine:
         
         logger.info(f"Generated {len(clips)} unique clips (removed duplicates)")
         return clips[:num_clips]
+    
+    def detect_multi_segment_clips(
+        self,
+        words: List[Dict],
+        diarization: List[Dict],
+        audio_features: Optional[Dict] = None,
+        vision_features: Optional[Dict] = None,
+        num_clips: int = 3,
+        target_duration: float = 45.0,
+    ) -> List[MultiSegmentClip]:
+        """
+        Detect multi-segment clips by combining high-value non-contiguous segments
+        
+        This creates Pro Clips that stitch together the best moments from different
+        parts of the video, similar to Opus Clip's approach.
+        
+        Args:
+            words: List of word dicts
+            diarization: Speaker segments
+            audio_features: Optional audio data
+            vision_features: Optional vision data
+            num_clips: Number of multi-segment clips to generate
+            target_duration: Target total duration for each clip (seconds)
+            
+        Returns:
+            List of MultiSegmentClip objects
+        """
+        logger.info(f"🎬 Detecting multi-segment clips (target: {target_duration}s)")
+        
+        # Convert to Word objects
+        word_objs = [Word(**w) for w in words]
+        
+        # Build segments
+        segments = self._build_segments(word_objs, diarization)
+        
+        # Score all segments
+        segment_scores = []
+        for segment in segments:
+            features = self._extract_features(
+                segment,
+                word_objs,
+                audio_features,
+                vision_features,
+                segments
+            )
+            score = self._compute_score(features)
+            segment_scores.append((segment, features, score))
+        
+        # Sort segments by score
+        segment_scores.sort(key=lambda x: x[2], reverse=True)
+        
+        # Generate multi-segment clips
+        multi_clips = []
+        used_segments = set()  # Track which segments are already used
+        
+        for clip_idx in range(num_clips):
+            # Find combination of segments that work well together
+            clip_segments = self._find_segment_combination(
+                segment_scores,
+                used_segments,
+                target_duration,
+                word_objs
+            )
+            
+            if not clip_segments:
+                logger.warning(f"Could not find segment combination for clip {clip_idx + 1}")
+                continue
+            
+            # Mark segments as used
+            for seg in clip_segments:
+                used_segments.add((seg.start, seg.end))
+            
+            # Create multi-segment clip
+            multi_clip = self._create_multi_segment_clip(
+                clip_segments,
+                word_objs
+            )
+            
+            if multi_clip:
+                multi_clips.append(multi_clip)
+                logger.info(f"✅ Created multi-segment clip {clip_idx + 1}: "
+                          f"{len(clip_segments)} segments, "
+                          f"{multi_clip.total_duration:.1f}s, "
+                          f"score: {multi_clip.combined_score:.0f}")
+        
+        return multi_clips
+    
+    def _find_segment_combination(
+        self,
+        segment_scores: List[Tuple[Segment, Dict, float]],
+        used_segments: set,
+        target_duration: float,
+        words: List[Word],
+    ) -> List[ClipSegment]:
+        """
+        Find the best combination of segments that:
+        1. Are not already used
+        2. Have high scores
+        3. Tell a coherent story
+        4. Sum to approximately target_duration
+        """
+        # Tolerance for duration (±30%)
+        min_duration = target_duration * 0.7
+        max_duration = target_duration * 1.3
+        
+        # Try to find 2-4 segments that work well together
+        for num_segments in [3, 2, 4]:
+            # Get top unused segments
+            available_segments = [
+                (seg, features, score)
+                for seg, features, score in segment_scores
+                if (seg.start, seg.end) not in used_segments
+            ]
+            
+            if len(available_segments) < num_segments:
+                continue
+            
+            # Try different combinations
+            for i in range(len(available_segments) - num_segments + 1):
+                candidate_segments = available_segments[i:i + num_segments]
+                
+                # Calculate total duration
+                total_duration = sum(seg.duration for seg, _, _ in candidate_segments)
+                
+                # Check if duration is acceptable
+                if min_duration <= total_duration <= max_duration:
+                    # Check if segments are well-spaced (at least 5s apart)
+                    segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
+                    well_spaced = True
+                    
+                    for j in range(len(segments_sorted) - 1):
+                        gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
+                        if gap < 5.0:  # Segments too close together
+                            well_spaced = False
+                            break
+                    
+                    if well_spaced:
+                        # Create ClipSegment objects
+                        clip_segments = []
+                        for order, (seg, features, score) in enumerate(segments_sorted, 1):
+                            clip_segments.append(ClipSegment(
+                                start=seg.start,
+                                end=seg.end,
+                                duration=seg.duration,
+                                score=score,
+                                text=seg.text,
+                                order=order
+                            ))
+                        return clip_segments
+        
+        return []
+    
+    def _create_multi_segment_clip(
+        self,
+        clip_segments: List[ClipSegment],
+        words: List[Word],
+    ) -> Optional[MultiSegmentClip]:
+        """Create a MultiSegmentClip from segments"""
+        if not clip_segments:
+            return None
+        
+        # Calculate combined metrics
+        total_duration = sum(seg.duration for seg in clip_segments)
+        combined_score = sum(seg.score for seg in clip_segments) / len(clip_segments)
+        
+        # Combine text
+        full_text = ' [...] '.join(seg.text for seg in clip_segments)
+        
+        # Aggregate features (average across segments)
+        # For now, use placeholder features
+        features = {
+            'hook': combined_score / 100,
+            'multi_segment': 1.0,
+            'segment_count': len(clip_segments)
+        }
+        
+        # Generate reason
+        reason = f"Multi-segment clip with {len(clip_segments)} high-value moments"
+        
+        return MultiSegmentClip(
+            segments=clip_segments,
+            total_duration=total_duration,
+            combined_score=combined_score,
+            features=features,
+            reason=reason,
+            full_text=full_text
+        )
     
     def _build_segments(
         self,
