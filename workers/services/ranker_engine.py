@@ -301,12 +301,12 @@ class RankerEngine:
         if not available_segments:
             return []
         
-        # Strategy: ONLY use consecutive segments for perfect coherence
-        # This ensures Pro Clips are high-quality and make sense
-        # Better to return 0 clips than incoherent ones (paid feature)
+        # Strategy: Use AI to validate coherence instead of strict time constraints
+        # This allows segments from different parts of video if they're topically related
+        # Better for longer videos (podcasts, interviews, etc.)
         
-        # Build list of consecutive segment groups
-        consecutive_groups = []
+        # Build list of candidate segment groups
+        candidate_groups = []
         for i in range(len(available_segments)):
             for num_segments in [4, 3, 2]:  # Try longer clips first
                 if i + num_segments > len(available_segments):
@@ -314,31 +314,20 @@ class RankerEngine:
                 
                 candidate_segments = available_segments[i:i + num_segments]
                 
-                # Check if these segments are actually consecutive in time
-                segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
-                is_consecutive = True
-                
-                for j in range(len(segments_sorted) - 1):
-                    gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
-                    # Segments must be within 60 seconds to be "consecutive"
-                    # Relaxed from 30s to allow for longer videos with related topics
-                    if gap > 60.0:
-                        is_consecutive = False
-                        break
-                
-                if is_consecutive and self._is_valid_combination(candidate_segments, min_duration, max_duration):
+                # Check if combination is valid (duration, gaps, coherence)
+                if self._is_valid_combination(candidate_segments, min_duration, max_duration):
                     # Calculate average score for this group
                     avg_score = sum(score for _, _, score in candidate_segments) / len(candidate_segments)
-                    consecutive_groups.append((candidate_segments, avg_score))
+                    candidate_groups.append((candidate_segments, avg_score))
         
-        # Return the highest-scoring consecutive group
-        if consecutive_groups:
-            consecutive_groups.sort(key=lambda x: x[1], reverse=True)
-            best_group = consecutive_groups[0][0]
-            logger.info(f"Found {len(best_group)} consecutive segments with avg score {consecutive_groups[0][1]:.2f}")
+        # Return the highest-scoring valid group
+        if candidate_groups:
+            candidate_groups.sort(key=lambda x: x[1], reverse=True)
+            best_group = candidate_groups[0][0]
+            logger.info(f"Found {len(best_group)} segments with avg score {candidate_groups[0][1]:.2f}")
             return self._create_clip_segments(best_group)
         
-        logger.info("No consecutive high-quality segments found")
+        logger.info("No valid segment combinations found")
         return []
     
     def _is_valid_combination(
@@ -366,8 +355,10 @@ class RankerEngine:
             if gap < 3.0:
                 return False
         
-        # No need for AI coherence check since we only use consecutive segments
-        # Consecutive segments are guaranteed to be coherent (same conversation)
+        # Use AI to check semantic coherence
+        # This allows segments from different parts of video if topically related
+        if not self._check_semantic_coherence(segments_sorted):
+            return False
         
         return True
     

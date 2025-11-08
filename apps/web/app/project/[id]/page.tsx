@@ -192,8 +192,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          numClips: 3,
-          targetDuration: 45, // Use the clip length setting from UI
+          numClips: clipSettings.clipCount,
+          targetDuration: clipSettings.clipLength, // Use the actual clip length from settings
           withCrossfade: false, // Disable crossfade (FFmpeg complex filter issues)
         }),
       });
