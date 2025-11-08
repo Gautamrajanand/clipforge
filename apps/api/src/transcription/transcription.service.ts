@@ -89,6 +89,7 @@ export class TranscriptionService {
         create: {
           projectId,
           language: transcript.language_code || 'en',
+          status: 'COMPLETED',
           data: {
             words,
             text: transcript.text,
@@ -98,6 +99,7 @@ export class TranscriptionService {
         },
         update: {
           language: transcript.language_code || 'en',
+          status: 'COMPLETED',
           data: {
             words,
             text: transcript.text,

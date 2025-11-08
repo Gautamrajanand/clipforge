@@ -77,6 +77,7 @@ export class ProjectsService {
         assets: true,
         moments: { orderBy: { score: 'desc' } },
         exports: { orderBy: { createdAt: 'desc' }, take: 10 },
+        transcript: true,
       },
     });
 
