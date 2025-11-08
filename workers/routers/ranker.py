@@ -655,9 +655,15 @@ async def detect_pro_clips(request: ProClipRequest):
         
         logger.info(f"✅ Detected {len(multi_clips)} Pro Clips")
         
-        # Format response
+        # Format response with AI-generated titles and descriptions
         result = []
-        for clip in multi_clips:
+        for i, clip in enumerate(multi_clips, 1):
+            # Generate AI title and description
+            ai_title = _generate_ai_title(clip.full_text)
+            ai_description = _generate_ai_description(clip.full_text, ai_title or f"Pro Clip {i}")
+            
+            logger.info(f"✨ Pro Clip {i} - Title: {ai_title}")
+            
             result.append({
                 'segments': [
                     {
@@ -674,7 +680,9 @@ async def detect_pro_clips(request: ProClipRequest):
                 'combined_score': clip.combined_score,
                 'features': clip.features,
                 'reason': clip.reason,
-                'full_text': clip.full_text
+                'full_text': clip.full_text,
+                'title': ai_title or f"Pro Clip {i}",
+                'description': ai_description or clip.reason
             })
         
         db.close()

@@ -152,8 +152,8 @@ export class ClipsService {
             tStart: multiClip.segments[0].start,
             tEnd: multiClip.segments[multiClip.segments.length - 1].end,
             duration: multiClip.total_duration,
-            title: `Pro Clip ${i + 1}`, // TODO: Generate AI title
-            description: multiClip.reason,
+            title: multiClip.title || `Pro Clip ${i + 1}`, // Use AI-generated title from ML worker
+            description: multiClip.description || multiClip.reason,
             score: scorePercentage, // Store as percentage (0-100)
             aspectRatio: '16:9',
             proxyUrl: clipKey, // Store the MinIO key for video playback
