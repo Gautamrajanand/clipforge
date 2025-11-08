@@ -142,6 +142,10 @@ export class ClipsService {
         // Clean up temp output file
         await fs.unlink(outputPath).catch(() => {});
       
+        // Convert score from 0-1 range to 0-100 percentage
+        const scorePercentage = Math.round(multiClip.combined_score * 100);
+        this.logger.log(`Pro Clip ${i + 1} score: ${multiClip.combined_score} -> ${scorePercentage}%`);
+        
         const moment = await this.prisma.moment.create({
           data: {
             projectId,
@@ -150,7 +154,7 @@ export class ClipsService {
             duration: multiClip.total_duration,
             title: `Pro Clip ${i + 1}`, // TODO: Generate AI title
             description: multiClip.reason,
-            score: multiClip.combined_score,
+            score: scorePercentage, // Store as percentage (0-100)
             aspectRatio: '16:9',
             proxyUrl: clipKey, // Store the MinIO key for video playback
             features: {
