@@ -444,9 +444,11 @@ export class ProjectsService {
       const features = moment.features as any;
       const isProClip = features?.isProClip && moment.proxyUrl;
       
+      this.logger.log(`Moment ${moment.id}: isProClip=${features?.isProClip}, hasProxyUrl=${!!moment.proxyUrl}, proxyUrl=${moment.proxyUrl}`);
+      
       if (isProClip) {
         // Pro Clip: Use the already-generated multi-segment video
-        this.logger.log(`Exporting Pro Clip ${moment.id} (multi-segment)`);
+        this.logger.log(`Exporting Pro Clip ${moment.id} (multi-segment) from ${moment.proxyUrl}`);
         clipKey = `projects/${projectId}/exports/${moment.id}.mp4`;
         
         // Copy the Pro Clip from proxyUrl to exports location
@@ -454,7 +456,7 @@ export class ProjectsService {
         await this.storage.uploadFile(clipKey, proClipBuffer, 'video/mp4');
       } else {
         // Regular clip: Cut from source video
-        this.logger.log(`Exporting regular clip ${moment.id}`);
+        this.logger.log(`Exporting regular clip ${moment.id} (${moment.tStart}s - ${moment.tEnd}s)`);
         const outputPath = this.video.getTempFilePath('.mp4');
         await this.video.cutVideoSegment(
           sourcePath,
