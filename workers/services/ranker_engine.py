@@ -244,32 +244,24 @@ class RankerEngine:
         
         for clip_idx in range(num_clips):
             # Find combination of segments that work well together
-            clip_segments = self._find_segment_combination(
+            # Returns (clip_segments, original_segments_used)
+            result = self._find_segment_combination(
                 segment_scores,
                 used_segments,
                 target_duration,
                 word_objs
             )
             
-            if not clip_segments:
+            if not result:
                 logger.warning(f"Could not find segment combination for clip {clip_idx + 1}")
                 continue
             
-            # Mark segments as used (track by original segment start/end before padding)
-            # Find the original segments that match these clip segments
-            for clip_seg in clip_segments:
-                # Find matching segment in segment_scores
-                # The clip_seg has padding added (0.05s), so we need to reverse it
-                for seg, _, _ in segment_scores:
-                    # Check if this is the same segment (both start AND end must match)
-                    # Account for the 0.05s padding we added
-                    start_matches = abs(seg.start - (clip_seg.start + 0.05)) < 0.2
-                    end_matches = abs(seg.end - (clip_seg.end - 0.05)) < 0.2
-                    
-                    if start_matches and end_matches:
-                        used_segments.add((seg.start, seg.end))
-                        logger.debug(f"Marked segment as used: {seg.start:.2f}-{seg.end:.2f}")
-                        break
+            clip_segments, original_segments = result
+            
+            # Mark original segments as used BEFORE creating the clip
+            for seg, _, _ in original_segments:
+                used_segments.add((seg.start, seg.end))
+                logger.debug(f"Marked segment as used: {seg.start:.2f}-{seg.end:.2f}")
             
             # Create multi-segment clip
             multi_clip = self._create_multi_segment_clip(
@@ -346,12 +338,14 @@ class RankerEngine:
                     total_dur = sum(seg.duration for seg, _, _ in candidate_segments)
                     if self._is_valid_combination_fast(candidate_segments, min_duration, max_duration):
                         logger.info(f"✅ Found {num_segments} consecutive segments (total: {total_dur:.1f}s, target: {min_duration:.1f}-{max_duration:.1f}s)")
-                        return self._create_clip_segments(candidate_segments)
+                        # Return both padded clip_segments AND original candidate_segments
+                        clip_segments = self._create_clip_segments(candidate_segments)
+                        return (clip_segments, candidate_segments)
                     else:
                         logger.debug(f"❌ Consecutive segments rejected - duration {total_dur:.1f}s outside range {min_duration:.1f}-{max_duration:.1f}s")
         
         logger.info("No consecutive segment combinations found")
-        return []
+        return None
     
     def _is_valid_combination_fast(
         self,

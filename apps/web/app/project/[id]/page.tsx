@@ -86,7 +86,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          numClips: clipSettings.clipCount,
+          numClips: 10, // Try to generate up to 10, but return however many are actually found
           targetDuration: clipSettings.clipLength,
           withCrossfade: false,
         }),
