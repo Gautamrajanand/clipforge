@@ -287,10 +287,10 @@ class RankerEngine:
         3. Tell a coherent story
         4. Sum to approximately target_duration
         """
-        # Tolerance for duration (±70% for more flexibility with Pro Clips)
-        # Pro Clips are harder to find, so we need more tolerance
-        min_duration = target_duration * 0.3
-        max_duration = target_duration * 2.0
+        # Tolerance for duration - aim for target but allow some flexibility
+        # For Pro Clips, we want to get close to the target duration
+        min_duration = target_duration * 0.7  # At least 70% of target
+        max_duration = target_duration * 1.3  # At most 130% of target
         
         # Get top unused segments
         available_segments = [
@@ -433,7 +433,7 @@ class RankerEngine:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a video editing assistant. Determine if the following segments from a video transcript could work together in a short-form video clip. The segments don't need to be perfect - they just need to be related enough that a viewer wouldn't be confused. Be lenient - if there's ANY thematic connection or if they're part of the same general conversation, answer YES. Only answer NO if the segments are completely unrelated topics (e.g., cooking + sports + politics). Answer with ONLY 'YES' or 'NO'."
+                        "content": "You are a video editing assistant evaluating if segments should be combined into a premium Pro Clip. The segments MUST tell a coherent, flowing story about the SAME specific topic. Be strict - only answer YES if the segments clearly build on each other or discuss the exact same subject. Answer NO if segments jump between different topics, even if loosely related. For example: 'Tiger Triumph exercise' + 'US-India relations' = NO (different topics). 'US-India trade' + 'US-India security' + 'US-India partnership' = YES (same topic). Answer with ONLY 'YES' or 'NO'."
                     },
                     {
                         "role": "user",
@@ -459,14 +459,23 @@ class RankerEngine:
             return True  # Allow if check fails
     
     def _create_clip_segments(self, candidate_segments: List[Tuple]) -> List[ClipSegment]:
-        """Create ClipSegment objects from candidate segments"""
+        """Create ClipSegment objects from candidate segments with padding"""
         segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
         clip_segments = []
+        
+        # Add 0.5s padding before/after each segment to avoid abrupt cuts
+        PADDING = 0.5
+        
         for order, (seg, features, score) in enumerate(segments_sorted, 1):
+            # Add padding, but don't go below 0
+            padded_start = max(0, seg.start - PADDING)
+            padded_end = seg.end + PADDING
+            padded_duration = padded_end - padded_start
+            
             clip_segments.append(ClipSegment(
-                start=seg.start,
-                end=seg.end,
-                duration=seg.duration,
+                start=padded_start,
+                end=padded_end,
+                duration=padded_duration,
                 score=score,
                 text=seg.text,
                 order=order
