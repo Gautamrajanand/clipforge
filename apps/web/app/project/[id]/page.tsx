@@ -311,16 +311,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
             </div>
           )}
 
-          {/* Clip Detection Settings */}
-          <div className="mb-8">
-            <ClipSettings
-              settings={clipSettings}
-              onChange={setClipSettings}
-              onDetect={handleDetectClips}
-              isDetecting={isDetecting}
-            />
-          </div>
-
           {/* AI-Detected Clips Grid */}
           {clips.length > 0 && (
             <div className="mb-8">
