@@ -26,6 +26,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     maxLength: 180,
   });
   const [isDetecting, setIsDetecting] = useState(false);
+  const [isGeneratingProClips, setIsGeneratingProClips] = useState(false);
 
   useEffect(() => {
     const getToken = async () => {
@@ -181,6 +182,39 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleGenerateProClips = async () => {
+    setIsGeneratingProClips(true);
+    try {
+      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/clips/pro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          numClips: 3,
+          withCrossfade: true,
+        }),
+      });
+
+      if (response.ok) {
+        const proClips = await response.json();
+        console.log('Pro Clips generated:', proClips);
+        // Refresh project data to get new Pro Clips
+        await fetchProjectData(token);
+        alert(`✨ ${proClips.length} Pro Clips generated successfully!`);
+      } else {
+        const error = await response.text();
+        alert(`Failed to generate Pro Clips: ${error}`);
+      }
+    } catch (error) {
+      console.error('Pro Clips generation error:', error);
+      alert('Failed to generate Pro Clips');
+    } finally {
+      setIsGeneratingProClips(false);
+    }
+  };
+
   const handleDownloadExport = async (exportId: string) => {
     try {
       const response = await fetch(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
@@ -246,6 +280,15 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               <button className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
                 <Share2 className="w-4 h-4" />
                 Share
+              </button>
+              <button
+                onClick={handleGenerateProClips}
+                disabled={isGeneratingProClips || !project?.transcript}
+                className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                title="Generate Pro Clips with multi-segment stitching"
+              >
+                <Sparkles className="w-4 h-4" />
+                {isGeneratingProClips ? 'Generating Pro Clips...' : '✨ Pro Clips'}
               </button>
               <button
                 onClick={handleExport}
