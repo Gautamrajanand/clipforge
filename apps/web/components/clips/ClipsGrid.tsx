@@ -31,6 +31,7 @@ interface Clip {
     quote?: number;
     structure?: number;
     segments?: TranscriptSegment[];
+    isProClip?: boolean;
   };
 }
 
@@ -85,10 +86,16 @@ export default function ClipsGrid({
     <>
       {/* Clips grid */}
       <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
-        {clips.map((clip) => (
+        {clips.map((clip) => {
+          const isProClip = clip.features?.isProClip;
+          return (
           <div
             key={clip.id}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+            className={`bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all ${
+              isProClip 
+                ? 'border-2 border-purple-300 hover:border-purple-400 ring-2 ring-purple-100' 
+                : 'border border-gray-200'
+            }`}
           >
             {/* Thumbnail */}
             <div className="relative aspect-video bg-gray-900 group cursor-pointer">
@@ -118,6 +125,13 @@ export default function ClipsGrid({
               <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
                 {formatDuration(clip.duration)}
               </div>
+
+              {/* PRO badge for multi-segment clips */}
+              {clip.features?.isProClip && (
+                <div className="absolute top-2 right-2 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg">
+                  ✨ PRO
+                </div>
+              )}
 
               {/* Score badge - clickable */}
               <button
@@ -245,7 +259,8 @@ export default function ClipsGrid({
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Empty state */}
