@@ -287,10 +287,11 @@ class RankerEngine:
         3. Tell a coherent story
         4. Sum to approximately target_duration
         """
-        # Tolerance for duration - aim for target but allow some flexibility
-        # For Pro Clips, we want to get close to the target duration
-        min_duration = target_duration * 0.7  # At least 70% of target
-        max_duration = target_duration * 1.3  # At most 130% of target
+        # Tolerance for duration - balance between target and availability
+        # For consecutive segments: more flexible (harder to find)
+        # For AI-validated: stricter (we're already being selective)
+        min_duration = target_duration * 0.6  # At least 60% of target (27s for 45s)
+        max_duration = target_duration * 1.5  # At most 150% of target (67.5s for 45s)
         
         # Get top unused segments
         available_segments = [
@@ -307,8 +308,8 @@ class RankerEngine:
         
         # First, try consecutive segments (fast, no AI needed)
         for num_segments in [3, 2, 4]:
-            # Only check top 20 segments to limit search space
-            top_segments = available_segments[:min(20, len(available_segments))]
+            # Check top 30 segments for consecutive combinations
+            top_segments = available_segments[:min(30, len(available_segments))]
             
             for i in range(len(top_segments) - num_segments + 1):
                 candidate_segments = top_segments[i:i + num_segments]
@@ -329,16 +330,16 @@ class RankerEngine:
                         return self._create_clip_segments(candidate_segments)
         
         # If no consecutive segments found, try AI-validated combinations (slower)
-        # Limit to top 10 segments and only try a few combinations
+        # Limit search to avoid too many API calls
         logger.info("No consecutive segments found, trying AI-validated combinations...")
-        top_10 = available_segments[:min(10, len(available_segments))]
+        top_15 = available_segments[:min(15, len(available_segments))]
         
         for num_segments in [3, 2]:  # Only try 2-3 segments for AI validation
-            for i in range(min(5, len(top_10))):  # Only try first 5 positions
-                if i + num_segments > len(top_10):
+            for i in range(min(10, len(top_15))):  # Try first 10 positions
+                if i + num_segments > len(top_15):
                     continue
                     
-                candidate_segments = top_10[i:i + num_segments]
+                candidate_segments = top_15[i:i + num_segments]
                 
                 # Use AI validation for non-consecutive segments
                 if self._is_valid_combination(candidate_segments, min_duration, max_duration):
