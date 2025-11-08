@@ -440,9 +440,13 @@ class RankerEngine:
                     diarization
                 )
                 
+                # Add small padding to avoid cutting words (100ms before, 100ms after)
+                padded_start = max(0, current_start - 0.1)
+                padded_end = segment_end + 0.1
+                
                 segments.append(Segment(
-                    start=current_start,
-                    end=segment_end,
+                    start=padded_start,
+                    end=padded_end,
                     text=segment_text,
                     speaker=speaker
                 ))
@@ -458,9 +462,14 @@ class RankerEngine:
                 (current_start + segment_end) / 2,
                 diarization
             )
+            
+            # Add small padding to avoid cutting words
+            padded_start = max(0, current_start - 0.1)
+            padded_end = segment_end + 0.1
+            
             segments.append(Segment(
-                start=current_start,
-                end=segment_end,
+                start=padded_start,
+                end=padded_end,
                 text=segment_text,
                 speaker=speaker
             ))
