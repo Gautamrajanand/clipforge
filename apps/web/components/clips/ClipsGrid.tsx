@@ -126,10 +126,10 @@ export default function ClipsGrid({
                 {formatDuration(clip.duration)}
               </div>
 
-              {/* PRO badge for multi-segment clips */}
+              {/* SMART badge for multi-segment clips */}
               {clip.features?.isProClip && (
                 <div className="absolute top-2 right-2 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg">
-                  ✨ PRO
+                  ✨ SMART
                 </div>
               )}
 
@@ -157,7 +157,7 @@ export default function ClipsGrid({
               {expandedScoreId === clip.id && clip.features && (
                 <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="text-xs font-semibold text-gray-700 mb-2">
-                    {isProClip ? 'Pro Clip Features' : 'Score Breakdown'}
+                    {isProClip ? 'Smart Clip Features' : 'Score Breakdown'}
                   </div>
                   {isProClip ? (
                     // Pro Clip: Show segment info and aggregate features

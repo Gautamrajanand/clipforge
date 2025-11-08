@@ -457,8 +457,9 @@ class RankerEngine:
         segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
         clip_segments = []
         
-        # Add 0.5s padding before/after each segment to avoid abrupt cuts
-        PADDING = 0.5
+        # Add 0.2s padding before/after each segment to avoid abrupt cuts
+        # Reduced from 0.5s to prevent bleeding into next word
+        PADDING = 0.2
         
         for order, (seg, features, score) in enumerate(segments_sorted, 1):
             # Add padding, but don't go below 0
