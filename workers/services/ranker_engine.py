@@ -375,7 +375,62 @@ class RankerEngine:
             if gap > 120.0:  # 2 minutes
                 return False
         
+        # Check semantic coherence using AI
+        if not self._check_semantic_coherence(segments_sorted):
+            return False
+        
         return True
+    
+    def _check_semantic_coherence(self, segments_sorted: List[Tuple]) -> bool:
+        """Use OpenAI to check if segments form a coherent story"""
+        import os
+        
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            logger.warning("OpenAI API key not found, skipping coherence check")
+            return True  # Allow if no API key
+        
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+            
+            # Build combined text from segments
+            segment_texts = []
+            for i, (seg, _, _) in enumerate(segments_sorted, 1):
+                segment_texts.append(f"Segment {i}: {seg.text}")
+            
+            combined_text = "\n".join(segment_texts)
+            
+            # Ask GPT if these segments form a coherent clip
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a video editing assistant. Determine if the following segments from a video transcript would form a coherent, engaging clip when stitched together. The segments should be about the same topic or tell a related story. Answer with ONLY 'YES' or 'NO'."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Would these segments form a coherent clip?\n\n{combined_text}"
+                    }
+                ],
+                max_tokens=10,
+                temperature=0.3
+            )
+            
+            answer = response.choices[0].message.content.strip().upper()
+            is_coherent = answer.startswith('YES')
+            
+            if not is_coherent:
+                logger.info(f"❌ Segments rejected by AI coherence check")
+            else:
+                logger.info(f"✅ Segments approved by AI coherence check")
+            
+            return is_coherent
+            
+        except Exception as e:
+            logger.error(f"AI coherence check failed: {str(e)}")
+            return True  # Allow if check fails
     
     def _create_clip_segments(self, candidate_segments: List[Tuple]) -> List[ClipSegment]:
         """Create ClipSegment objects from candidate segments"""
