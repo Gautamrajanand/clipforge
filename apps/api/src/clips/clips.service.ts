@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FFmpegService } from '../video/ffmpeg.service';
+import { StorageService } from '../storage/storage.service';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 @Injectable()
 export class ClipsService {
@@ -9,6 +12,7 @@ export class ClipsService {
   constructor(
     private prisma: PrismaService,
     private ffmpegService: FFmpegService,
+    private storage: StorageService,
   ) {}
 
   async findByProject(projectId: string, orgId: string) {
@@ -97,28 +101,36 @@ export class ClipsService {
     
     this.logger.log(`✅ Detected ${multiClips.length} multi-segment clips`);
 
-    // Generate video files for each multi-segment clip
-    const generatedClips = [];
+    // Download source video from MinIO to temp file
+    this.logger.log('📥 Downloading source video from storage...');
+    const sourceBuffer = await this.storage.downloadFile(videoAsset.url);
+    const sourcePath = `/tmp/source_${projectId}${path.extname(videoAsset.url)}`;
+    await fs.writeFile(sourcePath, sourceBuffer);
+    this.logger.log(`✅ Downloaded source video: ${sourcePath}`);
 
-    for (let i = 0; i < multiClips.length; i++) {
-      const multiClip = multiClips[i];
-      
-      this.logger.log(`🎬 Processing Pro Clip ${i + 1}/${multiClips.length}`);
+    try {
+      // Generate video files for each multi-segment clip
+      const generatedClips = [];
 
-      // Create output path
-      const outputPath = `/tmp/pro_clip_${projectId}_${i}.mp4`;
+      for (let i = 0; i < multiClips.length; i++) {
+        const multiClip = multiClips[i];
+        
+        this.logger.log(`🎬 Processing Pro Clip ${i + 1}/${multiClips.length}`);
 
-      // Stitch segments using FFmpeg
-      await this.ffmpegService.createMultiSegmentClip(
-        videoAsset.url, // Source video
-        multiClip.segments.map((seg: any) => ({
-          start: seg.start,
-          end: seg.end,
-          order: seg.order,
-        })),
-        outputPath,
-        withCrossfade,
-      );
+        // Create output path
+        const outputPath = `/tmp/pro_clip_${projectId}_${i}.mp4`;
+
+        // Stitch segments using FFmpeg
+        await this.ffmpegService.createMultiSegmentClip(
+          sourcePath, // Local file path
+          multiClip.segments.map((seg: any) => ({
+            start: seg.start,
+            end: seg.end,
+            order: seg.order,
+          })),
+          outputPath,
+          withCrossfade,
+        );
 
       // TODO: Upload to MinIO and create Moment record
       // For now, just save metadata
@@ -142,13 +154,19 @@ export class ClipsService {
         },
       });
 
-      generatedClips.push(moment);
-      
-      this.logger.log(`✅ Pro Clip ${i + 1} created: ${moment.id}`);
+        generatedClips.push(moment);
+        
+        this.logger.log(`✅ Pro Clip ${i + 1} created: ${moment.id}`);
+      }
+
+      this.logger.log(`🎉 Generated ${generatedClips.length} Pro Clips successfully`);
+
+      return generatedClips;
+    } finally {
+      // Clean up temp source file
+      await fs.unlink(sourcePath).catch((err) => {
+        this.logger.warn(`Failed to clean up temp source file: ${err.message}`);
+      });
     }
-
-    this.logger.log(`🎉 Generated ${generatedClips.length} Pro Clips successfully`);
-
-    return generatedClips;
   }
 }
