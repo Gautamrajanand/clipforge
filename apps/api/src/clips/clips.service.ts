@@ -132,27 +132,35 @@ export class ClipsService {
           withCrossfade,
         );
 
-      // TODO: Upload to MinIO and create Moment record
-      // For now, just save metadata
+        // Upload Pro Clip to MinIO
+        this.logger.log(`📤 Uploading Pro Clip ${i + 1} to storage...`);
+        const clipBuffer = await fs.readFile(outputPath);
+        const clipKey = `projects/${projectId}/pro_clip_${i + 1}_${Date.now()}.mp4`;
+        await this.storage.uploadFile(clipKey, clipBuffer, 'video/mp4');
+        this.logger.log(`✅ Uploaded to storage: ${clipKey}`);
+        
+        // Clean up temp output file
+        await fs.unlink(outputPath).catch(() => {});
       
-      const moment = await this.prisma.moment.create({
-        data: {
-          projectId,
-          tStart: multiClip.segments[0].start,
-          tEnd: multiClip.segments[multiClip.segments.length - 1].end,
-          duration: multiClip.total_duration,
-          title: `Pro Clip ${i + 1}`, // TODO: Generate AI title
-          description: multiClip.reason,
-          score: multiClip.combined_score,
-          aspectRatio: '16:9',
-          features: {
-            ...multiClip.features,
-            segments: multiClip.segments,
-            isProClip: true,
-            withCrossfade,
+        const moment = await this.prisma.moment.create({
+          data: {
+            projectId,
+            tStart: multiClip.segments[0].start,
+            tEnd: multiClip.segments[multiClip.segments.length - 1].end,
+            duration: multiClip.total_duration,
+            title: `Pro Clip ${i + 1}`, // TODO: Generate AI title
+            description: multiClip.reason,
+            score: multiClip.combined_score,
+            aspectRatio: '16:9',
+            proxyUrl: clipKey, // Store the MinIO key for video playback
+            features: {
+              ...multiClip.features,
+              segments: multiClip.segments,
+              isProClip: true,
+              withCrossfade,
+            },
           },
-        },
-      });
+        });
 
         generatedClips.push(moment);
         
