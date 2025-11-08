@@ -303,50 +303,35 @@ class RankerEngine:
         if not available_segments:
             return []
         
-        # Strategy: Try top-scoring consecutive segments first, then use AI for non-consecutive
-        # This balances speed (consecutive is fast) with quality (AI for non-consecutive)
+        # Strategy: ONLY use consecutive segments (simple and reliable)
+        # Consecutive segments are naturally coherent (same conversation)
+        # No AI needed - faster and more predictable
         
-        # First, try consecutive segments (fast, no AI needed)
+        # Try consecutive segments with flexible gap tolerance
         for num_segments in [3, 2, 4]:
-            # Check top 30 segments for consecutive combinations
-            top_segments = available_segments[:min(30, len(available_segments))]
+            # Check top 40 segments for more opportunities
+            top_segments = available_segments[:min(40, len(available_segments))]
             
             for i in range(len(top_segments) - num_segments + 1):
                 candidate_segments = top_segments[i:i + num_segments]
                 
-                # Check if consecutive in time (within 60s gaps)
+                # Check if consecutive in time (within 90s gaps for more flexibility)
                 segments_sorted = sorted(candidate_segments, key=lambda x: x[0].start)
                 is_consecutive = True
                 for j in range(len(segments_sorted) - 1):
                     gap = segments_sorted[j + 1][0].start - segments_sorted[j][0].end
-                    if gap > 60.0:
+                    # Increased from 60s to 90s for longer videos
+                    if gap > 90.0:
                         is_consecutive = False
                         break
                 
-                # If consecutive, skip AI check (guaranteed coherent)
+                # If consecutive and valid duration, use it
                 if is_consecutive:
                     if self._is_valid_combination_fast(candidate_segments, min_duration, max_duration):
-                        logger.info(f"Found {num_segments} consecutive segments (no AI check needed)")
+                        logger.info(f"Found {num_segments} consecutive segments (gaps within 90s)")
                         return self._create_clip_segments(candidate_segments)
         
-        # If no consecutive segments found, try AI-validated combinations (slower)
-        # Limit search to avoid too many API calls
-        logger.info("No consecutive segments found, trying AI-validated combinations...")
-        top_15 = available_segments[:min(15, len(available_segments))]
-        
-        for num_segments in [3, 2]:  # Only try 2-3 segments for AI validation
-            for i in range(min(10, len(top_15))):  # Try first 10 positions
-                if i + num_segments > len(top_15):
-                    continue
-                    
-                candidate_segments = top_15[i:i + num_segments]
-                
-                # Use AI validation for non-consecutive segments
-                if self._is_valid_combination(candidate_segments, min_duration, max_duration):
-                    logger.info(f"Found {num_segments} AI-validated segments")
-                    return self._create_clip_segments(candidate_segments)
-        
-        logger.info("No valid segment combinations found")
+        logger.info("No consecutive segment combinations found")
         return []
     
     def _is_valid_combination_fast(
