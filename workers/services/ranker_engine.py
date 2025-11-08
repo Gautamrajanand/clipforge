@@ -287,11 +287,11 @@ class RankerEngine:
         3. Tell a coherent story
         4. Sum to approximately target_duration
         """
-        # Tolerance for duration - balance between target and availability
-        # For consecutive segments: more flexible (harder to find)
-        # For AI-validated: stricter (we're already being selective)
-        min_duration = target_duration * 0.6  # At least 60% of target (27s for 45s)
-        max_duration = target_duration * 1.5  # At most 150% of target (67.5s for 45s)
+        # Tolerance for duration - very flexible to ensure we find clips
+        # Pro Clips are premium multi-segment clips - finding good combinations is hard
+        # Better to have clips that are somewhat off-target than no clips at all
+        min_duration = target_duration * 0.4  # At least 40% of target (18s for 45s)
+        max_duration = target_duration * 2.0  # At most 200% of target (90s for 45s)
         
         # Get top unused segments
         available_segments = [
