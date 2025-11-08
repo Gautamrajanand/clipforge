@@ -287,9 +287,10 @@ class RankerEngine:
         3. Tell a coherent story
         4. Sum to approximately target_duration
         """
-        # Tolerance for duration (±50% for more flexibility)
-        min_duration = target_duration * 0.5
-        max_duration = target_duration * 1.5
+        # Tolerance for duration (±70% for more flexibility with Pro Clips)
+        # Pro Clips are harder to find, so we need more tolerance
+        min_duration = target_duration * 0.3
+        max_duration = target_duration * 2.0
         
         # Get top unused segments
         available_segments = [
