@@ -156,45 +156,72 @@ export default function ClipsGrid({
               {/* Score Breakdown - Expandable */}
               {expandedScoreId === clip.id && clip.features && (
                 <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-xs font-semibold text-gray-700 mb-2">Score Breakdown</div>
-                  <div className="space-y-1">
-                    {clip.features.hook !== undefined && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">🎣 Hook</span>
-                        <span className="font-medium">{Math.round(clip.features.hook * 100)}%</span>
-                      </div>
-                    )}
-                    {clip.features.emotion !== undefined && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">😊 Emotion</span>
-                        <span className="font-medium">{Math.round(clip.features.emotion * 100)}%</span>
-                      </div>
-                    )}
-                    {clip.features.clarity !== undefined && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">🔊 Clarity</span>
-                        <span className="font-medium">{Math.round(clip.features.clarity * 100)}%</span>
-                      </div>
-                    )}
-                    {clip.features.quote !== undefined && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">💬 Quote</span>
-                        <span className="font-medium">{Math.round(clip.features.quote * 100)}%</span>
-                      </div>
-                    )}
-                    {clip.features.novelty !== undefined && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">✨ Novelty</span>
-                        <span className="font-medium">{Math.round(clip.features.novelty * 100)}%</span>
-                      </div>
-                    )}
-                    {clip.features.structure !== undefined && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">📐 Structure</span>
-                        <span className="font-medium">{Math.round(clip.features.structure * 100)}%</span>
-                      </div>
-                    )}
+                  <div className="text-xs font-semibold text-gray-700 mb-2">
+                    {isProClip ? 'Pro Clip Features' : 'Score Breakdown'}
                   </div>
+                  {isProClip ? (
+                    // Pro Clip: Show segment info and aggregate features
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">🎬 Segments</span>
+                        <span className="font-medium">{clip.features.segments?.length || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">⏱️ Duration</span>
+                        <span className="font-medium">{formatDuration(clip.duration)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">✨ Quality</span>
+                        <span className="font-medium">{Math.round(clip.score)}%</span>
+                      </div>
+                      {clip.features.avg_segment_score !== undefined && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">📊 Avg Segment</span>
+                          <span className="font-medium">{Math.round(clip.features.avg_segment_score * 100)}%</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Regular Clip: Show detailed feature scores
+                    <div className="space-y-1">
+                      {clip.features.hook !== undefined && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">🎣 Hook</span>
+                          <span className="font-medium">{Math.round(clip.features.hook * 100)}%</span>
+                        </div>
+                      )}
+                      {clip.features.emotion !== undefined && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">😊 Emotion</span>
+                          <span className="font-medium">{Math.round(clip.features.emotion * 100)}%</span>
+                        </div>
+                      )}
+                      {clip.features.clarity !== undefined && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">🔊 Clarity</span>
+                          <span className="font-medium">{Math.round(clip.features.clarity * 100)}%</span>
+                        </div>
+                      )}
+                      {clip.features.quote !== undefined && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">💬 Quote</span>
+                          <span className="font-medium">{Math.round(clip.features.quote * 100)}%</span>
+                        </div>
+                      )}
+                      {clip.features.novelty !== undefined && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">✨ Novelty</span>
+                          <span className="font-medium">{Math.round(clip.features.novelty * 100)}%</span>
+                        </div>
+                      )}
+                      {clip.features.structure !== undefined && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">📐 Structure</span>
+                          <span className="font-medium">{Math.round(clip.features.structure * 100)}%</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
