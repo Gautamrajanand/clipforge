@@ -458,4 +458,67 @@ export class FFmpegService {
       });
     }
   }
+
+  /**
+   * Burn captions into video using subtitle file
+   * Supports SRT, VTT, and ASS formats
+   * 
+   * @param inputPath - Path to input video file
+   * @param outputPath - Path to save video with burned captions
+   * @param captionPath - Path to caption file (SRT, VTT, or ASS)
+   * @returns Promise<void>
+   */
+  async burnCaptions(
+    inputPath: string,
+    outputPath: string,
+    captionPath: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const captionExt = path.extname(captionPath).toLowerCase();
+      
+      // Determine subtitle filter based on file type
+      let subtitleFilter: string;
+      if (captionExt === '.ass' || captionExt === '.ssa') {
+        // ASS/SSA format with advanced styling
+        subtitleFilter = `ass=${captionPath.replace(/\\/g, '\\\\').replace(/:/g, '\\:')}`;
+      } else {
+        // SRT/VTT format (basic styling)
+        subtitleFilter = `subtitles=${captionPath.replace(/\\/g, '\\\\').replace(/:/g, '\\:')}`;
+      }
+
+      this.logger.log(`Burning captions from ${captionPath} into video`);
+
+      ffmpeg(inputPath)
+        .videoFilters(subtitleFilter)
+        .outputOptions([
+          '-c:v libx264',     // H.264 codec
+          '-preset medium',   // Balance speed and quality
+          '-crf 20',          // Premium quality
+          '-profile:v high',  // High profile
+          '-level 4.2',       // Wide compatibility
+          '-pix_fmt yuv420p', // Maximum compatibility
+          '-movflags +faststart', // Fast streaming
+          '-c:a copy',        // Copy audio (no re-encoding)
+        ])
+        .output(outputPath)
+        .on('start', (commandLine) => {
+          this.logger.debug(`FFmpeg command: ${commandLine}`);
+        })
+        .on('progress', (progress) => {
+          if (progress.percent) {
+            this.logger.debug(`Burning captions: ${progress.percent.toFixed(1)}%`);
+          }
+        })
+        .on('end', () => {
+          this.logger.log(`✅ Captions burned successfully: ${outputPath}`);
+          resolve();
+        })
+        .on('error', (err, stdout, stderr) => {
+          this.logger.error(`FFmpeg error: ${err.message}`);
+          this.logger.error(`FFmpeg stderr: ${stderr}`);
+          reject(err);
+        })
+        .run();
+    });
+  }
 }
