@@ -295,9 +295,9 @@ class RankerEngine:
         4. Sum to approximately target_duration
         """
         # Tolerance for duration - very permissive to ensure clips are found
-        # Pro Clips are about multi-segment stitching, not hitting exact duration
+        # Smart Clips are about multi-segment stitching, not hitting exact duration
         # Better to have clips of varying lengths than no clips at all
-        min_duration = 8.0  # Minimum viable clip length
+        min_duration = 18.0  # Minimum 18s - shorter clips lack sufficient content
         max_duration = 120.0  # Maximum to prevent overly long clips
         
         # Get top unused segments
