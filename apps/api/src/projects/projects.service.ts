@@ -6,6 +6,7 @@ import { VideoService } from '../video/video.service';
 import { FFmpegService } from '../video/ffmpeg.service';
 import { AIService } from '../ai/ai.service';
 import { TranscriptionService } from '../transcription/transcription.service';
+import { CaptionsService } from '../captions/captions.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -21,6 +22,7 @@ export class ProjectsService {
     private ffmpeg: FFmpegService,
     private ai: AIService,
     private transcription: TranscriptionService,
+    private captions: CaptionsService,
   ) {}
 
   // Helper to convert BigInt to number for JSON serialization
@@ -493,6 +495,16 @@ export class ProjectsService {
           await this.video.cleanupTempFile(proClipPath);
         }
         
+        // Apply caption burning if requested
+        if (burnCaptions) {
+          this.logger.log(`Burning captions for Pro Clip ${moment.id}`);
+          const captionedPath = this.video.getTempFilePath('.mp4');
+          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle);
+          // Clean up the non-captioned file
+          await this.video.cleanupTempFile(finalPath);
+          finalPath = captionedPath;
+        }
+        
         // Upload the final clip
         const finalBuffer = await fs.readFile(finalPath);
         clipKey = `projects/${projectId}/exports/${moment.id}.mp4`;
@@ -526,6 +538,16 @@ export class ProjectsService {
           finalPath = convertedPath;
           // Clean up the cut file
           await this.video.cleanupTempFile(cutPath);
+        }
+
+        // Apply caption burning if requested
+        if (burnCaptions) {
+          this.logger.log(`Burning captions for clip ${moment.id}`);
+          const captionedPath = this.video.getTempFilePath('.mp4');
+          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle);
+          // Clean up the non-captioned file
+          await this.video.cleanupTempFile(finalPath);
+          finalPath = captionedPath;
         }
 
         // Upload the final clip to MinIO
@@ -565,6 +587,69 @@ export class ProjectsService {
       message: `Exported ${exports.length} clips successfully`,
       exports,
     };
+  }
+
+  /**
+   * Helper method to burn captions for a moment
+   * Fetches transcript words for the moment's time range and generates captions
+   */
+  private async burnCaptionsForMoment(
+    moment: any,
+    inputPath: string,
+    outputPath: string,
+    captionStyle: string,
+  ): Promise<void> {
+    try {
+      // Fetch the project's transcript
+      const project = await this.prisma.project.findUnique({
+        where: { id: moment.projectId },
+        include: {
+          transcript: true,
+        },
+      });
+
+      const transcriptData = project?.transcript?.data as any;
+      if (!transcriptData?.words) {
+        this.logger.warn(`No transcript found for project ${moment.projectId}, skipping captions`);
+        // Just copy the file if no transcript
+        await fs.copyFile(inputPath, outputPath);
+        return;
+      }
+
+      // Extract words for this moment's time range
+      const words = (transcriptData.words as any[])
+        .filter((w: any) => w.start >= moment.tStart && w.end <= moment.tEnd)
+        .map((w: any) => ({
+          text: w.text,
+          start: w.start - moment.tStart, // Adjust to clip time
+          end: w.end - moment.tStart,
+          confidence: w.confidence || 1.0,
+          speaker: w.speaker,
+        }));
+
+      if (words.length === 0) {
+        this.logger.warn(`No words found for moment ${moment.id}, skipping captions`);
+        await fs.copyFile(inputPath, outputPath);
+        return;
+      }
+
+      // Generate caption file based on style
+      const captionPath = this.video.getTempFilePath('.ass'); // Use ASS for styling
+      const captionContent = this.captions.generateASS(words, {
+        preset: captionStyle as any,
+      });
+      await fs.writeFile(captionPath, captionContent, 'utf-8');
+
+      // Burn captions into video
+      await this.ffmpeg.burnCaptions(inputPath, outputPath, captionPath);
+
+      // Cleanup caption file
+      await this.video.cleanupTempFile(captionPath);
+    } catch (error) {
+      this.logger.error(`Failed to burn captions: ${error.message}`);
+      // Fallback: copy without captions
+      await fs.copyFile(inputPath, outputPath);
+    }
   }
 
   async downloadExport(exportId: string, orgId: string, res: Response) {

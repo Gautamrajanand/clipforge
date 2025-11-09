@@ -8,9 +8,10 @@ import { AIModule } from '../ai/ai.module';
 import { TranscriptionModule } from '../transcription/transcription.module';
 import { VideoService } from '../video/video.service';
 import { FFmpegService } from '../video/ffmpeg.service';
+import { CaptionsModule } from '../captions/captions.module';
 
 @Module({
-  imports: [PrismaModule, JobsModule, StorageModule, AIModule, TranscriptionModule],
+  imports: [PrismaModule, JobsModule, StorageModule, AIModule, TranscriptionModule, CaptionsModule],
   providers: [ProjectsService, VideoService, FFmpegService],
   controllers: [ProjectsController],
   exports: [ProjectsService],

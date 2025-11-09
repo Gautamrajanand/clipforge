@@ -14,6 +14,7 @@ import { UsageModule } from './usage/usage.module';
 import { JobsModule } from './jobs/jobs.module';
 import { StorageModule } from './storage/storage.module';
 import { ProxyModule } from './proxy/proxy.module';
+import { CaptionsModule } from './captions/captions.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ProxyModule } from './proxy/proxy.module';
     JobsModule,
     StorageModule,
     ProxyModule,
+    CaptionsModule,
   ],
 })
 export class AppModule {}
