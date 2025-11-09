@@ -521,4 +521,66 @@ export class FFmpegService {
         .run();
     });
   }
+
+  /**
+   * Overlay caption frames onto video (for animated captions)
+   * 
+   * @param inputPath - Path to input video file
+   * @param outputPath - Path to save video with overlaid captions
+   * @param framePattern - Pattern for caption frames (e.g., 'frames/caption_%06d.png')
+   * @param fps - Frames per second (default 30)
+   * @returns Promise<void>
+   */
+  async overlayCaptionFrames(
+    inputPath: string,
+    outputPath: string,
+    framePattern: string,
+    fps: number = 30,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.logger.log(`Overlaying caption frames from pattern: ${framePattern}`);
+
+      ffmpeg(inputPath)
+        .input(framePattern)
+        .inputOptions([`-framerate ${fps}`])
+        .complexFilter([
+          {
+            filter: 'overlay',
+            options: {
+              x: 0,
+              y: 0,
+            },
+          },
+        ])
+        .outputOptions([
+          '-c:v libx264',
+          '-preset medium',
+          '-crf 20',
+          '-profile:v high',
+          '-level 4.2',
+          '-pix_fmt yuv420p',
+          '-movflags +faststart',
+          '-c:a copy',
+        ])
+        .output(outputPath)
+        .on('start', (commandLine) => {
+          this.logger.debug(`FFmpeg command: ${commandLine}`);
+        })
+        .on('progress', (progress) => {
+          if (progress.percent) {
+            this.logger.debug(`Overlaying captions: ${progress.percent.toFixed(1)}%`);
+          }
+        })
+        .on('end', () => {
+          this.logger.log(`✅ Caption frames overlaid successfully: ${outputPath}`);
+          resolve();
+        })
+        .on('error', (err, stdout, stderr) => {
+          this.logger.error(`FFmpeg error: ${err.message}`);
+          this.logger.error(`FFmpeg stderr: ${stderr}`);
+          reject(err);
+        })
+        .run();
+    });
+  }
 }
