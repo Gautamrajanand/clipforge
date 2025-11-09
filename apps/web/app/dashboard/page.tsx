@@ -134,6 +134,14 @@ export default function Dashboard() {
     throw new Error('Processing timeout - please refresh the page');
   };
 
+  const handleOpenUploadModal = () => {
+    if (!isAuthReady) {
+      alert('Please wait, loading...');
+      return;
+    }
+    setShowUploadModal(true);
+  };
+
   const handleUpload = async (file: File, title: string, clipSettings?: any) => {
     if (!token || !isAuthReady) {
       alert('Please wait for authentication...');
@@ -320,7 +328,7 @@ export default function Dashboard() {
                 title="Video Editor"
                 icon={Scissors}
                 color="blue"
-                onClick={() => setShowUploadModal(true)}
+                onClick={handleOpenUploadModal}
               />
               <FeatureCard
                 title="Audio Editor"
@@ -340,7 +348,7 @@ export default function Dashboard() {
                 icon={Sparkles}
                 gradientFrom="from-purple-400"
                 gradientTo="to-purple-600"
-                onClick={() => setShowUploadModal(true)}
+                onClick={handleOpenUploadModal}
               />
               <AIToolCard
                 title="AI Text to Speech"
@@ -413,7 +421,7 @@ export default function Dashboard() {
                 Create your first project to get started
               </p>
               <button
-                onClick={() => setShowUploadModal(true)}
+                onClick={handleOpenUploadModal}
                 className="bg-gray-900 hover:bg-gray-800 text-white font-medium px-6 py-3 rounded-lg inline-flex items-center gap-2 transition-colors"
               >
                 + Create Project

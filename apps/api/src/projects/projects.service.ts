@@ -470,11 +470,36 @@ export class ProjectsService {
       if (isProClip) {
         // Pro Clip: Use the already-generated multi-segment video
         this.logger.log(`Exporting Pro Clip ${moment.id} (multi-segment) from ${moment.proxyUrl}`);
-        clipKey = `projects/${projectId}/exports/${moment.id}.mp4`;
         
-        // Copy the Pro Clip from proxyUrl to exports location
+        // Download the Pro Clip to temp
         const proClipBuffer = await this.storage.downloadFile(moment.proxyUrl);
-        await this.storage.uploadFile(clipKey, proClipBuffer, 'video/mp4');
+        const proClipPath = this.video.getTempFilePath('.mp4');
+        await fs.writeFile(proClipPath, proClipBuffer);
+        
+        // Apply aspect ratio conversion if requested
+        let finalPath = proClipPath;
+        if (aspectRatio && aspectRatio !== 'original') {
+          this.logger.log(`Converting Pro Clip to aspect ratio ${aspectRatio} using ${cropMode} mode`);
+          const convertedPath = this.video.getTempFilePath('.mp4');
+          await this.ffmpeg.convertAspectRatio(
+            proClipPath,
+            convertedPath,
+            aspectRatio,
+            cropMode,
+            cropPosition,
+          );
+          finalPath = convertedPath;
+          // Clean up the original pro clip file
+          await this.video.cleanupTempFile(proClipPath);
+        }
+        
+        // Upload the final clip
+        const finalBuffer = await fs.readFile(finalPath);
+        clipKey = `projects/${projectId}/exports/${moment.id}.mp4`;
+        await this.storage.uploadFile(clipKey, finalBuffer, 'video/mp4');
+        
+        // Cleanup temp file
+        await this.video.cleanupTempFile(finalPath);
       } else {
         // Regular clip: Cut from source video
         this.logger.log(`Exporting regular clip ${moment.id} (${moment.tStart}s - ${moment.tEnd}s)`);
