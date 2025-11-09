@@ -138,13 +138,6 @@ export default function ClipSettingsModal({
               onChange={(e) => setClipLength(Number(e.target.value))}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-500"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>15s</span>
-              <span>30s</span>
-              <span>60s</span>
-              <span>90s</span>
-              <span>180s</span>
-            </div>
           </div>
 
           {/* Number of Clips */}
@@ -162,12 +155,6 @@ export default function ClipSettingsModal({
               onChange={(e) => setNumberOfClips(Number(e.target.value))}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-500"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>1</span>
-              <span>3</span>
-              <span>5</span>
-              <span>10</span>
-            </div>
           </div>
 
           {/* Processing Timeframe */}
