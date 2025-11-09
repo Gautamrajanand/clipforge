@@ -2,13 +2,19 @@ FROM node:18-slim
 
 WORKDIR /app
 
-# Install build dependencies, FFmpeg, and system utilities
+# Install build dependencies, FFmpeg, Canvas dependencies, and system utilities
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
     ffmpeg \
     procps \
+    build-essential \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
