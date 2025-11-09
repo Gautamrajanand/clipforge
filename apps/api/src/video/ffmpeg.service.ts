@@ -128,12 +128,18 @@ export class FFmpegService {
     // Crop mode (default) - zoom to fill, crop excess
     // Calculate crop coordinates based on position
     let cropX = '(iw-ow)/2'; // center X
-    let cropY = '(ih-oh)/2'; // center Y
+    let cropY = '(ih-oh)/2'; // center Y (default)
 
     if (cropPosition === 'top') {
       cropY = '0';
     } else if (cropPosition === 'bottom') {
       cropY = 'ih-oh';
+    } else if (cropPosition === 'center') {
+      // For vertical formats (9:16, 4:5), bias slightly upward for talking heads
+      // This keeps faces better centered when cropping landscape to portrait
+      if (targetRatio < 1) { // Portrait orientation
+        cropY = '(ih-oh)/2.5'; // Slight upward bias (was /2, now /2.5)
+      }
     } else if (typeof cropPosition === 'object') {
       cropX = cropPosition.x.toString();
       cropY = cropPosition.y.toString();
