@@ -140,6 +140,12 @@ export class CaptionsService {
     const primaryColor = this.rgbToASS(textColor);
     const outlineColor = this.rgbToASS(stroke.color);
     const backColor = this.rgbaToASS(backgroundColor);
+    
+    // For karaoke effect: secondary color is the "highlighted" color
+    // Use yellow for karaoke style to create word-by-word highlighting
+    const secondaryColor = styleConfig.id === 'karaoke' 
+      ? this.rgbToASS('#FFFF00') // Bright yellow for highlight
+      : primaryColor;
 
     // Alignment: 1=left, 2=center, 3=right, 7=top-left, 8=top-center, 9=top-right
     const alignmentMap = {
@@ -165,7 +171,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,${fontFamily},${fontSize},${primaryColor},&H000000FF,${outlineColor},${backColor},${isBold},0,0,0,100,100,0,0,1,${stroke.width},2,${alignmentValue},20,20,${marginV},1
+Style: Default,${fontFamily},${fontSize},${primaryColor},${secondaryColor},${outlineColor},${backColor},${isBold},0,0,0,100,100,0,0,1,${stroke.width},2,${alignmentValue},20,20,${marginV},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -175,13 +181,16 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     let currentLine: Word[] = [];
     let currentLength = 0;
     const maxCharsPerLine = 42;
+    
+    // Enable karaoke animation for karaoke style
+    const useKaraoke = styleConfig.id === 'karaoke';
 
     for (let i = 0; i < words.length; i++) {
       const word = words[i];
       const wordLength = word.text.length + 1;
 
       if (currentLength + wordLength > maxCharsPerLine && currentLine.length > 0) {
-        events.push(this.createASSEvent(currentLine));
+        events.push(this.createASSEvent(currentLine, useKaraoke));
         currentLine = [word];
         currentLength = wordLength;
       } else {
@@ -190,14 +199,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       }
 
       if (word.text.match(/[.!?]$/) && currentLine.length > 0) {
-        events.push(this.createASSEvent(currentLine));
+        events.push(this.createASSEvent(currentLine, useKaraoke));
         currentLine = [];
         currentLength = 0;
       }
     }
 
     if (currentLine.length > 0) {
-      events.push(this.createASSEvent(currentLine));
+      events.push(this.createASSEvent(currentLine, useKaraoke));
     }
 
     return header + events.join('\n');
@@ -215,14 +224,33 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
   }
 
   /**
-   * Create a single ASS event entry
+   * Create a single ASS event entry with optional karaoke animation
    */
-  private createASSEvent(words: Word[]): string {
+  private createASSEvent(words: Word[], useKaraoke: boolean = false): string {
     const startTime = this.formatASSTime(words[0].start);
     const endTime = this.formatASSTime(words[words.length - 1].end);
-    const text = words.map(w => w.text).join(' ');
-
-    return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,${text}`;
+    
+    if (useKaraoke && words.length > 1) {
+      // Create karaoke effect: word-by-word highlighting
+      let karaokeText = '';
+      let cumulativeTime = 0;
+      
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const duration = word.end - word.start;
+        const centiseconds = Math.round(duration * 100);
+        
+        // Add karaoke timing tag {\k<duration>} before each word
+        karaokeText += `{\\k${centiseconds}}${word.text}`;
+        if (i < words.length - 1) karaokeText += ' ';
+      }
+      
+      return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,${karaokeText}`;
+    } else {
+      // Standard caption without animation
+      const text = words.map(w => w.text).join(' ');
+      return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,${text}`;
+    }
   }
 
   /**
