@@ -141,13 +141,19 @@ export class CaptionsService {
     const outlineColor = this.rgbToASS(stroke.color);
     const backColor = this.rgbaToASS(backgroundColor);
 
-    // Alignment: 1=left, 2=center, 3=right, 9=top-center, 10=center, 11=bottom-center
+    // Alignment: 1=left, 2=center, 3=right, 7=top-left, 8=top-center, 9=top-right
     const alignmentMap = {
       'top-left': 7, 'top-center': 8, 'top-right': 9,
       'center-left': 4, 'center': 5, 'center-right': 6,
       'bottom-left': 1, 'bottom-center': 2, 'bottom-right': 3,
     };
     const alignmentValue = alignmentMap[`${position}-${alignment}`] || 2;
+
+    // Determine bold flag based on preset
+    const isBold = ['bold', 'karaoke'].includes(styleConfig.id) ? -1 : 0;
+    
+    // Calculate vertical margin based on position (higher = more space from edge)
+    const marginV = position === 'bottom' ? 80 : position === 'top' ? 80 : 20;
 
     const header = `[Script Info]
 Title: ClipForge Captions
@@ -159,7 +165,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,${fontFamily},${fontSize},${primaryColor},&H000000FF,${outlineColor},${backColor},0,0,0,0,100,100,0,0,1,${stroke.width},2,${alignmentValue},10,10,10,1
+Style: Default,${fontFamily},${fontSize},${primaryColor},&H000000FF,${outlineColor},${backColor},${isBold},0,0,0,100,100,0,0,1,${stroke.width},2,${alignmentValue},20,20,${marginV},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
