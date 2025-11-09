@@ -429,8 +429,10 @@ export class ProjectsService {
       cropMode = 'crop',
       cropPosition = 'center',
       burnCaptions = false,
-      captionStyle = 'karaoke',
+      captionStyle = 'minimal',
     } = dto;
+    
+    this.logger.log(`Export request: aspectRatio=${aspectRatio}, burnCaptions=${burnCaptions}, captionStyle=${captionStyle}`);
     const project = await this.findOne(projectId, orgId);
 
     if (!project.sourceUrl) {
