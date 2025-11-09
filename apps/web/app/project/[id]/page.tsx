@@ -340,7 +340,12 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Exported Clips</h2>
               <div className="grid grid-cols-2 gap-6">
-                {exportedClips.map((exportItem) => (
+                {exportedClips.map((exportItem) => {
+                  // Find the corresponding moment to get its title
+                  const moment = clips.find(c => c.id === exportItem.momentId);
+                  const clipTitle = moment?.title || `Clip ${exportItem.momentId?.slice(-6)}`;
+                  
+                  return (
                   <div key={exportItem.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
                     <div className="aspect-video bg-black">
                       <video
@@ -355,7 +360,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-gray-800">
-                          Clip {exportItem.momentId?.slice(-6)}
+                          {clipTitle}
                         </span>
                         <span className="text-xs text-gray-500">{exportItem.format}</span>
                       </div>
@@ -368,7 +373,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
