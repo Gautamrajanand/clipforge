@@ -140,7 +140,10 @@ Every feature must:
 - ✅ **Duplicate prevention** - SessionStorage tracking prevents multiple generations
 - ✅ **Redesigned UI** - Podcastle-inspired clean card layout without thumbnails
 - ✅ **Duration accuracy** - Exported clips match displayed duration
-- ✅ **Zero padding** - Exact segment boundaries for precise cuts
+- ✅ **Zero padding** - Exact segment boundaries for precise cuts (0.0s)
+- ✅ **Minimum length** - 18s minimum for quality content
+- ✅ **Proper filenames** - Downloads use clip title, not generic ID
+- ✅ **Clean sliders** - Removed unnecessary number labels
 - ✅ **Removed settings panel** - Cleaner UI, auto-generates with optimal settings
 
 ### FREE TIER - Basic Clips
@@ -234,6 +237,122 @@ Every feature must:
 - ✅ Production-ready quality
 - ✅ Competitive pricing
 - ✅ Self-hosted advantage
+
+---
+
+## 🚧 PHASE 1.5: Video Enhancement (IN PROGRESS - Nov 2025)
+
+### Goal: **Professional Video Output with Aspect Ratios & Captions**
+
+### Status: **In Development** 🚧
+
+### Priority 1: Aspect Ratio Support 📐
+**Timeline:** 1-2 weeks  
+**Value:** ⭐⭐⭐⭐⭐
+
+**Features:**
+- **Multiple Aspect Ratios:**
+  * 9:16 (Vertical - TikTok, Instagram Reels, YouTube Shorts)
+  * 16:9 (Horizontal - YouTube, LinkedIn)
+  * 1:1 (Square - Instagram Feed, Facebook)
+  * 4:5 (Portrait - Instagram Feed)
+- **Smart Cropping:**
+  * AI-powered subject detection
+  * Face tracking and centering
+  * Motion-aware cropping
+  * Maintains important content in frame
+- **Processing Options:**
+  * Crop (zoom to fill)
+  * Pad (letterbox/pillarbox)
+  * Smart crop (AI-guided)
+- **Preview:**
+  * See crop before export
+  * Adjust crop position
+  * Real-time preview
+- **Batch Processing:**
+  * Apply same ratio to multiple clips
+  * Queue-based processing
+
+**Technical Requirements:**
+- FFmpeg video filters (`scale`, `crop`, `pad`)
+- Face detection (OpenCV or cloud API)
+- Preview generation
+- Aspect ratio presets
+- Feature flag: `FF_ASPECT_RATIO`
+
+**Revenue Impact:**
+- Critical for social media creators
+- Competitive with Opus Clip
+- Premium feature justification
+- Increases platform stickiness
+
+**Reference:** Opus Clip, Kapwing, Descript
+
+---
+
+### Priority 2: Caption Styles 💬
+**Timeline:** 2-3 weeks  
+**Value:** ⭐⭐⭐⭐⭐
+
+**Features:**
+- **Style Presets:**
+  * **Minimal:** Simple white text, clean
+  * **Bold:** Large text, high contrast, attention-grabbing
+  * **Elegant:** Serif font, subtle shadow
+  * **Modern:** Sans-serif, clean lines
+  * **Karaoke:** Word-by-word highlighting (like Opus Clip)
+  * **Podcast:** Speaker names, professional
+- **Customization:**
+  * Font family (20+ fonts)
+  * Font size (adjustable)
+  * Text color (any color)
+  * Background (none, box, shadow, gradient)
+  * Position (top, center, bottom)
+  * Alignment (left, center, right)
+  * Animation (fade in/out, slide, pop, none)
+  * Stroke/outline (color, width)
+- **Advanced Features:**
+  * Word-level timestamps (from AssemblyAI)
+  * Auto-line breaks (smart wrapping)
+  * Emoji support
+  * Multi-language support
+  * Speaker labels (different colors per speaker)
+- **Export Options:**
+  * Burn-in to video (permanent)
+  * Export SRT file (separate)
+  * Export VTT file (web)
+  * Export ASS/SSA (advanced styling)
+- **Preview:**
+  * Live preview with captions
+  * Scrub through timeline
+  * Edit caption text
+  * Adjust timing
+
+**Technical Requirements:**
+- Word-level timestamps from AssemblyAI
+- FFmpeg subtitle burning (`subtitles` filter)
+- Font library (Google Fonts)
+- Caption editor UI
+- Style templates
+- SRT/VTT generation
+
+**Revenue Impact:**
+- 80% of social videos watched without sound
+- Accessibility requirement (legal in some cases)
+- Competitive with Opus Clip
+- Premium feature
+- High perceived value
+
+**Reference:** Opus Clip, Kapwing, Descript, Podcastle
+
+---
+
+### Why This Phase Matters:
+- 🎯 **Social Media Ready:** Aspect ratios are essential for platform optimization
+- 🔊 **Accessibility:** Captions make content accessible to everyone
+- 📈 **Engagement:** Captions increase watch time by 40%+
+- 🏆 **Competitive:** Matches Opus Clip's key features
+- 💰 **Revenue:** Justifies premium pricing
 
 ---
 
