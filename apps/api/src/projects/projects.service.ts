@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { VideoService } from '../video/video.service';
+import { FFmpegService } from '../video/ffmpeg.service';
 import { AIService } from '../ai/ai.service';
 import { TranscriptionService } from '../transcription/transcription.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -17,6 +18,7 @@ export class ProjectsService {
     private prisma: PrismaService,
     private storage: StorageService,
     private video: VideoService,
+    private ffmpeg: FFmpegService,
     private ai: AIService,
     private transcription: TranscriptionService,
   ) {}
@@ -407,7 +409,26 @@ export class ProjectsService {
     });
   }
 
-  async exportMoments(projectId: string, orgId: string, momentIds: string[]) {
+  async exportMoments(
+    projectId: string,
+    orgId: string,
+    dto: {
+      momentIds: string[];
+      aspectRatio?: string;
+      cropMode?: 'crop' | 'pad' | 'smart';
+      cropPosition?: 'center' | 'top' | 'bottom' | { x: number; y: number };
+      burnCaptions?: boolean;
+      captionStyle?: string;
+    },
+  ) {
+    const {
+      momentIds,
+      aspectRatio = 'original',
+      cropMode = 'crop',
+      cropPosition = 'center',
+      burnCaptions = false,
+      captionStyle = 'karaoke',
+    } = dto;
     const project = await this.findOne(projectId, orgId);
 
     if (!project.sourceUrl) {
@@ -457,24 +478,41 @@ export class ProjectsService {
       } else {
         // Regular clip: Cut from source video
         this.logger.log(`Exporting regular clip ${moment.id} (${moment.tStart}s - ${moment.tEnd}s)`);
-        const outputPath = this.video.getTempFilePath('.mp4');
+        const cutPath = this.video.getTempFilePath('.mp4');
         await this.video.cutVideoSegment(
           sourcePath,
-          outputPath,
+          cutPath,
           moment.tStart,
           moment.tEnd,
         );
 
-        // Upload the clip to MinIO
-        const clipBuffer = await fs.readFile(outputPath);
+        // Apply aspect ratio conversion if requested
+        let finalPath = cutPath;
+        if (aspectRatio && aspectRatio !== 'original') {
+          this.logger.log(`Converting to aspect ratio ${aspectRatio} using ${cropMode} mode`);
+          const convertedPath = this.video.getTempFilePath('.mp4');
+          await this.ffmpeg.convertAspectRatio(
+            cutPath,
+            convertedPath,
+            aspectRatio,
+            cropMode,
+            cropPosition,
+          );
+          finalPath = convertedPath;
+          // Clean up the cut file
+          await this.video.cleanupTempFile(cutPath);
+        }
+
+        // Upload the final clip to MinIO
+        const clipBuffer = await fs.readFile(finalPath);
         clipKey = `projects/${projectId}/exports/${moment.id}.mp4`;
         await this.storage.uploadFile(clipKey, clipBuffer, 'video/mp4');
 
         // Cleanup temp file
-        await this.video.cleanupTempFile(outputPath);
+        await this.video.cleanupTempFile(finalPath);
       }
 
-      // Create export record
+      // Create export record with aspect ratio metadata
       const exportRecord = await this.prisma.export.create({
         data: {
           projectId,
@@ -484,6 +522,11 @@ export class ProjectsService {
             mp4_url: clipKey,
           },
           status: 'COMPLETED',
+          aspectRatio: aspectRatio !== 'original' ? aspectRatio : null,
+          cropMode: aspectRatio !== 'original' ? cropMode : null,
+          cropPosition: aspectRatio !== 'original' ? cropPosition : null,
+          burnCaptions,
+          captionStyle,
         },
       });
 

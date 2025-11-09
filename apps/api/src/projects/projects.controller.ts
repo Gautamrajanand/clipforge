@@ -19,6 +19,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ProjectsService } from './projects.service';
+import { ExportMomentsDto } from './dto/export-moments.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { DetectClipsDto } from './dto/clip-settings.dto';
 
@@ -114,17 +115,17 @@ export class ProjectsController {
   }
 
   @Post(':id/export')
-  @ApiOperation({ summary: 'Export selected moments as video clips' })
+  @ApiOperation({ summary: 'Export selected moments as video clips with aspect ratio conversion' })
   async exportMoments(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() dto: { momentIds: string[] },
+    @Body() dto: ExportMomentsDto,
   ) {
     const orgId = req.user.memberships[0]?.org?.id;
     if (!orgId) {
       throw new Error('No organization found');
     }
-    return this.projectsService.exportMoments(id, orgId, dto.momentIds);
+    return this.projectsService.exportMoments(id, orgId, dto);
   }
 
   @Get('exports/:exportId/download')
