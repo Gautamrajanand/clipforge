@@ -502,7 +502,10 @@ export class ProjectsService {
   async downloadExport(exportId: string, orgId: string, res: Response) {
     const exportRecord = await this.prisma.export.findUnique({
       where: { id: exportId },
-      include: { project: true },
+      include: { 
+        project: true,
+        moment: true, // Include moment to get title
+      },
     });
 
     if (!exportRecord) {
@@ -519,10 +522,19 @@ export class ProjectsService {
     const metadata = await this.storage.getFileMetadata(clipUrl);
     const stream = this.storage.getFileStream(clipUrl);
 
+    // Create a safe filename from the moment's title
+    const safeTitle = exportRecord.moment?.title
+      ? exportRecord.moment.title
+          .replace(/[^a-z0-9\s-]/gi, '') // Remove special characters
+          .replace(/\s+/g, '-') // Replace spaces with hyphens
+          .toLowerCase()
+          .substring(0, 50) // Limit length
+      : `clip-${exportRecord.momentId}`;
+
     res.set({
       'Content-Type': 'video/mp4',
       'Content-Length': metadata.ContentLength,
-      'Content-Disposition': `attachment; filename="clip-${exportRecord.momentId}.mp4"`,
+      'Content-Disposition': `attachment; filename="${safeTitle}.mp4"`,
     });
 
     return new Promise((resolve, reject) => {
