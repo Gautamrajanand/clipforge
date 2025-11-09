@@ -200,9 +200,15 @@ model Export {
   processingStartedAt   DateTime?
   processingCompletedAt DateTime?
   
-  // Caption styling fields
+  // Aspect ratio fields (premium feature)
+  aspectRatio           String?  // "9:16", "16:9", "1:1", "4:5", null = original
+  cropMode              String?  @default("crop") // "crop", "pad", "smart"
+  cropPosition          Json?    // { x, y } or "center", "top", "bottom"
+  
+  // Caption styling fields (premium feature)
   captionStyle          String?  @default("karaoke") // Caption preset ID
   captionsEnabled       Boolean  @default(true)
+  burnCaptions          Boolean  @default(false) // Burn into video vs separate file
   
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
