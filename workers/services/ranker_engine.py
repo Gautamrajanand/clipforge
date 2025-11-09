@@ -695,6 +695,13 @@ class RankerEngine:
         }
         
         score = sum(features.get(k, 0) * v for k, v in weights.items())
+        
+        # Apply "kinder scoring" multiplier to be more encouraging
+        # This ensures most clips show above 75% to encourage exports
+        # Formula: score = 0.75 + (score * 0.25)
+        # This maps: 0.0 -> 0.75, 0.5 -> 0.875, 1.0 -> 1.0
+        score = 0.75 + (score * 0.25)
+        
         return min(score, 1.0)
     
     def _find_seed_points(
