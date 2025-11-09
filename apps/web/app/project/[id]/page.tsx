@@ -172,6 +172,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           aspectRatio: options.aspectRatio,
           cropMode: options.cropMode,
           cropPosition: options.cropPosition,
+          burnCaptions: options.burnCaptions,
+          captionStyle: options.captionStyle,
         }),
       });
 
