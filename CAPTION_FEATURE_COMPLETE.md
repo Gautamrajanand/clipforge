@@ -2,7 +2,8 @@
 
 **Date:** November 9, 2025  
 **Status:** ✅ Production-Ready (Week 1 + Week 2)  
-**Timeline:** Completed in ~4 hours (ahead of 2-week schedule!)
+**Timeline:** Completed in ~6 hours (ahead of 2-week schedule!)  
+**Note:** See CAPTION_SYSTEM_STATUS.md for technical details and limitations
 
 ---
 
