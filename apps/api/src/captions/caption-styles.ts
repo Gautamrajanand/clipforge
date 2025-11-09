@@ -45,7 +45,7 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
   bold: {
     id: 'bold',
     name: 'Bold',
-    description: 'Large, high-contrast text that demands attention',
+    description: 'Pop-in animation with large text (Opus Clip style)',
     fontFamily: 'Arial Black',
     fontSize: 56,
     textColor: '#FFFFFF',
@@ -61,7 +61,7 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
   elegant: {
     id: 'elegant',
     name: 'Elegant',
-    description: 'Refined serif font with soft shadow',
+    description: 'Smooth slide-up animation with serif font',
     fontFamily: 'Georgia',
     fontSize: 34,
     textColor: '#F5F5F5',
@@ -77,7 +77,7 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
   modern: {
     id: 'modern',
     name: 'Modern',
-    description: 'Clean sans-serif with smooth animation',
+    description: 'Fade-in animation with clean sans-serif',
     fontFamily: 'Arial',
     fontSize: 36,
     textColor: '#FFFFFF',
@@ -93,7 +93,7 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
   karaoke: {
     id: 'karaoke',
     name: 'Karaoke',
-    description: 'Word-by-word highlighting (Opus Clip style)',
+    description: 'Word-by-word color highlighting (Opus Clip style)',
     fontFamily: 'Arial',
     fontSize: 48,
     textColor: '#00FF00',

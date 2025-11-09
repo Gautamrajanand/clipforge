@@ -181,16 +181,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     let currentLine: Word[] = [];
     let currentLength = 0;
     const maxCharsPerLine = 42;
-    
-    // Enable karaoke animation for karaoke style
-    const useKaraoke = styleConfig.id === 'karaoke';
 
     for (let i = 0; i < words.length; i++) {
       const word = words[i];
       const wordLength = word.text.length + 1;
 
       if (currentLength + wordLength > maxCharsPerLine && currentLine.length > 0) {
-        events.push(this.createASSEvent(currentLine, useKaraoke));
+        events.push(this.createASSEvent(currentLine, styleConfig.id));
         currentLine = [word];
         currentLength = wordLength;
       } else {
@@ -199,14 +196,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       }
 
       if (word.text.match(/[.!?]$/) && currentLine.length > 0) {
-        events.push(this.createASSEvent(currentLine, useKaraoke));
+        events.push(this.createASSEvent(currentLine, styleConfig.id));
         currentLine = [];
         currentLength = 0;
       }
     }
 
     if (currentLine.length > 0) {
-      events.push(this.createASSEvent(currentLine, useKaraoke));
+      events.push(this.createASSEvent(currentLine, styleConfig.id));
     }
 
     return header + events.join('\n');
@@ -224,33 +221,91 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
   }
 
   /**
-   * Create a single ASS event entry with optional karaoke animation
+   * Create a single ASS event entry with style-specific animation
    */
-  private createASSEvent(words: Word[], useKaraoke: boolean = false): string {
+  private createASSEvent(words: Word[], styleId: string = 'minimal'): string {
     const startTime = this.formatASSTime(words[0].start);
     const endTime = this.formatASSTime(words[words.length - 1].end);
     
-    if (useKaraoke && words.length > 1) {
-      // Create karaoke effect: word-by-word highlighting
-      let karaokeText = '';
-      let cumulativeTime = 0;
+    // Different animation styles based on preset
+    switch (styleId) {
+      case 'karaoke':
+        // Word-by-word color highlighting (green → yellow)
+        return this.createKaraokeAnimation(words, startTime, endTime);
       
-      for (let i = 0; i < words.length; i++) {
-        const word = words[i];
-        const duration = word.end - word.start;
-        const centiseconds = Math.round(duration * 100);
-        
-        // Add karaoke timing tag {\k<duration>} before each word
-        karaokeText += `{\\k${centiseconds}}${word.text}`;
-        if (i < words.length - 1) karaokeText += ' ';
-      }
+      case 'bold':
+        // Pop-in effect with scale animation
+        return this.createPopAnimation(words, startTime, endTime);
       
-      return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,${karaokeText}`;
-    } else {
-      // Standard caption without animation
-      const text = words.map(w => w.text).join(' ');
-      return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,${text}`;
+      case 'modern':
+        // Fade-in effect
+        return this.createFadeAnimation(words, startTime, endTime);
+      
+      case 'elegant':
+        // Smooth slide-up effect
+        return this.createSlideAnimation(words, startTime, endTime);
+      
+      default:
+        // Standard caption without animation
+        const text = words.map(w => w.text).join(' ');
+        return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,${text}`;
     }
+  }
+
+  /**
+   * Karaoke animation: word-by-word color highlighting
+   */
+  private createKaraokeAnimation(words: Word[], startTime: string, endTime: string): string {
+    let karaokeText = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const duration = word.end - word.start;
+      const centiseconds = Math.round(duration * 100);
+      
+      // Add karaoke timing tag {\k<duration>} before each word
+      karaokeText += `{\\k${centiseconds}}${word.text}`;
+      if (i < words.length - 1) karaokeText += ' ';
+    }
+    
+    return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,${karaokeText}`;
+  }
+
+  /**
+   * Pop animation: scale effect for bold impact
+   */
+  private createPopAnimation(words: Word[], startTime: string, endTime: string): string {
+    let animatedText = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const duration = word.end - word.start;
+      const centiseconds = Math.round(duration * 100);
+      
+      // Pop effect: scale from 80% to 100% over 10 centiseconds
+      animatedText += `{\\t(0,10,\\fscx80\\fscy80)\\t(10,20,\\fscx100\\fscy100)\\k${centiseconds}}${word.text}`;
+      if (i < words.length - 1) animatedText += ' ';
+    }
+    
+    return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,${animatedText}`;
+  }
+
+  /**
+   * Fade animation: smooth fade-in effect
+   */
+  private createFadeAnimation(words: Word[], startTime: string, endTime: string): string {
+    const text = words.map(w => w.text).join(' ');
+    // Fade from transparent to opaque over 200ms
+    return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,{\\fad(200,0)}${text}`;
+  }
+
+  /**
+   * Slide animation: slide up from bottom
+   */
+  private createSlideAnimation(words: Word[], startTime: string, endTime: string): string {
+    const text = words.map(w => w.text).join(' ');
+    // Slide up 20 pixels over 300ms
+    return `Dialogue: 0,${startTime},${endTime},Default,,0,0,0,,{\\move(0,20,0,0,0,300)}${text}`;
   }
 
   /**
