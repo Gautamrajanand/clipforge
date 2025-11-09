@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getCaptionStylePreset, CaptionStylePreset } from './caption-styles';
 
 export interface Word {
   text: string;
@@ -100,15 +101,40 @@ export class CaptionsService {
    * Used for advanced caption styling with FFmpeg
    */
   generateASS(words: Word[], style: CaptionStyle = {}): string {
+    // If preset is specified, load it and merge with custom overrides
+    let styleConfig: CaptionStylePreset;
+    if (style.preset) {
+      styleConfig = getCaptionStylePreset(style.preset);
+      // Merge custom overrides
+      styleConfig = {
+        ...styleConfig,
+        ...style,
+      };
+    } else {
+      // Use provided style or defaults
+      styleConfig = {
+        id: 'custom',
+        name: 'Custom',
+        description: 'Custom style',
+        fontFamily: style.fontFamily || 'Arial',
+        fontSize: style.fontSize || 24,
+        textColor: style.textColor || '#FFFFFF',
+        backgroundColor: style.backgroundColor || 'rgba(0,0,0,0.7)',
+        position: style.position || 'bottom',
+        alignment: style.alignment || 'center',
+        stroke: style.stroke || { color: '#000000', width: 2 },
+      };
+    }
+
     const {
-      fontFamily = 'Arial',
-      fontSize = 24,
-      textColor = '#FFFFFF',
-      backgroundColor = 'rgba(0,0,0,0.7)',
-      position = 'bottom',
-      alignment = 'center',
+      fontFamily,
+      fontSize,
+      textColor,
+      backgroundColor,
+      position,
+      alignment,
       stroke = { color: '#000000', width: 2 },
-    } = style;
+    } = styleConfig;
 
     // Convert colors to ASS format (&HAABBGGRR)
     const primaryColor = this.rgbToASS(textColor);
