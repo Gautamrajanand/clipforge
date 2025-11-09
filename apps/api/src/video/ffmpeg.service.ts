@@ -136,10 +136,10 @@ export class FFmpegService {
       cropY = 'ih-oh';
     } else if (cropPosition === 'center') {
       // For vertical formats (9:16, 4:5), optimize for talking heads
-      // Bias slightly right and upward since subjects are often positioned right-of-center
+      // Keep horizontal center, but bias upward to keep faces in frame
       if (targetRatio < 1) { // Portrait orientation
-        cropX = '(iw-ow)/2.2'; // Slight right bias to keep faces centered
-        cropY = '(ih-oh)/3.5'; // Upward bias to keep faces in frame
+        // cropX stays centered at (iw-ow)/2
+        cropY = '(ih-oh)/3.5'; // Upward bias to prevent top-of-head cutoff
       }
     } else if (typeof cropPosition === 'object') {
       cropX = cropPosition.x.toString();
