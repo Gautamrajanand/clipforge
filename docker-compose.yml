@@ -72,6 +72,8 @@ services:
       API_HOST: 0.0.0.0
       OPENAI_API_KEY: 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
       ASSEMBLYAI_API_KEY: 16e3cbc95572499088bcb6086efd08be
+      FF_ASPECT_RATIO: "true"
+      FF_CAPTION_STYLES: "false"
     ports:
       - "3000:3000"
     depends_on:

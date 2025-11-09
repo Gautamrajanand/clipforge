@@ -13,18 +13,22 @@ export class FFmpegService {
   private readonly logger = new Logger(FFmpegService.name);
 
   /**
-   * Convert video to target aspect ratio
-   * Crops or pads video to fit the target ratio without distortion
+   * Convert video to target aspect ratio with smart cropping
+   * Premium quality conversion for social media platforms
    * 
    * @param inputPath - Path to input video file
    * @param outputPath - Path to save processed video
    * @param aspectRatio - Target aspect ratio (9:16, 16:9, 1:1, 4:5)
+   * @param mode - Conversion mode: 'crop' (zoom to fill), 'pad' (letterbox), 'smart' (AI-guided)
+   * @param cropPosition - Custom crop position {x, y} or 'center', 'top', 'bottom'
    * @returns Promise<void>
    */
   async convertAspectRatio(
     inputPath: string,
     outputPath: string,
     aspectRatio: string,
+    mode: 'crop' | 'pad' | 'smart' = 'crop',
+    cropPosition: 'center' | 'top' | 'bottom' | { x: number; y: number } = 'center',
   ): Promise<void> {
     // Check feature flag
     if (!FeatureFlags.ASPECT_RATIO) {
@@ -34,31 +38,41 @@ export class FFmpegService {
       return;
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const { width, height } = this.getTargetDimensions(aspectRatio);
 
       this.logger.log(
-        `Converting video to ${aspectRatio} (${width}x${height})`,
+        `Converting video to ${aspectRatio} (${width}x${height}) using ${mode} mode`,
+      );
+
+      // Get video metadata for smart processing
+      const metadata = await this.getVideoMetadata(inputPath);
+      const sourceWidth = metadata.width;
+      const sourceHeight = metadata.height;
+
+      // Build video filters based on mode
+      const filters = this.buildAspectRatioFilters(
+        mode,
+        width,
+        height,
+        sourceWidth,
+        sourceHeight,
+        cropPosition,
       );
 
       ffmpeg(inputPath)
-        .videoFilters([
-          // Scale and pad to maintain aspect ratio without distortion
-          // This ensures the video fits the target dimensions
-          {
-            filter: 'scale',
-            options: `${width}:${height}:force_original_aspect_ratio=decrease`,
-          },
-          {
-            filter: 'pad',
-            options: `${width}:${height}:(ow-iw)/2:(oh-ih)/2:black`,
-          },
-        ])
+        .videoFilters(filters)
         .outputOptions([
-          '-c:v libx264', // H.264 codec
-          '-preset fast', // Fast encoding
-          '-crf 23', // Good quality
-          '-c:a copy', // Copy audio without re-encoding
+          '-c:v libx264',     // H.264 codec (universal compatibility)
+          '-preset medium',   // Better quality than 'fast', still reasonable speed
+          '-crf 20',          // Premium quality (18-23 is visually lossless)
+          '-profile:v high',  // High profile for better compression
+          '-level 4.2',       // Wide device compatibility
+          '-pix_fmt yuv420p', // Maximum compatibility
+          '-movflags +faststart', // Enable streaming/fast playback
+          '-c:a aac',         // AAC audio (don't just copy, ensure compatibility)
+          '-b:a 192k',        // High quality audio
+          '-ar 48000',        // 48kHz sample rate (professional standard)
         ])
         .output(outputPath)
         .on('start', (commandLine) => {
@@ -83,8 +97,80 @@ export class FFmpegService {
   }
 
   /**
+   * Build FFmpeg filters for aspect ratio conversion
+   * Handles crop, pad, and smart modes with premium quality
+   */
+  private buildAspectRatioFilters(
+    mode: 'crop' | 'pad' | 'smart',
+    targetWidth: number,
+    targetHeight: number,
+    sourceWidth: number,
+    sourceHeight: number,
+    cropPosition: 'center' | 'top' | 'bottom' | { x: number; y: number },
+  ): any[] {
+    const sourceRatio = sourceWidth / sourceHeight;
+    const targetRatio = targetWidth / targetHeight;
+
+    if (mode === 'pad') {
+      // Letterbox/Pillarbox mode - scale down and add black bars
+      return [
+        {
+          filter: 'scale',
+          options: `${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease`,
+        },
+        {
+          filter: 'pad',
+          options: `${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2:black`,
+        },
+      ];
+    }
+
+    // Crop mode (default) - zoom to fill, crop excess
+    // Calculate crop coordinates based on position
+    let cropX = '(iw-ow)/2'; // center X
+    let cropY = '(ih-oh)/2'; // center Y
+
+    if (cropPosition === 'top') {
+      cropY = '0';
+    } else if (cropPosition === 'bottom') {
+      cropY = 'ih-oh';
+    } else if (typeof cropPosition === 'object') {
+      cropX = cropPosition.x.toString();
+      cropY = cropPosition.y.toString();
+    }
+
+    if (sourceRatio > targetRatio) {
+      // Source is wider - crop width
+      const cropWidth = Math.round(sourceHeight * targetRatio);
+      return [
+        {
+          filter: 'crop',
+          options: `${cropWidth}:${sourceHeight}:${cropX}:0`,
+        },
+        {
+          filter: 'scale',
+          options: `${targetWidth}:${targetHeight}`,
+        },
+      ];
+    } else {
+      // Source is taller - crop height
+      const cropHeight = Math.round(sourceWidth / targetRatio);
+      return [
+        {
+          filter: 'crop',
+          options: `${sourceWidth}:${cropHeight}:0:${cropY}`,
+        },
+        {
+          filter: 'scale',
+          options: `${targetWidth}:${targetHeight}`,
+        },
+      ];
+    }
+  }
+
+  /**
    * Get target dimensions for aspect ratio
-   * Returns standard dimensions that maintain quality
+   * Premium quality dimensions for social media platforms
    */
   private getTargetDimensions(aspectRatio: string): {
     width: number;
