@@ -594,6 +594,7 @@ export class ProjectsService {
   /**
    * Helper method to burn captions for a moment
    * Fetches transcript words for the moment's time range and generates captions
+   * Uses frame-by-frame rendering for animated styles (bold, modern, elegant)
    */
   private async burnCaptionsForMoment(
     moment: any,
@@ -635,23 +636,71 @@ export class ProjectsService {
         return;
       }
 
-      // Generate caption file based on style
-      const captionPath = this.video.getTempFilePath('.ass'); // Use ASS for styling
-      const captionContent = this.captions.generateASS(words, {
-        preset: captionStyle as any,
-      });
-      await fs.writeFile(captionPath, captionContent, 'utf-8');
+      // Determine if we need frame-by-frame rendering (for animated styles)
+      const animatedStyles = ['bold', 'modern', 'elegant'];
+      const useFrameByFrame = animatedStyles.includes(captionStyle);
 
-      // Burn captions into video
-      await this.ffmpeg.burnCaptions(inputPath, outputPath, captionPath);
-
-      // Cleanup caption file
-      await this.video.cleanupTempFile(captionPath);
+      if (useFrameByFrame) {
+        this.logger.log(`Using frame-by-frame rendering for ${captionStyle} style`);
+        await this.renderAnimatedCaptions(inputPath, outputPath, words, captionStyle, moment);
+      } else {
+        // Use ASS subtitle burning for karaoke and static styles
+        this.logger.log(`Using ASS subtitle burning for ${captionStyle} style`);
+        const captionPath = this.video.getTempFilePath('.ass');
+        const captionContent = this.captions.generateASS(words, {
+          preset: captionStyle as any,
+        });
+        await fs.writeFile(captionPath, captionContent, 'utf-8');
+        await this.ffmpeg.burnCaptions(inputPath, outputPath, captionPath);
+        await this.video.cleanupTempFile(captionPath);
+      }
     } catch (error) {
       this.logger.error(`Failed to burn captions: ${error.message}`);
       // Fallback: copy without captions
       await fs.copyFile(inputPath, outputPath);
     }
+  }
+
+  /**
+   * Render animated captions using frame-by-frame approach
+   */
+  private async renderAnimatedCaptions(
+    inputPath: string,
+    outputPath: string,
+    words: any[],
+    captionStyle: string,
+    moment: any,
+  ): Promise<void> {
+    const { CaptionAnimatorService } = await import('../captions/caption-animator.service');
+    const { getCaptionStylePreset } = await import('../captions/caption-styles');
+    
+    const animator = new CaptionAnimatorService();
+    const stylePreset = getCaptionStylePreset(captionStyle);
+    
+    // Get video metadata
+    const metadata = await this.ffmpeg.getVideoMetadata(inputPath);
+    const duration = moment.tEnd - moment.tStart;
+    
+    // Generate caption frames
+    const frameDir = this.video.getTempFilePath('_frames');
+    await fs.mkdir(frameDir, { recursive: true });
+    
+    this.logger.log(`Generating ${Math.ceil(duration * 30)} caption frames...`);
+    await animator.generateCaptionFrames(
+      words,
+      stylePreset,
+      duration,
+      30, // 30 FPS
+      frameDir,
+    );
+    
+    // Overlay frames onto video
+    const framePattern = `${frameDir}/caption_%06d.png`;
+    await this.ffmpeg.overlayCaptionFrames(inputPath, outputPath, framePattern, 30);
+    
+    // Cleanup frames
+    await animator.cleanupFrames(frameDir);
+    this.logger.log(`✅ Animated captions rendered successfully`);
   }
 
   async downloadExport(exportId: string, orgId: string, res: Response) {
