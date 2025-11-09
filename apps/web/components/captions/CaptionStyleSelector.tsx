@@ -117,11 +117,33 @@ export default function CaptionStyleSelector({
                 </div>
               )}
 
-              {/* Preview with gradient and icon */}
-              <div className={`mb-3 h-20 bg-gradient-to-br ${preset.gradient} rounded flex items-center justify-center overflow-hidden relative`}>
-                <preset.icon className="w-8 h-8 text-white opacity-20 absolute" />
-                <div className="text-white text-xs font-bold px-2 relative z-10">
-                  Sample Text
+              {/* Preview with gradient and animated caption */}
+              <div className={`mb-3 h-24 bg-gradient-to-br ${preset.gradient} rounded flex items-center justify-center overflow-hidden relative`}>
+                {/* Background icon */}
+                <preset.icon className="w-12 h-12 text-white opacity-10 absolute" />
+                
+                {/* Animated caption preview */}
+                <div className="relative z-10 w-full px-3">
+                  <div 
+                    className="text-white font-bold text-center animate-pulse"
+                    style={{
+                      fontSize: preset.id === 'bold' ? '16px' : preset.id === 'karaoke' ? '14px' : '12px',
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    {preset.id === 'karaoke' ? (
+                      <span className="text-green-400">SAMPLE TEXT</span>
+                    ) : preset.id === 'bold' ? (
+                      <span className="tracking-wide">SAMPLE TEXT</span>
+                    ) : (
+                      'Sample Caption Text'
+                    )}
+                  </div>
+                  {/* Position indicator */}
+                  <div className="text-xs text-white opacity-50 text-center mt-1">
+                    {preset.position === 'center' ? '⬤ Center' : preset.position === 'top' ? '⬆ Top' : '⬇ Bottom'}
+                  </div>
                 </div>
               </div>
 

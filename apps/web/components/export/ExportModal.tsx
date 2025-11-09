@@ -29,11 +29,29 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
   const [burnCaptions, setBurnCaptions] = useState(false);
   const [captionStyle, setCaptionStyle] = useState('minimal');
   const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  const [estimatedTime, setEstimatedTime] = useState(0);
 
   if (!isOpen) return null;
 
   const handleExport = async () => {
     setIsExporting(true);
+    setExportProgress(0);
+    
+    // Calculate estimated time: base 10s per clip + 5s if captions enabled
+    const baseTime = selectedClips.length * 10;
+    const captionTime = burnCaptions ? selectedClips.length * 5 : 0;
+    const total = baseTime + captionTime;
+    setEstimatedTime(total);
+    
+    // Simulate progress (since we don't have real-time progress from API)
+    const progressInterval = setInterval(() => {
+      setExportProgress(prev => {
+        if (prev >= 90) return prev; // Stop at 90%, complete when done
+        return prev + 10;
+      });
+    }, total * 100); // Update every 10% of estimated time
+    
     try {
       await onExport({
         aspectRatio,
@@ -42,11 +60,15 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
         burnCaptions,
         captionStyle,
       });
-      onClose();
+      setExportProgress(100);
+      clearInterval(progressInterval);
+      setTimeout(() => onClose(), 500); // Close after showing 100%
     } catch (error) {
       console.error('Export failed:', error);
+      clearInterval(progressInterval);
     } finally {
       setIsExporting(false);
+      setExportProgress(0);
     }
   };
 
@@ -136,35 +158,57 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between rounded-b-2xl">
-            <div className="text-sm text-gray-600">
-              Premium quality • Fast processing
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                disabled={isExporting}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleExport}
-                disabled={isExporting}
-                className="px-6 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-medium rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isExporting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Exporting...
-                  </>
+          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl">
+            {/* Progress bar */}
+            {isExporting && (
+              <div className="mb-3">
+                <div className="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>Exporting {selectedClips.length} clip{selectedClips.length !== 1 ? 's' : ''}...</span>
+                  <span>~{estimatedTime}s • {exportProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${exportProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {burnCaptions ? (
+                  <>Premium quality • Captions enabled • ~{selectedClips.length * 15}s</>
                 ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    Export {selectedClips.length} Clip{selectedClips.length !== 1 ? 's' : ''}
-                  </>
+                  <>Premium quality • Fast processing • ~{selectedClips.length * 10}s</>
                 )}
-              </button>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={onClose}
+                  disabled={isExporting}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="px-6 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-medium rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      Export {selectedClips.length} Clip{selectedClips.length !== 1 ? 's' : ''}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
