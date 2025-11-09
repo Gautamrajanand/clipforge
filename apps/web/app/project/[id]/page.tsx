@@ -8,6 +8,7 @@ import TopBar from '@/components/layout/TopBar';
 import ClipsGrid from '@/components/clips/ClipsGrid';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import ClipSettings from '@/components/clips/ClipSettings';
+import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
 
 export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [project, setProject] = useState<any>(null);
@@ -15,6 +16,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [selectedClips, setSelectedClips] = useState<string[]>([]);
   const [token, setToken] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [exportedClips, setExportedClips] = useState<any[]>([]);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportVideoUrls, setExportVideoUrls] = useState<Record<string, string>>({});
@@ -148,12 +150,15 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     );
   };
 
-  const handleExport = async () => {
+  const handleExportClick = () => {
     if (selectedClips.length === 0) {
       alert('Please select at least one clip to export');
       return;
     }
+    setShowExportModal(true);
+  };
 
+  const handleExport = async (options: ExportOptions) => {
     setIsExporting(true);
     try {
       const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/export`, {
@@ -162,7 +167,12 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ momentIds: selectedClips }),
+        body: JSON.stringify({
+          momentIds: selectedClips,
+          aspectRatio: options.aspectRatio,
+          cropMode: options.cropMode,
+          cropPosition: options.cropPosition,
+        }),
       });
 
       if (response.ok) {
@@ -176,7 +186,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         }
         setExportVideoUrls(urls);
         
-        alert(`Successfully exported ${data.exports.length} clips!`);
+        alert(`Successfully exported ${data.exports.length} clips with ${options.aspectRatio} aspect ratio!`);
       } else {
         alert('Failed to export clips');
       }
@@ -286,7 +296,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 Share
               </button>
               <button
-                onClick={handleExport}
+                onClick={handleExportClick}
                 disabled={selectedClips.length === 0 || isExporting}
                 className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
@@ -380,6 +390,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           )}
         </div>
       </main>
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        selectedClips={selectedClips}
+        onExport={handleExport}
+      />
     </div>
   );
 }
