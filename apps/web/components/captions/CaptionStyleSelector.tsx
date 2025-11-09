@@ -1,144 +1,60 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Type, Sparkles, Zap, Mic, Wand2 } from "lucide-react";
 
 /**
  * Caption Style Presets
- * Matches worker/services/caption_presets.py
+ * Professional styles for social media and content creation
  */
 export const CAPTION_PRESETS = [
   {
+    id: "minimal",
+    name: "Minimal",
+    description: "Simple white text with subtle background",
+    icon: Type,
+    position: "bottom",
+    gradient: "from-gray-600 to-gray-800",
+  },
+  {
+    id: "bold",
+    name: "Bold",
+    description: "Large, high-contrast text that demands attention",
+    icon: Zap,
+    position: "center",
+    gradient: "from-red-600 to-orange-600",
+  },
+  {
+    id: "elegant",
+    name: "Elegant",
+    description: "Refined serif font with soft shadow",
+    icon: Sparkles,
+    position: "bottom",
+    gradient: "from-purple-600 to-pink-600",
+  },
+  {
+    id: "modern",
+    name: "Modern",
+    description: "Clean sans-serif with smooth animation",
+    icon: Wand2,
+    position: "bottom",
+    gradient: "from-blue-600 to-cyan-600",
+  },
+  {
     id: "karaoke",
     name: "Karaoke",
-    description: "Word-by-word highlight, big caps, bottom",
-    preview: "bottom-center",
-    style: {
-      fontSize: "72px",
-      fontWeight: "bold",
-      color: "#FFFFFF",
-      textShadow: "3px 3px 6px rgba(0,0,0,0.5)",
-      textAlign: "center" as const,
-    },
+    description: "Word-by-word highlighting (Opus Clip style)",
+    icon: Sparkles,
+    position: "center",
+    gradient: "from-yellow-600 to-amber-600",
   },
   {
-    id: "deep_diver",
-    name: "Deep Diver",
-    description: "Centered, bold, large lines",
-    preview: "center",
-    style: {
-      fontSize: "80px",
-      fontWeight: "bold",
-      color: "#FFFFFF",
-      textShadow: "4px 4px 8px rgba(0,0,0,0.8)",
-      textAlign: "center" as const,
-    },
-  },
-  {
-    id: "pod_p",
-    name: "Pod P",
-    description: "Bottom, clean blocks, minimal",
-    preview: "bottom-center",
-    style: {
-      fontSize: "64px",
-      fontWeight: "normal",
-      color: "#FFFFFF",
-      textShadow: "2px 2px 4px rgba(0,0,0,0.4)",
-      textAlign: "center" as const,
-    },
-  },
-  {
-    id: "popline",
-    name: "Popline",
-    description: "Upper third, strong outline",
-    preview: "top-center",
-    style: {
-      fontSize: "70px",
-      fontWeight: "bold",
-      color: "#FFFFFF",
-      textShadow: "5px 5px 10px rgba(0,0,0,0.9)",
-      textAlign: "center" as const,
-    },
-  },
-  {
-    id: "seamless_bounce",
-    name: "Seamless Bounce",
-    description: "Subtle bounce entrance",
-    preview: "bottom-center",
-    style: {
-      fontSize: "68px",
-      fontWeight: "bold",
-      color: "#FFFFFF",
-      textShadow: "2.5px 2.5px 5px rgba(0,0,0,0.4)",
-      textAlign: "center" as const,
-    },
-  },
-  {
-    id: "beasty",
-    name: "Beasty",
-    description: "Heavy stroke, high contrast",
-    preview: "bottom-center",
-    style: {
-      fontSize: "76px",
-      fontWeight: "bold",
-      color: "#FFFFFF",
-      textShadow: "6px 6px 12px rgba(0,0,0,1)",
-      textAlign: "center" as const,
-    },
-  },
-  {
-    id: "youshaei",
-    name: "Youshaei",
-    description: "Thin stroke, keyword paint",
-    preview: "bottom-center",
-    style: {
-      fontSize: "66px",
-      fontWeight: "normal",
-      color: "#FFFFFF",
-      textShadow: "1.5px 1.5px 3px rgba(0,0,0,0.3)",
-      textAlign: "center" as const,
-    },
-  },
-  {
-    id: "mozi",
-    name: "Mozi",
-    description: "Rounded pill backgrounds",
-    preview: "bottom-center",
-    style: {
-      fontSize: "64px",
-      fontWeight: "bold",
-      color: "#FFFFFF",
-      backgroundColor: "rgba(0,0,0,0.8)",
-      padding: "8px 24px",
-      borderRadius: "32px",
-      textAlign: "center" as const,
-    },
-  },
-  {
-    id: "glitch_infinite",
-    name: "Glitch Infinite",
-    description: "Short glitch-in effect",
-    preview: "bottom-center",
-    style: {
-      fontSize: "70px",
-      fontWeight: "bold",
-      color: "#FFFFFF",
-      textShadow: "3px 3px 6px rgba(0,255,255,0.5)",
-      textAlign: "center" as const,
-    },
-  },
-  {
-    id: "baby_earthquake",
-    name: "Baby Earthquake",
-    description: "Micro shake on emphasized words",
-    preview: "bottom-center",
-    style: {
-      fontSize: "68px",
-      fontWeight: "bold",
-      color: "#FFFFFF",
-      textShadow: "2.5px 2.5px 5px rgba(0,0,0,0.4)",
-      textAlign: "center" as const,
-    },
+    id: "podcast",
+    name: "Podcast",
+    description: "Professional style with speaker labels",
+    icon: Mic,
+    position: "bottom",
+    gradient: "from-green-600 to-emerald-600",
   },
 ];
 
@@ -201,16 +117,10 @@ export default function CaptionStyleSelector({
                 </div>
               )}
 
-              {/* Preview */}
-              <div className="mb-3 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded flex items-center justify-center overflow-hidden">
-                <div
-                  className="text-white text-xs px-2"
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: preset.style.fontWeight,
-                    textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-                  }}
-                >
+              {/* Preview with gradient and icon */}
+              <div className={`mb-3 h-20 bg-gradient-to-br ${preset.gradient} rounded flex items-center justify-center overflow-hidden relative`}>
+                <preset.icon className="w-8 h-8 text-white opacity-20 absolute" />
+                <div className="text-white text-xs font-bold px-2 relative z-10">
                   Sample Text
                 </div>
               </div>

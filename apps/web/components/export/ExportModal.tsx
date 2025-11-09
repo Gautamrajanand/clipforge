@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Download, Loader2 } from 'lucide-react';
+import { X, Download, Loader2, Subtitles } from 'lucide-react';
 import AspectRatioSelector from './AspectRatioSelector';
 import CropModeSelector from './CropModeSelector';
 import CropPositionSelector from './CropPositionSelector';
+import CaptionStyleSelector from '../captions/CaptionStyleSelector';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -17,12 +18,16 @@ export interface ExportOptions {
   aspectRatio: string;
   cropMode: 'crop' | 'pad' | 'smart';
   cropPosition: 'center' | 'top' | 'bottom';
+  burnCaptions?: boolean;
+  captionStyle?: string;
 }
 
 export default function ExportModal({ isOpen, onClose, selectedClips, onExport }: ExportModalProps) {
   const [aspectRatio, setAspectRatio] = useState('9:16');
   const [cropMode, setCropMode] = useState<'crop' | 'pad' | 'smart'>('crop');
   const [cropPosition, setCropPosition] = useState<'center' | 'top' | 'bottom'>('center');
+  const [burnCaptions, setBurnCaptions] = useState(false);
+  const [captionStyle, setCaptionStyle] = useState('minimal');
   const [isExporting, setIsExporting] = useState(false);
 
   if (!isOpen) return null;
@@ -34,6 +39,8 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
         aspectRatio,
         cropMode,
         cropPosition,
+        burnCaptions,
+        captionStyle,
       });
       onClose();
     } catch (error) {
@@ -98,6 +105,34 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
                 />
               </>
             )}
+
+            {/* Divider */}
+            <div className="border-t border-gray-200" />
+
+            {/* Captions */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Subtitles className="w-5 h-5 text-primary-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">Captions</h3>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={burnCaptions}
+                    onChange={(e) => setBurnCaptions(e.target.checked)}
+                    className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-gray-600">Burn captions into video</span>
+                </label>
+              </div>
+              {burnCaptions && (
+                <CaptionStyleSelector
+                  selectedStyle={captionStyle}
+                  onStyleChange={setCaptionStyle}
+                />
+              )}
+            </div>
           </div>
 
           {/* Footer */}
