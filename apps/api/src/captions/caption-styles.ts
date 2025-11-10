@@ -31,14 +31,14 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
     name: 'Minimal',
     description: 'Simple white text with subtle background',
     fontFamily: 'Arial',
-    fontSize: 32,
+    fontSize: 46, // Increased from 32 for better visibility
     textColor: '#FFFFFF',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     position: 'bottom',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 2,
+      width: 4, // Increased from 2 for better contrast
     },
   },
 
@@ -63,14 +63,14 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
     name: 'Elegant',
     description: 'Smooth slide-up animation with serif font',
     fontFamily: 'Georgia',
-    fontSize: 34,
+    fontSize: 48, // Increased from 34 for better visibility
     textColor: '#F5F5F5',
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     position: 'bottom',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 2,
+      width: 4, // Increased from 2 for better contrast
     },
   },
 
@@ -79,14 +79,14 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
     name: 'Modern',
     description: 'Fade-in animation with clean sans-serif',
     fontFamily: 'Arial',
-    fontSize: 36,
+    fontSize: 50, // Increased from 36 for better visibility
     textColor: '#FFFFFF',
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     position: 'bottom',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 2,
+      width: 4, // Increased from 2 for better contrast
     },
   },
 
@@ -111,14 +111,14 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
     name: 'Podcast',
     description: 'Professional style with speaker labels',
     fontFamily: 'Arial',
-    fontSize: 30,
+    fontSize: 48, // Increased from 30 for better visibility
     textColor: '#FFFFFF',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Slightly more opaque
     position: 'bottom',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 2,
+      width: 4, // Increased from 2 for better contrast
     },
   },
 
