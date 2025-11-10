@@ -681,6 +681,18 @@ export class ProjectsService {
     const metadata = await this.ffmpeg.getVideoMetadata(inputPath);
     const duration = moment.tEnd - moment.tStart;
     
+    // Check duration limit for animated styles (memory constraint)
+    const MAX_DURATION = 20; // 20 seconds max for frame-by-frame rendering
+    if (duration > MAX_DURATION) {
+      this.logger.warn(
+        `Clip duration (${duration.toFixed(1)}s) exceeds limit for animated captions (${MAX_DURATION}s). ` +
+        `Falling back to static captions. Use Karaoke style for longer clips.`
+      );
+      // Fallback to copying without captions
+      await fs.copyFile(inputPath, outputPath);
+      return;
+    }
+    
     // Generate caption frames
     const frameDir = this.video.getTempFilePath('_frames');
     await fs.mkdir(frameDir, { recursive: true });
