@@ -677,15 +677,17 @@ export class ProjectsService {
     const animator = new CaptionAnimatorService();
     const stylePreset = getCaptionStylePreset(captionStyle);
     
-    // Get video metadata
+    // Get video metadata and actual duration from the file
     const metadata = await this.ffmpeg.getVideoMetadata(inputPath);
-    const duration = moment.tEnd - moment.tStart;
+    const actualDuration = metadata.duration;
+    
+    this.logger.log(`Clip actual duration: ${actualDuration.toFixed(1)}s (moment span: ${(moment.tEnd - moment.tStart).toFixed(1)}s)`);
     
     // Check duration limit for animated styles (memory constraint)
     const MAX_DURATION = 20; // 20 seconds max for frame-by-frame rendering
-    if (duration > MAX_DURATION) {
+    if (actualDuration > MAX_DURATION) {
       this.logger.warn(
-        `Clip duration (${duration.toFixed(1)}s) exceeds limit for animated captions (${MAX_DURATION}s). ` +
+        `Clip duration (${actualDuration.toFixed(1)}s) exceeds limit for animated captions (${MAX_DURATION}s). ` +
         `Falling back to static captions. Use Karaoke style for longer clips.`
       );
       // Fallback to copying without captions
@@ -697,11 +699,11 @@ export class ProjectsService {
     const frameDir = this.video.getTempFilePath('_frames');
     await fs.mkdir(frameDir, { recursive: true });
     
-    this.logger.log(`Generating ${Math.ceil(duration * 30)} caption frames...`);
+    this.logger.log(`Generating ${Math.ceil(actualDuration * 30)} caption frames...`);
     await animator.generateCaptionFrames(
       words,
       stylePreset,
-      duration,
+      actualDuration,
       30, // 30 FPS
       frameDir,
     );
