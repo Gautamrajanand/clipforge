@@ -351,23 +351,29 @@ export class CaptionAnimatorService {
     width: number,
     height: number,
   ): void {
-    const y = height / 2;
+    // Position slightly above center for better face framing
+    const y = height * 0.45;
     const fontSize = style.fontSize;
+    const wordSpacing = 30; // Add extra spacing between words
     
     ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'center'; // Center each word individually
     ctx.textBaseline = 'middle';
 
-    // Calculate total width for centering
-    const totalWidth = ctx.measureText(caption.text).width;
+    // Calculate positions for each word with proper spacing
+    const words = caption.words;
+    const wordWidths = words.map(w => ctx.measureText(w.text).width);
+    const totalWidth = wordWidths.reduce((sum, w) => sum + w, 0) + (wordSpacing * (words.length - 1));
     let currentX = (width - totalWidth) / 2;
 
     // Render each word with individual bounce animation
     const totalDuration = caption.end - caption.start;
     
-    for (const word of caption.words) {
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const wordWidth = wordWidths[i];
+      const wordCenter = currentX + wordWidth / 2;
       const wordStart = (word.start - caption.start) / totalDuration;
-      const wordEnd = (word.end - caption.start) / totalDuration;
       
       // Check if this word should be animated
       if (progress >= wordStart) {
@@ -382,25 +388,25 @@ export class CaptionAnimatorService {
         }
         
         ctx.save();
-        ctx.translate(currentX + ctx.measureText(word.text).width / 2, y);
+        ctx.translate(wordCenter, y);
         ctx.scale(scale, scale);
-        ctx.translate(-(currentX + ctx.measureText(word.text).width / 2), -y);
+        ctx.translate(-wordCenter, -y);
         
         // Draw stroke (thick black outline)
         if (style.stroke) {
           ctx.strokeStyle = style.stroke.color;
           ctx.lineWidth = style.stroke.width;
-          ctx.strokeText(word.text, currentX, y);
+          ctx.strokeText(word.text, wordCenter, y);
         }
         
         // Draw fill (yellow/gold)
         ctx.fillStyle = style.textColor;
-        ctx.fillText(word.text, currentX, y);
+        ctx.fillText(word.text, wordCenter, y);
         
         ctx.restore();
       }
       
-      currentX += ctx.measureText(word.text + ' ').width;
+      currentX += wordWidth + wordSpacing;
     }
   }
 
@@ -415,23 +421,24 @@ export class CaptionAnimatorService {
     width: number,
     height: number,
   ): void {
-    const y = height - 150;
+    // Position at bottom third for portrait videos
+    const y = height * 0.75;
     const fontSize = style.fontSize;
     
     ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Pulsing glow effect
-    const glowIntensity = 0.5 + 0.5 * Math.sin(progress * Math.PI * 4); // Pulse 4 times
-    const glowBlur = 15 + glowIntensity * 25;
+    // Pulsing glow effect (more intense)
+    const glowIntensity = 0.6 + 0.4 * Math.sin(progress * Math.PI * 4); // Pulse 4 times
+    const glowBlur = 20 + glowIntensity * 40; // Stronger glow
     
-    // Draw multiple glow layers
-    for (let i = 0; i < 3; i++) {
+    // Draw multiple glow layers for intense effect
+    for (let i = 0; i < 4; i++) {
       ctx.save();
       ctx.shadowColor = style.textColor;
-      ctx.shadowBlur = glowBlur * (3 - i);
-      ctx.globalAlpha = 0.3 * glowIntensity;
+      ctx.shadowBlur = glowBlur * (4 - i);
+      ctx.globalAlpha = 0.4 * glowIntensity;
       
       ctx.fillStyle = style.textColor;
       ctx.fillText(text, width / 2, y);
@@ -439,7 +446,7 @@ export class CaptionAnimatorService {
       ctx.restore();
     }
     
-    // Draw main text with stroke
+    // Draw main text with thick stroke
     if (style.stroke && style.stroke.width > 0) {
       ctx.strokeStyle = style.stroke.color;
       ctx.lineWidth = style.stroke.width;
