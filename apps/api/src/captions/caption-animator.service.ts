@@ -464,7 +464,7 @@ export class CaptionAnimatorService {
     const padding = 15;
     
     ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left'; // Use left alignment for precise positioning
     ctx.textBaseline = 'middle';
 
     // Calculate total width for centering
@@ -494,9 +494,9 @@ export class CaptionAnimatorService {
           fontSize + padding,
         );
         
-        // Draw black text on top
+        // Draw black text on top (left-aligned now)
         ctx.fillStyle = style.textColor;
-        ctx.fillText(word.text, currentX + wordWidth / 2, y);
+        ctx.fillText(word.text, currentX, y);
       }
       
       currentX += ctx.measureText(word.text + ' ').width;
