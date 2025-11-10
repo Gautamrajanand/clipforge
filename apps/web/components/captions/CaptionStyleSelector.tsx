@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Type, Sparkles, Zap, Mic, Wand2 } from "lucide-react";
+import { Check, Type, Sparkles, Zap, Mic, Wand2, Star, Flame, Highlighter } from "lucide-react";
 
 /**
  * Caption Style Presets
@@ -55,6 +55,31 @@ export const CAPTION_PRESETS = [
     icon: Mic,
     position: "bottom",
     gradient: "from-green-600 to-emerald-600",
+  },
+  // NEW VIRAL STYLES (2024-2025 Trends)
+  {
+    id: "mrbeast",
+    name: "MrBeast",
+    description: "🔥 Viral yellow pop with bounce (TikTok/YouTube)",
+    icon: Star,
+    position: "center",
+    gradient: "from-yellow-500 to-orange-500",
+  },
+  {
+    id: "neon",
+    name: "Neon",
+    description: "✨ Bright green glow effect (Instagram Reels)",
+    icon: Flame,
+    position: "bottom",
+    gradient: "from-green-400 to-emerald-500",
+  },
+  {
+    id: "highlight",
+    name: "Highlight",
+    description: "💡 Yellow box on keywords (Hormozi style)",
+    icon: Highlighter,
+    position: "center",
+    gradient: "from-amber-400 to-yellow-500",
   },
 ];
 

@@ -121,6 +121,62 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
       width: 2,
     },
   },
+
+  // NEW VIRAL STYLES (2024-2025 Trends)
+
+  mrbeast: {
+    id: 'mrbeast',
+    name: 'MrBeast',
+    description: 'Viral yellow pop style with bounce animation',
+    fontFamily: 'Arial Black',
+    fontSize: 64,
+    textColor: '#FFD700', // Gold/Yellow
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 8,
+    },
+  },
+
+  neon: {
+    id: 'neon',
+    name: 'Neon',
+    description: 'Bright neon green with glow effect (TikTok viral)',
+    fontFamily: 'Arial Black',
+    fontSize: 56,
+    textColor: '#00FF00', // Neon green
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'bottom',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 6,
+    },
+    shadow: {
+      offsetX: 0,
+      offsetY: 0,
+      blur: 20,
+      color: '#00FF00',
+    },
+  },
+
+  highlight: {
+    id: 'highlight',
+    name: 'Highlight',
+    description: 'Yellow box highlights on key words (Hormozi style)',
+    fontFamily: 'Montserrat',
+    fontSize: 48,
+    textColor: '#000000', // Black text
+    backgroundColor: '#FFD700', // Yellow background
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#FFFFFF',
+      width: 0,
+    },
+  },
 };
 
 /**

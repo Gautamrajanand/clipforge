@@ -192,6 +192,15 @@ export class CaptionAnimatorService {
       case 'karaoke':
         this.renderKaraokeAnimation(ctx, caption, style, animationProgress, width, height);
         break;
+      case 'mrbeast':
+        this.renderMrBeastAnimation(ctx, caption, style, animationProgress, width, height);
+        break;
+      case 'neon':
+        this.renderNeonAnimation(ctx, caption.text, style, animationProgress, width, height);
+        break;
+      case 'highlight':
+        this.renderHighlightAnimation(ctx, caption, style, animationProgress, width, height);
+        break;
       default:
         this.renderStaticCaption(ctx, caption.text, style, width, height);
     }
@@ -321,6 +330,171 @@ export class CaptionAnimatorService {
       ctx.fillStyle = color;
       ctx.fillText(word.text, currentX, y);
 
+      currentX += ctx.measureText(word.text + ' ').width;
+    }
+  }
+
+  /**
+   * MrBeast style: Word-by-word pop with elastic bounce
+   */
+  private renderMrBeastAnimation(
+    ctx: CanvasRenderingContext2D,
+    caption: { words: Word[]; start: number; end: number; text: string },
+    style: CaptionStylePreset,
+    progress: number,
+    width: number,
+    height: number,
+  ): void {
+    const y = height / 2;
+    const fontSize = style.fontSize;
+    
+    ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Calculate total width for centering
+    const totalWidth = ctx.measureText(caption.text).width;
+    let currentX = (width - totalWidth) / 2;
+
+    // Render each word with individual bounce animation
+    const totalDuration = caption.end - caption.start;
+    
+    for (const word of caption.words) {
+      const wordStart = (word.start - caption.start) / totalDuration;
+      const wordEnd = (word.end - caption.start) / totalDuration;
+      
+      // Check if this word should be animated
+      if (progress >= wordStart) {
+        const wordProgress = Math.min(1, (progress - wordStart) / 0.15); // 15% duration for bounce
+        
+        // Elastic bounce: 0.7 → 1.2 → 1.0
+        let scale = 1.0;
+        if (wordProgress < 1) {
+          const t = wordProgress;
+          scale = 0.7 + (0.5 * (1 - Math.pow(1 - t, 3))) - (0.2 * Math.sin(t * Math.PI));
+        }
+        
+        ctx.save();
+        ctx.translate(currentX + ctx.measureText(word.text).width / 2, y);
+        ctx.scale(scale, scale);
+        ctx.translate(-(currentX + ctx.measureText(word.text).width / 2), -y);
+        
+        // Draw stroke (thick black outline)
+        if (style.stroke) {
+          ctx.strokeStyle = style.stroke.color;
+          ctx.lineWidth = style.stroke.width;
+          ctx.strokeText(word.text, currentX, y);
+        }
+        
+        // Draw fill (yellow/gold)
+        ctx.fillStyle = style.textColor;
+        ctx.fillText(word.text, currentX, y);
+        
+        ctx.restore();
+      }
+      
+      currentX += ctx.measureText(word.text + ' ').width;
+    }
+  }
+
+  /**
+   * Neon style: Glow pulse effect with bright colors
+   */
+  private renderNeonAnimation(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    style: CaptionStylePreset,
+    progress: number,
+    width: number,
+    height: number,
+  ): void {
+    const y = height - 150;
+    const fontSize = style.fontSize;
+    
+    ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Pulsing glow effect
+    const glowIntensity = 0.5 + 0.5 * Math.sin(progress * Math.PI * 4); // Pulse 4 times
+    const glowBlur = 15 + glowIntensity * 25;
+    
+    // Draw multiple glow layers
+    for (let i = 0; i < 3; i++) {
+      ctx.save();
+      ctx.shadowColor = style.textColor;
+      ctx.shadowBlur = glowBlur * (3 - i);
+      ctx.globalAlpha = 0.3 * glowIntensity;
+      
+      ctx.fillStyle = style.textColor;
+      ctx.fillText(text, width / 2, y);
+      
+      ctx.restore();
+    }
+    
+    // Draw main text with stroke
+    if (style.stroke && style.stroke.width > 0) {
+      ctx.strokeStyle = style.stroke.color;
+      ctx.lineWidth = style.stroke.width;
+      ctx.strokeText(text, width / 2, y);
+    }
+    
+    // Draw bright fill
+    ctx.fillStyle = style.textColor;
+    ctx.fillText(text, width / 2, y);
+  }
+
+  /**
+   * Highlight style: Yellow box slides in behind words
+   */
+  private renderHighlightAnimation(
+    ctx: CanvasRenderingContext2D,
+    caption: { words: Word[]; start: number; end: number; text: string },
+    style: CaptionStylePreset,
+    progress: number,
+    width: number,
+    height: number,
+  ): void {
+    const y = height / 2;
+    const fontSize = style.fontSize;
+    const padding = 15;
+    
+    ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Calculate total width for centering
+    const totalWidth = ctx.measureText(caption.text).width;
+    let currentX = (width - totalWidth) / 2;
+
+    // Render each word with sliding box animation
+    const totalDuration = caption.end - caption.start;
+    
+    for (const word of caption.words) {
+      const wordStart = (word.start - caption.start) / totalDuration;
+      
+      if (progress >= wordStart) {
+        const wordProgress = Math.min(1, (progress - wordStart) / 0.1); // 10% duration for slide
+        const wordWidth = ctx.measureText(word.text).width;
+        
+        // Slide box from left to right
+        const boxWidth = wordWidth + padding * 2;
+        const slideProgress = wordProgress; // Linear slide
+        
+        // Draw yellow background box
+        ctx.fillStyle = style.backgroundColor;
+        ctx.fillRect(
+          currentX - padding,
+          y - fontSize / 2 - padding / 2,
+          boxWidth * slideProgress,
+          fontSize + padding,
+        );
+        
+        // Draw black text on top
+        ctx.fillStyle = style.textColor;
+        ctx.fillText(word.text, currentX + wordWidth / 2, y);
+      }
+      
       currentX += ctx.measureText(word.text + ' ').width;
     }
   }
