@@ -1,16 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-// TODO: Re-enable canvas when Docker build completes
-// import { createCanvas, Canvas, CanvasRenderingContext2D } from 'canvas';
+import { createCanvas, Canvas, CanvasRenderingContext2D } from 'canvas';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CaptionStylePreset } from './caption-styles';
-
-// Temporary type definitions until canvas is installed
-type Canvas = any;
-type CanvasRenderingContext2D = any;
-const createCanvas = (width: number, height: number): any => {
-  throw new Error('Canvas not yet installed - frame-by-frame rendering temporarily disabled');
-};
 
 interface Word {
   text: string;
