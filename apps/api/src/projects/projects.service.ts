@@ -684,7 +684,7 @@ export class ProjectsService {
     this.logger.log(`Clip actual duration: ${actualDuration.toFixed(1)}s (moment span: ${(moment.tEnd - moment.tStart).toFixed(1)}s)`);
     
     // Check duration limit for animated styles (memory constraint)
-    const MAX_DURATION = 25; // 25 seconds max for frame-by-frame rendering (~750 frames)
+    const MAX_DURATION = 15; // 15 seconds max for frame-by-frame rendering (~450 frames, reliable)
     if (actualDuration > MAX_DURATION) {
       this.logger.warn(
         `Clip duration (${actualDuration.toFixed(1)}s) exceeds limit for animated captions (${MAX_DURATION}s). ` +
