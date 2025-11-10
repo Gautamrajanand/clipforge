@@ -55,7 +55,8 @@ export class CaptionAnimatorService {
     // Group words into caption lines
     const captionLines = this.groupWordsIntoLines(words, 42);
 
-    // Generate each frame
+    // Generate each frame with progress logging and memory management
+    const batchSize = 100; // Process 100 frames at a time
     for (let frameNum = 0; frameNum < totalFrames; frameNum++) {
       const timestamp = frameNum / fps;
       const framePath = path.join(outputDir, `caption_${frameNum.toString().padStart(6, '0')}.png`);
@@ -75,6 +76,17 @@ export class CaptionAnimatorService {
       }
 
       framePaths.push(framePath);
+
+      // Log progress every 100 frames
+      if ((frameNum + 1) % batchSize === 0 || frameNum === totalFrames - 1) {
+        const percent = ((frameNum + 1) / totalFrames * 100).toFixed(1);
+        this.logger.log(`Frame generation progress: ${frameNum + 1}/${totalFrames} (${percent}%)`);
+        
+        // Force garbage collection hint (if available)
+        if (global.gc) {
+          global.gc();
+        }
+      }
     }
 
     this.logger.log(`Generated ${framePaths.length} caption frames`);
