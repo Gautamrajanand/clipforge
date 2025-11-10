@@ -129,14 +129,14 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
     name: 'MrBeast',
     description: 'Viral yellow pop style with bounce animation',
     fontFamily: 'Arial Black',
-    fontSize: 64,
+    fontSize: 80, // Increased from 64 for better visibility
     textColor: '#FFD700', // Gold/Yellow
     backgroundColor: 'rgba(0, 0, 0, 0)',
     position: 'center',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 8,
+      width: 10, // Increased from 8 for stronger outline
     },
   },
 
@@ -145,19 +145,19 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
     name: 'Neon',
     description: 'Bright neon green with glow effect (TikTok viral)',
     fontFamily: 'Arial Black',
-    fontSize: 56,
+    fontSize: 72, // Increased from 56 for better visibility
     textColor: '#00FF00', // Neon green
     backgroundColor: 'rgba(0, 0, 0, 0)',
     position: 'bottom',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 6,
+      width: 8, // Increased from 6 for stronger outline
     },
     shadow: {
       offsetX: 0,
       offsetY: 0,
-      blur: 20,
+      blur: 30, // Increased from 20 for stronger glow
       color: '#00FF00',
     },
   },
@@ -166,8 +166,8 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
     id: 'highlight',
     name: 'Highlight',
     description: 'Yellow box highlights on key words (Hormozi style)',
-    fontFamily: 'Montserrat',
-    fontSize: 48,
+    fontFamily: 'Arial Black', // Changed from Montserrat for consistency
+    fontSize: 70, // Increased from 48 for better visibility
     textColor: '#000000', // Black text
     backgroundColor: '#FFD700', // Yellow background
     position: 'center',

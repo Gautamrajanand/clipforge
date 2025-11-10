@@ -41,6 +41,8 @@ export class CaptionAnimatorService {
     duration: number,
     fps: number = 30,
     outputDir: string,
+    width: number = 1920,
+    height: number = 1080,
   ): Promise<string[]> {
     this.logger.log(`Generating caption frames: ${words.length} words, ${duration}s, ${fps}fps`);
 
@@ -69,10 +71,10 @@ export class CaptionAnimatorService {
         const progress = this.calculateAnimationProgress(activeCaption, timestamp);
 
         // Render frame with animation
-        await this.renderFrame(framePath, activeCaption, style, progress, 1920, 1080);
+        await this.renderFrame(framePath, activeCaption, style, progress, width, height);
       } else {
         // Render transparent frame (no caption)
-        await this.renderTransparentFrame(framePath, 1920, 1080);
+        await this.renderTransparentFrame(framePath, width, height);
       }
 
       framePaths.push(framePath);
@@ -369,13 +371,14 @@ export class CaptionAnimatorService {
       
       // Check if this word should be animated
       if (progress >= wordStart) {
-        const wordProgress = Math.min(1, (progress - wordStart) / 0.15); // 15% duration for bounce
+        const wordProgress = Math.min(1, (progress - wordStart) / 0.2); // 20% duration for more visible bounce
         
-        // Elastic bounce: 0.7 → 1.2 → 1.0
+        // Stronger elastic bounce: 0.5 → 1.3 → 1.0 (more pronounced)
         let scale = 1.0;
         if (wordProgress < 1) {
           const t = wordProgress;
-          scale = 0.7 + (0.5 * (1 - Math.pow(1 - t, 3))) - (0.2 * Math.sin(t * Math.PI));
+          // More dramatic bounce effect
+          scale = 0.5 + (0.8 * (1 - Math.pow(1 - t, 3))) - (0.3 * Math.sin(t * Math.PI));
         }
         
         ctx.save();

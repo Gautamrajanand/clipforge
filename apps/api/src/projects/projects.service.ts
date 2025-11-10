@@ -695,17 +695,19 @@ export class ProjectsService {
       return;
     }
     
-    // Generate caption frames
+    // Generate caption frames with correct video dimensions
     const frameDir = this.video.getTempFilePath('_frames');
     await fs.mkdir(frameDir, { recursive: true });
     
-    this.logger.log(`Generating ${Math.ceil(actualDuration * 30)} caption frames...`);
+    this.logger.log(`Generating ${Math.ceil(actualDuration * 30)} caption frames at ${metadata.width}x${metadata.height}...`);
     await animator.generateCaptionFrames(
       words,
       stylePreset,
       actualDuration,
       30, // 30 FPS
       frameDir,
+      metadata.width,
+      metadata.height,
     );
     
     // Overlay frames onto video
