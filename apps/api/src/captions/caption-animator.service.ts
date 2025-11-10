@@ -54,8 +54,8 @@ export class CaptionAnimatorService {
     const totalFrames = Math.ceil(duration * fps);
     const framePaths: string[] = [];
 
-    // Group words into caption lines
-    const captionLines = this.groupWordsIntoLines(words, 42);
+    // Group words into caption lines (shorter for more impact)
+    const captionLines = this.groupWordsIntoLines(words, 20); // Reduced from 42 to show 1-2 words at a time
 
     // Generate each frame with progress logging and memory management
     const batchSize = 100; // Process 100 frames at a time
@@ -462,12 +462,13 @@ export class CaptionAnimatorService {
     width: number,
     height: number,
   ): void {
-    const y = height / 2;
+    // Position slightly above center for better face framing
+    const y = height * 0.45;
     const fontSize = style.fontSize;
-    const padding = 15;
+    const padding = 25; // Increased from 15 for more breathing room
     
     ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
-    ctx.textAlign = 'left'; // Use left alignment for precise positioning
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
     // Calculate total width for centering
@@ -481,23 +482,26 @@ export class CaptionAnimatorService {
       const wordStart = (word.start - caption.start) / totalDuration;
       
       if (progress >= wordStart) {
-        const wordProgress = Math.min(1, (progress - wordStart) / 0.1); // 10% duration for slide
+        // Faster, snappier animation (5% duration instead of 10%)
+        const wordProgress = Math.min(1, (progress - wordStart) / 0.05);
         const wordWidth = ctx.measureText(word.text).width;
+        
+        // Ease-out for snappier feel
+        const easeProgress = 1 - Math.pow(1 - wordProgress, 3);
         
         // Slide box from left to right
         const boxWidth = wordWidth + padding * 2;
-        const slideProgress = wordProgress; // Linear slide
         
-        // Draw yellow background box
+        // Draw yellow background box with rounded corners effect
         ctx.fillStyle = style.backgroundColor;
         ctx.fillRect(
           currentX - padding,
           y - fontSize / 2 - padding / 2,
-          boxWidth * slideProgress,
+          boxWidth * easeProgress,
           fontSize + padding,
         );
         
-        // Draw black text on top (left-aligned now)
+        // Draw black text on top
         ctx.fillStyle = style.textColor;
         ctx.fillText(word.text, currentX, y);
       }
