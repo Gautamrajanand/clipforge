@@ -87,11 +87,13 @@ model Project {
 
 enum ProjectStatus {
   PENDING
+  IMPORTING
   INGESTING
   TRANSCRIBING
   DETECTING
   READY
   FAILED
+  ERROR
 }
 
 model Asset {

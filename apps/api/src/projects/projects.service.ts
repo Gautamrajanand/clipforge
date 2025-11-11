@@ -393,74 +393,90 @@ export class ProjectsService {
 
     this.logger.log(`📥 Importing video from URL for project ${projectId}: ${url}`);
 
+    // Update project status to IMPORTING immediately
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        status: 'IMPORTING',
+      },
+    });
+
+    // Start the import process asynchronously (don't wait for it)
+    this.processUrlImport(projectId, url, customTitle).catch((error) => {
+      this.logger.error(`URL import failed for project ${projectId}:`, error);
+      // Update project status to ERROR
+      this.prisma.project.update({
+        where: { id: projectId },
+        data: {
+          status: 'ERROR',
+        },
+      }).catch(err => this.logger.error('Failed to update project status:', err));
+    });
+
+    // Return immediately
+    return {
+      message: 'Video import started',
+      projectId,
+      status: 'IMPORTING',
+    };
+  }
+
+  private async processUrlImport(projectId: string, url: string, customTitle?: string) {
+    this.logger.log(`🔄 Processing URL import for project ${projectId}`);
+
     // Import VideoDownloadService dynamically
     const { VideoDownloadService } = await import('../video/video-download.service');
     const downloadService = new VideoDownloadService();
 
-    try {
-      // Download video from URL
-      const { filePath, info } = await downloadService.downloadVideo(url, customTitle);
+    // Download video from URL
+    const { filePath, info } = await downloadService.downloadVideo(url, customTitle);
 
-      // Read the downloaded file
-      const fileBuffer = await fs.readFile(filePath);
-      const fileSize = (await fs.stat(filePath)).size;
+    // Read the downloaded file
+    const fileBuffer = await fs.readFile(filePath);
+    const fileSize = (await fs.stat(filePath)).size;
 
-      // Upload to MinIO
-      const key = `projects/${projectId}/source.mp4`;
-      const result = await this.storage.uploadFile(key, fileBuffer, 'video/mp4');
+    // Upload to MinIO
+    const key = `projects/${projectId}/source.mp4`;
+    const result = await this.storage.uploadFile(key, fileBuffer, 'video/mp4');
 
-      // Get video metadata
-      const metadata = await this.video.getVideoMetadata(filePath);
+    // Get video metadata
+    const metadata = await this.video.getVideoMetadata(filePath);
 
-      // Cleanup downloaded file
-      await downloadService.cleanup(filePath);
+    // Cleanup downloaded file
+    await downloadService.cleanup(filePath);
 
-      // Update project with video info
-      await this.prisma.project.update({
-        where: { id: projectId },
-        data: {
-          title: customTitle || info.title,
-          sourceUrl: result.key,
-          status: 'INGESTING',
-        },
+    // Update project with video info
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        title: customTitle || info.title,
+        sourceUrl: result.key,
+        status: 'INGESTING',
+      },
+    });
+
+    // Create asset record
+    await this.prisma.asset.create({
+      data: {
+        projectId,
+        kind: 'ORIGINAL',
+        url: result.key,
+        duration: metadata.duration,
+        mimeType: 'video/mp4',
+        size: BigInt(fileSize),
+      },
+    });
+
+    this.logger.log(`✅ URL import complete for project ${projectId}`);
+
+    // Trigger transcription asynchronously
+    if (this.transcription.isAvailable()) {
+      this.logger.log(`🎙️  Triggering transcription for project: ${projectId}`);
+      this.transcription.transcribeProject(projectId).catch((error) => {
+        this.logger.error('Transcription failed:', error);
       });
-
-      // Create asset record
-      await this.prisma.asset.create({
-        data: {
-          projectId,
-          kind: 'ORIGINAL',
-          url: result.key,
-          duration: metadata.duration,
-          mimeType: 'video/mp4',
-          size: BigInt(fileSize),
-        },
-      });
-
-      // Trigger transcription asynchronously
-      if (this.transcription.isAvailable()) {
-        this.logger.log(`🎙️  Triggering transcription for project: ${projectId}`);
-        this.transcription.transcribeProject(projectId).catch((error) => {
-          this.logger.error('Transcription failed:', error);
-        });
-      } else {
-        this.logger.warn('⚠️  Transcription not available - skipping');
-      }
-
-      return {
-        message: 'Video imported successfully',
-        key: result.key,
-        platform: info.platform,
-        metadata: {
-          ...metadata,
-          size: fileSize,
-          title: info.title,
-          thumbnail: info.thumbnail,
-        },
-      };
-    } catch (error) {
-      this.logger.error(`Failed to import video from URL: ${error.message}`);
-      throw error;
+    } else {
+      this.logger.warn('⚠️  Transcription not available - skipping');
     }
   }
 
