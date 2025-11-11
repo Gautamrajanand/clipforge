@@ -143,11 +143,14 @@ export default function Dashboard() {
   };
 
   const handleImportUrl = async (url: string, title: string, clipSettings?: any) => {
+    console.log('🚀 handleImportUrl called with:', { url, title, clipSettings });
+    
     if (!token || !isAuthReady) {
       alert('Please wait for authentication...');
       return;
     }
 
+    console.log('✅ Auth ready, starting import...');
     setIsUploading(true);
     setUploadState({
       stage: 'uploading',
@@ -159,7 +162,7 @@ export default function Dashboard() {
 
     try {
       // Create project with clip settings
-      console.log('📥 Importing from URL:', url);
+      console.log('📥 Creating project for URL:', url);
       const createResponse = await fetch('http://localhost:3000/v1/projects', {
         method: 'POST',
         headers: {
@@ -172,8 +175,13 @@ export default function Dashboard() {
         }),
       });
 
-      if (!createResponse.ok) throw new Error('Failed to create project');
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text();
+        console.error('❌ Failed to create project:', errorText);
+        throw new Error('Failed to create project');
+      }
       const project = await createResponse.json();
+      console.log('✅ Project created:', project.id);
 
       // Import video from URL
       setUploadState({
@@ -184,6 +192,7 @@ export default function Dashboard() {
         error: '',
       });
 
+      console.log('📥 Calling import-url endpoint...');
       const importResponse = await fetch(`http://localhost:3000/v1/projects/${project.id}/import-url`, {
         method: 'POST',
         headers: {
@@ -195,8 +204,12 @@ export default function Dashboard() {
 
       if (!importResponse.ok) {
         const errorData = await importResponse.json();
+        console.error('❌ Import failed:', errorData);
         throw new Error(errorData.message || 'Failed to import video');
       }
+
+      const importResult = await importResponse.json();
+      console.log('✅ Import successful:', importResult);
 
       // Import complete - now wait for processing
       setUploadState({
@@ -207,15 +220,17 @@ export default function Dashboard() {
         error: '',
       });
       
+      console.log('⏳ Polling for project status...');
       // Poll for project completion
       await pollProjectStatus(project.id);
       
+      console.log('✅ Processing complete! Redirecting...');
       // Close modal and navigate
       setShowUploadModal(false);
       setIsUploading(false);
       router.push(`/project/${project.id}`);
     } catch (error: any) {
-      console.error('Import error:', error);
+      console.error('❌ Import error:', error);
       setUploadState({
         stage: 'error',
         progress: 0,

@@ -70,8 +70,9 @@ export default function UploadModal({
       onUpload(file, title, clipSettings);
       // Don't close modal or clear form during upload
       // The parent component will handle closing after upload completes
-    } else if (activeTab === 'url' && url && title && onImportUrl) {
-      onImportUrl(url, title, clipSettings);
+    } else if (activeTab === 'url' && url && onImportUrl) {
+      // Use title if provided, otherwise let backend auto-fill
+      onImportUrl(url, title || 'Imported Video', clipSettings);
     }
   };
 
@@ -276,13 +277,13 @@ export default function UploadModal({
               {/* Project Title */}
               <div className="mt-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Project Title
+                  Project Title <span className="text-gray-400 font-normal">(optional - will auto-fill from video)</span>
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter project title (or leave blank to auto-fill)"
+                  placeholder="Leave blank to use video title"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
@@ -318,7 +319,7 @@ export default function UploadModal({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={(activeTab === 'upload' && (!file || !title)) || (activeTab === 'url' && (!url || !title))}
+            disabled={(activeTab === 'upload' && (!file || !title)) || (activeTab === 'url' && !url)}
             className="flex-1 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {activeTab === 'upload' ? 'Upload & Process' : 'Import & Process'}
