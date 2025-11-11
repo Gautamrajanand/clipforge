@@ -687,8 +687,8 @@ export class ProjectsService {
     
     this.logger.log(`🎬 Starting chunked rendering for ${actualDuration.toFixed(1)}s clip`);
     
-    // Split into chunks
-    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 15);
+    // Split into chunks (12s for better memory management)
+    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 12);
     const chunkMetadata = chunkManager.getChunkMetadata(chunks);
     
     this.logger.log(
@@ -744,6 +744,11 @@ export class ProjectsService {
       await fs.unlink(chunkInputPath);
       
       chunkVideoPaths.push(chunkOutputPath);
+      
+      // Force garbage collection after each chunk to free memory
+      if (global.gc) {
+        global.gc();
+      }
       
       this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
     }
