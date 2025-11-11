@@ -17,7 +17,7 @@ export interface ChunkBoundary {
 @Injectable()
 export class ChunkManagerService {
   private readonly logger = new Logger(ChunkManagerService.name);
-  private readonly CHUNK_SIZE = 12; // 12 seconds per chunk (reduced for memory safety)
+  private readonly CHUNK_SIZE = 8; // 8 seconds per chunk (ultra-conservative for memory)
   private readonly OVERLAP = 0.5; // 0.5 second overlap for smooth transitions
 
   /**

@@ -687,8 +687,8 @@ export class ProjectsService {
     
     this.logger.log(`🎬 Starting chunked rendering for ${actualDuration.toFixed(1)}s clip`);
     
-    // Split into chunks (12s for better memory management)
-    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 12);
+    // Split into chunks (8s for ultra-conservative memory management)
+    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 8);
     const chunkMetadata = chunkManager.getChunkMetadata(chunks);
     
     this.logger.log(
@@ -749,6 +749,9 @@ export class ProjectsService {
       if (global.gc) {
         global.gc();
       }
+      
+      // Add a small delay to let memory settle between chunks
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second pause
       
       this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
     }

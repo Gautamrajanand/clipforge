@@ -554,15 +554,16 @@ export class FFmpegService {
         ])
         .outputOptions([
           '-c:v libx264',
-          '-preset fast', // Changed from medium to fast for less memory
-          '-crf 23', // Slightly higher CRF for smaller file size
-          '-profile:v high',
-          '-level 4.2',
+          '-preset ultrafast', // Ultra-fast preset for minimal memory
+          '-crf 25', // Higher CRF for smaller files
+          '-profile:v baseline', // Simpler profile
+          '-level 3.1',
           '-pix_fmt yuv420p',
           '-movflags +faststart',
           '-c:a copy',
-          '-threads 2', // Limit threads to reduce memory usage
-          '-bufsize 1M', // Smaller buffer size
+          '-threads 1', // Single thread to minimize memory
+          '-bufsize 512k', // Even smaller buffer
+          '-maxrate 2M', // Limit bitrate
         ])
         .output(outputPath)
         .on('start', (commandLine) => {
