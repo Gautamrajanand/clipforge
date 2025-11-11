@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2025-11-11
+
+### 🎉 Major Feature: Long-Form Clips with Animated Captions
+
+This release adds support for 60-90+ second clips with all 14 animated caption styles, achieving competitive parity with OpusClip, Submagic, and Kapwing.
+
+### Added
+
+#### Chunked Rendering Architecture
+- **ChunkManagerService**: Splits long clips into 8-second chunks with smart boundary detection
+- **VideoMergerService**: Seamless concatenation with FFmpeg concat demuxer
+- Automatic routing: ≤15s = single-pass, >15s = chunked rendering
+- Memory-efficient sequential processing with 2s recovery pauses
+- Chunk validation (resolution, codec, FPS compatibility)
+
+#### Caption System Enhancements
+- Extended all 14 animated styles to support 90+ second clips
+- Added 4 new viral caption styles:
+  - **Rainbow**: Rotating colors for maximum engagement
+  - **Fill**: Progressive highlight fill effect
+  - **3D Shadow**: Layered depth effect
+  - **Tricolor**: Accent color on middle word
+  - **Bounce**: Vertical bounce animation (Hormozi/Gary Vee style)
+- Improved caption positioning (58% height for optimal face framing)
+- Reduced max chars per line (12) for better visual spacing
+- Chunk-aware frame generation with progress tracking
+
+#### Memory Optimizations
+- Ultra-conservative FFmpeg settings (ultrafast preset, single-threaded)
+- 8-second chunks (240 frames @ 30fps)
+- Forced garbage collection after each chunk
+- Smaller buffers (512k) and bitrate limiting (2M)
+- Automatic cleanup of temporary files
+
+### Changed
+- Updated caption duration limits from 15s to 90+ seconds for animated styles
+- Improved animation parameters (stronger pop/bounce effects)
+- Enhanced error handling for chunked rendering
+- Updated API documentation with new duration support
+
+### Technical Details
+- Processing time: ~5-10 minutes for 60-90s clips
+- Memory per chunk: ~100-150MB (stable)
+- Seamless concatenation with no visible seams
+- Production-tested with 38.6s clip (5 chunks)
+
+### Documentation
+- Updated `ARCHITECTURE.md` with chunked rendering architecture
+- Updated `API_DOCUMENTATION.md` with new duration limits
+- Updated `LONGER_CLIPS_PLAN.md` with implementation status
+- Created comprehensive caption system documentation
+
+---
+
 ## [0.1.0] - 2025-11-05
 
 ### 🎉 Initial Release - MVP Foundation

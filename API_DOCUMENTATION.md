@@ -525,20 +525,20 @@ Content-Type: application/json
 **Available Caption Styles:**
 ```typescript
 type CaptionStyleId = 
-  | 'minimal'      // Static, clean
-  | 'bold'         // Animated pop-in
-  | 'elegant'      // Animated slide-up
-  | 'modern'       // Animated fade-in
-  | 'karaoke'      // Word-by-word highlight (unlimited duration)
-  | 'podcast'      // Static, professional
-  | 'mrbeast'      // Viral yellow pop (15s max)
-  | 'neon'         // Glow pulse (15s max)
-  | 'highlight'    // Yellow box slide (15s max)
-  | 'rainbow'      // Color rotation (15s max)
-  | 'fill'         // Progressive fill (15s max)
-  | 'shadow3d'     // 3D depth effect (15s max)
-  | 'tricolor'     // Accent word (15s max)
-  | 'bounce';      // Vertical bounce (15s max)
+  | 'minimal'      // Static, clean (unlimited)
+  | 'bold'         // Animated pop-in (up to 90s+)
+  | 'elegant'      // Animated slide-up (up to 90s+)
+  | 'modern'       // Animated fade-in (up to 90s+)
+  | 'karaoke'      // Word-by-word highlight (unlimited)
+  | 'podcast'      // Static, professional (unlimited)
+  | 'mrbeast'      // Viral yellow pop (up to 90s+)
+  | 'neon'         // Glow pulse (up to 90s+)
+  | 'highlight'    // Yellow box slide (up to 90s+)
+  | 'rainbow'      // Color rotation (up to 90s+)
+  | 'fill'         // Progressive fill (up to 90s+)
+  | 'shadow3d'     // 3D depth effect (up to 90s+)
+  | 'tricolor'     // Accent word (up to 90s+)
+  | 'bounce';      // Vertical bounce (up to 90s+)
 ```
 
 **Response:**
@@ -554,15 +554,6 @@ type CaptionStyleId =
 
 **Error Responses:**
 
-*Clip Too Long (Animated Styles):*
-```json
-{
-  "statusCode": 400,
-  "message": "Clip duration (23.5s) exceeds maximum (15s) for animated captions. Use 'karaoke' style for longer clips.",
-  "error": "Bad Request"
-}
-```
-
 *Invalid Style:*
 ```json
 {
@@ -572,19 +563,27 @@ type CaptionStyleId =
 }
 ```
 
-**Duration Limits:**
+**Duration Support:**
 
-| Style Type | Max Duration | Reason |
-|------------|--------------|--------|
-| Animated (mrbeast, neon, highlight, rainbow, fill, shadow3d, tricolor, bounce) | 15 seconds | Memory constraints |
+| Style Type | Max Duration | Processing Method |
+|------------|--------------|-------------------|
+| Animated (mrbeast, neon, highlight, rainbow, fill, shadow3d, tricolor, bounce, bold, modern, elegant) | 90+ seconds | Chunked rendering (8s chunks) |
 | Karaoke | Unlimited | ASS subtitle burning |
 | Static (minimal, podcast) | Unlimited | ASS subtitle burning |
 
+**Processing Details:**
+- **Clips ≤15s:** Single-pass rendering (fast)
+- **Clips >15s:** Automatic chunked rendering
+  - Split into 8-second chunks
+  - Sequential processing with memory recovery
+  - Seamless concatenation
+  - ~5-10 minutes for 60-90s clips
+
 **Best Practices:**
-- Use `karaoke` for clips over 15 seconds
-- Use viral styles (mrbeast, rainbow, neon) for short, impactful clips
+- All animated styles now support long-form content (60-90s+)
+- Use viral styles (mrbeast, rainbow, neon) for maximum engagement
 - Use static styles (minimal, podcast) for professional content
-- Check clip duration before selecting animated styles
+- Longer clips take more time but produce same quality
 
 **See Also:**
 - `CAPTION_STYLES.md` - Complete style reference

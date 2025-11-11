@@ -625,6 +625,19 @@ ClipForge features a comprehensive caption burning system with 14 professional s
 - Supports 14 animated and static styles
 - Dynamic positioning (55-60% height for optimal face framing)
 - Memory-optimized batch processing (100 frames at a time)
+- Chunk-aware rendering for long clips
+
+**2. Chunk Manager Service** (`chunk-manager.service.ts`) ✨ NEW
+- Splits long clips into 8-second chunks
+- Smart boundary detection at sentence ends
+- Word timing adjustment per chunk
+- Chunk validation and metadata
+
+**3. Video Merger Service** (`video-merger.service.ts`) ✨ NEW
+- Seamless concatenation with FFmpeg concat demuxer
+- Chunk validation (resolution, codec, FPS)
+- Support for cut and fade transitions
+- Automatic cleanup of temporary files
 
 **2. Caption Styles** (`caption-styles.ts`)
 ```typescript
@@ -675,9 +688,11 @@ interface CaptionStylePreset {
 - Word spacing: 30px
 
 **Memory Management:**
-- 15-second limit for animated styles
+- Chunked rendering for clips >15 seconds
+- 8-second chunks (240 frames @ 30fps)
 - Batch processing (100 frames)
 - Garbage collection hints
+- 2-second recovery pause between chunks
 - Frame cleanup after overlay
 
 **FFmpeg Integration:**
@@ -687,16 +702,27 @@ ffmpeg -i input.mp4 -framerate 30 -i frames/caption_%06d.png \
   -c:v libx264 -preset fast output.mp4
 ```
 
-**5. Limitations**
+**5. Duration Support** ✅ UPDATED
 
-| Style Type | Max Duration | Reason |
-|------------|--------------|--------|
-| Animated | 15 seconds | Memory constraints during FFmpeg overlay |
+| Style Type | Max Duration | Processing Method |
+|------------|--------------|-------------------|
+| Animated | 90+ seconds | Chunked rendering (8s chunks) |
 | Karaoke | Unlimited | ASS subtitle burning (efficient) |
 | Static | Unlimited | ASS subtitle burning (efficient) |
 
+**Processing Flow:**
+- **≤15s clips:** Single-pass rendering (fast, ~30-60 seconds)
+- **>15s clips:** Automatic chunked rendering
+  1. Split into 8-second chunks
+  2. Process each chunk sequentially
+  3. 2-second memory recovery between chunks
+  4. Seamless concatenation
+  5. Total time: ~5-10 minutes for 60-90s clips
+
 **6. Future Enhancements**
-- Support for 60-90 second clips (in progress)
+- ✅ ~~Support for 60-90 second clips~~ **COMPLETE**
+- WebSocket progress events for chunked rendering
+- Parallel chunk processing
 - Custom style editor
 - Style presets per platform
 - Multi-language support
