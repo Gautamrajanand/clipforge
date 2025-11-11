@@ -207,6 +207,18 @@ export class CaptionAnimatorService {
       case 'highlight':
         this.renderHighlightAnimation(ctx, caption, style, animationProgress, width, height);
         break;
+      case 'rainbow':
+        this.renderRainbowAnimation(ctx, caption, style, animationProgress, width, height);
+        break;
+      case 'fill':
+        this.renderFillAnimation(ctx, caption, style, animationProgress, width, height);
+        break;
+      case 'shadow3d':
+        this.render3DShadowAnimation(ctx, caption, style, animationProgress, width, height);
+        break;
+      case 'tricolor':
+        this.renderTricolorAnimation(ctx, caption, style, animationProgress, width, height);
+        break;
       default:
         this.renderStaticCaption(ctx, caption.text, style, width, height);
     }
@@ -351,8 +363,8 @@ export class CaptionAnimatorService {
     width: number,
     height: number,
   ): void {
-    // Position slightly above center for better face framing
-    const y = height * 0.45;
+    // Position at 55-60% height (below subject's head)
+    const y = height * 0.58;
     const fontSize = style.fontSize;
     const wordSpacing = 30; // Add extra spacing between words
     
@@ -421,8 +433,8 @@ export class CaptionAnimatorService {
     width: number,
     height: number,
   ): void {
-    // Position at bottom third for portrait videos
-    const y = height * 0.75;
+    // Position at bottom (70-75% for Neon style)
+    const y = height * 0.72;
     const fontSize = style.fontSize;
     
     ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
@@ -469,8 +481,8 @@ export class CaptionAnimatorService {
     width: number,
     height: number,
   ): void {
-    // Position slightly above center for better face framing
-    const y = height * 0.45;
+    // Position at 55-60% height (below subject's head)
+    const y = height * 0.58;
     const fontSize = style.fontSize;
     const padding = 25; // Increased from 15 for more breathing room
     
@@ -592,6 +604,280 @@ export class CaptionAnimatorService {
 
     const buffer = canvas.toBuffer('image/png');
     fs.writeFileSync(outputPath, buffer);
+  }
+
+  /**
+   * Rainbow style: Rotating colors for each word
+   */
+  private renderRainbowAnimation(
+    ctx: CanvasRenderingContext2D,
+    caption: { words: Word[]; start: number; end: number; text: string },
+    style: CaptionStylePreset,
+    progress: number,
+    width: number,
+    height: number,
+  ): void {
+    // Position at 55-60% height (below subject's head)
+    const y = height * 0.58;
+    const fontSize = style.fontSize;
+    const wordSpacing = 30;
+    
+    // Color palette for rotation
+    const colors = ['#FFD700', '#00FFFF', '#00FF00', '#FF1493', '#FF8C00']; // Yellow, Cyan, Green, Pink, Orange
+    
+    ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Calculate positions
+    const words = caption.words;
+    const wordWidths = words.map(w => ctx.measureText(w.text).width);
+    const totalWidth = wordWidths.reduce((sum, w) => sum + w, 0) + (wordSpacing * (words.length - 1));
+    let currentX = (width - totalWidth) / 2;
+
+    const totalDuration = caption.end - caption.start;
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const wordWidth = wordWidths[i];
+      const wordCenter = currentX + wordWidth / 2;
+      const wordStart = (word.start - caption.start) / totalDuration;
+      
+      if (progress >= wordStart) {
+        const wordProgress = Math.min(1, (progress - wordStart) / 0.15);
+        
+        // Stronger pop animation (0.3 → 1.5 → 1.0)
+        let scale = 1.0;
+        if (wordProgress < 1) {
+          const t = wordProgress;
+          scale = 0.3 + (1.2 * (1 - Math.pow(1 - t, 3))) - (0.5 * Math.sin(t * Math.PI));
+        }
+        
+        // Rotate color based on word index
+        const colorIndex = i % colors.length;
+        const wordColor = colors[colorIndex];
+        
+        ctx.save();
+        ctx.translate(wordCenter, y);
+        ctx.scale(scale, scale);
+        ctx.translate(-wordCenter, -y);
+        
+        // Draw thick black outline
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = style.stroke.width;
+        ctx.strokeText(word.text, wordCenter, y);
+        
+        // Draw colored fill
+        ctx.fillStyle = wordColor;
+        ctx.fillText(word.text, wordCenter, y);
+        
+        ctx.restore();
+      }
+      
+      currentX += wordWidth + wordSpacing;
+    }
+  }
+
+  /**
+   * Fill style: Progressive fill effect as words are spoken
+   */
+  private renderFillAnimation(
+    ctx: CanvasRenderingContext2D,
+    caption: { words: Word[]; start: number; end: number; text: string },
+    style: CaptionStylePreset,
+    progress: number,
+    width: number,
+    height: number,
+  ): void {
+    const y = height * 0.58;
+    const fontSize = style.fontSize;
+    const padding = 25;
+    
+    ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    const totalWidth = ctx.measureText(caption.text).width;
+    let currentX = (width - totalWidth) / 2;
+
+    const totalDuration = caption.end - caption.start;
+    
+    for (const word of caption.words) {
+      const wordStart = (word.start - caption.start) / totalDuration;
+      const wordEnd = (word.end - caption.start) / totalDuration;
+      
+      if (progress >= wordStart) {
+        const wordWidth = ctx.measureText(word.text).width;
+        
+        // Calculate fill progress (0 to 1 during word duration)
+        const fillProgress = Math.min(1, Math.max(0, (progress - wordStart) / (wordEnd - wordStart)));
+        
+        // Draw background box with progressive fill
+        const boxWidth = wordWidth + padding * 2;
+        const boxHeight = fontSize + padding;
+        
+        ctx.fillStyle = style.backgroundColor;
+        ctx.fillRect(
+          currentX - padding,
+          y - fontSize / 2 - padding / 2,
+          boxWidth * fillProgress,
+          boxHeight,
+        );
+        
+        // Draw black outline
+        if (style.stroke && style.stroke.width > 0) {
+          ctx.strokeStyle = style.stroke.color;
+          ctx.lineWidth = style.stroke.width;
+          ctx.strokeText(word.text, currentX, y);
+        }
+        
+        // Draw white text
+        ctx.fillStyle = style.textColor;
+        ctx.fillText(word.text, currentX, y);
+      }
+      
+      currentX += ctx.measureText(word.text + ' ').width;
+    }
+  }
+
+  /**
+   * 3D Shadow style: Bold text with 3D shadow effect
+   */
+  private render3DShadowAnimation(
+    ctx: CanvasRenderingContext2D,
+    caption: { words: Word[]; start: number; end: number; text: string },
+    style: CaptionStylePreset,
+    progress: number,
+    width: number,
+    height: number,
+  ): void {
+    const y = height * 0.58;
+    const fontSize = style.fontSize;
+    const wordSpacing = 30;
+    
+    ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const words = caption.words;
+    const wordWidths = words.map(w => ctx.measureText(w.text).width);
+    const totalWidth = wordWidths.reduce((sum, w) => sum + w, 0) + (wordSpacing * (words.length - 1));
+    let currentX = (width - totalWidth) / 2;
+
+    const totalDuration = caption.end - caption.start;
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const wordWidth = wordWidths[i];
+      const wordCenter = currentX + wordWidth / 2;
+      const wordStart = (word.start - caption.start) / totalDuration;
+      
+      if (progress >= wordStart) {
+        const wordProgress = Math.min(1, (progress - wordStart) / 0.15);
+        
+        // Strong pop animation
+        let scale = 1.0;
+        if (wordProgress < 1) {
+          const t = wordProgress;
+          scale = 0.3 + (1.2 * (1 - Math.pow(1 - t, 3))) - (0.5 * Math.sin(t * Math.PI));
+        }
+        
+        ctx.save();
+        ctx.translate(wordCenter, y);
+        ctx.scale(scale, scale);
+        ctx.translate(-wordCenter, -y);
+        
+        // Draw 3D shadow layers (multiple offset shadows for depth)
+        for (let layer = 3; layer > 0; layer--) {
+          ctx.fillStyle = `rgba(0, 0, 0, ${0.3 * layer / 3})`;
+          ctx.fillText(word.text, wordCenter + (layer * 2), y + (layer * 2));
+        }
+        
+        // Draw main black outline
+        ctx.strokeStyle = style.stroke.color;
+        ctx.lineWidth = style.stroke.width;
+        ctx.strokeText(word.text, wordCenter, y);
+        
+        // Draw white fill
+        ctx.fillStyle = style.textColor;
+        ctx.fillText(word.text, wordCenter, y);
+        
+        ctx.restore();
+      }
+      
+      currentX += wordWidth + wordSpacing;
+    }
+  }
+
+  /**
+   * Tricolor style: Three words with accent color on middle word
+   */
+  private renderTricolorAnimation(
+    ctx: CanvasRenderingContext2D,
+    caption: { words: Word[]; start: number; end: number; text: string },
+    style: CaptionStylePreset,
+    progress: number,
+    width: number,
+    height: number,
+  ): void {
+    const y = height * 0.58;
+    const fontSize = style.fontSize;
+    const wordSpacing = 30;
+    
+    // Accent colors to rotate through
+    const accentColors = ['#FFD700', '#00FFFF', '#00FF00', '#FF1493']; // Yellow, Cyan, Green, Pink
+    
+    ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const words = caption.words;
+    const wordWidths = words.map(w => ctx.measureText(w.text).width);
+    const totalWidth = wordWidths.reduce((sum, w) => sum + w, 0) + (wordSpacing * (words.length - 1));
+    let currentX = (width - totalWidth) / 2;
+
+    const totalDuration = caption.end - caption.start;
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const wordWidth = wordWidths[i];
+      const wordCenter = currentX + wordWidth / 2;
+      const wordStart = (word.start - caption.start) / totalDuration;
+      
+      if (progress >= wordStart) {
+        const wordProgress = Math.min(1, (progress - wordStart) / 0.15);
+        
+        // Strong pop animation
+        let scale = 1.0;
+        if (wordProgress < 1) {
+          const t = wordProgress;
+          scale = 0.3 + (1.2 * (1 - Math.pow(1 - t, 3))) - (0.5 * Math.sin(t * Math.PI));
+        }
+        
+        // Middle word gets accent color, others white
+        const isMiddleWord = i === Math.floor(words.length / 2);
+        const accentIndex = Math.floor(i / 3) % accentColors.length;
+        const wordColor = isMiddleWord ? accentColors[accentIndex] : style.textColor;
+        
+        ctx.save();
+        ctx.translate(wordCenter, y);
+        ctx.scale(scale, scale);
+        ctx.translate(-wordCenter, -y);
+        
+        // Draw black outline
+        ctx.strokeStyle = style.stroke.color;
+        ctx.lineWidth = style.stroke.width;
+        ctx.strokeText(word.text, wordCenter, y);
+        
+        // Draw colored fill
+        ctx.fillStyle = wordColor;
+        ctx.fillText(word.text, wordCenter, y);
+        
+        ctx.restore();
+      }
+      
+      currentX += wordWidth + wordSpacing;
+    }
   }
 
   /**

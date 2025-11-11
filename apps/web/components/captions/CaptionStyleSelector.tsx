@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Type, Sparkles, Zap, Mic, Wand2, Star, Flame, Highlighter } from "lucide-react";
+import { Check, Type, Sparkles, Zap, Mic, Wand2, Star, Flame, Highlighter, Rainbow, Droplet, Box, Palette } from "lucide-react";
 
 /**
  * Caption Style Presets
@@ -80,6 +80,38 @@ export const CAPTION_PRESETS = [
     icon: Highlighter,
     position: "center",
     gradient: "from-amber-400 to-yellow-500",
+  },
+  {
+    id: "rainbow",
+    name: "Rainbow",
+    description: "🌈 Rotating colors for max engagement",
+    icon: Rainbow,
+    position: "center",
+    gradient: "from-pink-500 via-purple-500 to-blue-500",
+  },
+  {
+    id: "fill",
+    name: "Fill",
+    description: "📊 Progressive fill as words are spoken",
+    icon: Droplet,
+    position: "center",
+    gradient: "from-cyan-400 to-blue-500",
+  },
+  {
+    id: "shadow3d",
+    name: "3D Shadow",
+    description: "🎭 Bold text with 3D depth effect",
+    icon: Box,
+    position: "center",
+    gradient: "from-gray-700 to-gray-900",
+  },
+  {
+    id: "tricolor",
+    name: "Tricolor",
+    description: "🎨 Accent color on middle word",
+    icon: Palette,
+    position: "center",
+    gradient: "from-indigo-500 to-purple-600",
   },
 ];
 

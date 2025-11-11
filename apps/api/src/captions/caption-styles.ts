@@ -177,6 +177,78 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
       width: 0,
     },
   },
+
+  // ADVANCED VIRAL STYLES (2025 Trends)
+
+  rainbow: {
+    id: 'rainbow',
+    name: 'Rainbow',
+    description: 'Rotating colors for maximum engagement (Yellow/Cyan/Green/Pink)',
+    fontFamily: 'Arial Black',
+    fontSize: 95,
+    textColor: '#FFD700', // Default yellow (will rotate)
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 12,
+    },
+  },
+
+  fill: {
+    id: 'fill',
+    name: 'Fill',
+    description: 'Progressive fill effect as words are spoken',
+    fontFamily: 'Arial Black',
+    fontSize: 90,
+    textColor: '#FFFFFF', // White text
+    backgroundColor: '#00BFFF', // Cyan/blue background
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 10,
+    },
+  },
+
+  shadow3d: {
+    id: 'shadow3d',
+    name: '3D Shadow',
+    description: 'Bold text with 3D shadow effect for depth',
+    fontFamily: 'Arial Black',
+    fontSize: 95,
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 12,
+    },
+    shadow: {
+      offsetX: 6,
+      offsetY: 6,
+      blur: 0,
+      color: '#000000',
+    },
+  },
+
+  tricolor: {
+    id: 'tricolor',
+    name: 'Tricolor',
+    description: 'Three words with accent color on middle word',
+    fontFamily: 'Arial Black',
+    fontSize: 90,
+    textColor: '#FFFFFF', // White for regular words
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 10,
+    },
+  },
 };
 
 /**
