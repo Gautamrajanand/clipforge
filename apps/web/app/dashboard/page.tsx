@@ -186,6 +186,7 @@ export default function Dashboard() {
 
     try {
       // Create project with clip settings
+      // Use temporary title - will be updated with video title after import
       console.log('📥 Creating project for URL:', url);
       const createResponse = await fetch('http://localhost:3000/v1/projects', {
         method: 'POST',
@@ -194,7 +195,7 @@ export default function Dashboard() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ 
-          title: title || 'Imported Video',
+          title: title || 'Importing...',
           settings: clipSettings 
         }),
       });

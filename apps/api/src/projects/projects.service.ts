@@ -446,10 +446,12 @@ export class ProjectsService {
     await downloadService.cleanup(filePath);
 
     // Update project with video info
+    // Use video title from metadata if no custom title provided
+    const finalTitle = (customTitle && customTitle.trim()) ? customTitle : info.title;
     await this.prisma.project.update({
       where: { id: projectId },
       data: {
-        title: customTitle || info.title,
+        title: finalTitle,
         sourceUrl: result.key,
         status: 'INGESTING',
       },
