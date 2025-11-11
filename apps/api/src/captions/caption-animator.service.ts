@@ -55,7 +55,7 @@ export class CaptionAnimatorService {
     const framePaths: string[] = [];
 
     // Group words into caption lines (shorter for more impact)
-    const captionLines = this.groupWordsIntoLines(words, 20); // Reduced from 42 to show 1-2 words at a time
+    const captionLines = this.groupWordsIntoLines(words, 12); // Limit to 1-2 words (12 chars) to avoid edge-to-edge text
 
     // Generate each frame with progress logging and memory management
     const batchSize = 100; // Process 100 frames at a time
