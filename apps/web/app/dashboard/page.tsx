@@ -83,7 +83,7 @@ export default function Dashboard() {
   };
 
   const pollProjectStatus = async (projectId: string) => {
-    const maxAttempts = 60; // 2 minutes max (2s interval)
+    const maxAttempts = 120; // 4 minutes max (2s interval) - increased for URL imports
     let attempts = 0;
 
     while (attempts < maxAttempts) {
@@ -94,18 +94,42 @@ export default function Dashboard() {
 
         if (response.ok) {
           const project = await response.json();
+          console.log(`📊 Project status: ${project.status} (attempt ${attempts + 1}/${maxAttempts})`);
           
-          // Update status message
-          if (project.status === 'PENDING') {
+          // Update status message based on current status
+          if (project.status === 'IMPORTING') {
             setUploadState(prev => ({
               ...prev,
+              stage: 'processing',
+              message: 'Downloading video from URL...',
+              eta: 'This may take 1-3 minutes',
+            }));
+          } else if (project.status === 'INGESTING') {
+            setUploadState(prev => ({
+              ...prev,
+              stage: 'processing',
+              message: 'Processing video file...',
+              eta: `${Math.max(1, Math.floor((maxAttempts - attempts) * 2 / 60))} min remaining`,
+            }));
+          } else if (project.status === 'TRANSCRIBING') {
+            setUploadState(prev => ({
+              ...prev,
+              stage: 'processing',
               message: 'Transcribing audio...',
+              eta: `${Math.max(1, Math.floor((maxAttempts - attempts) * 2 / 60))} min remaining`,
+            }));
+          } else if (project.status === 'PENDING') {
+            setUploadState(prev => ({
+              ...prev,
+              stage: 'processing',
+              message: 'Preparing transcription...',
               eta: `${Math.max(1, Math.floor((maxAttempts - attempts) * 2 / 60))} min remaining`,
             }));
           } else if (project.status === 'DETECTING') {
             setUploadState(prev => ({
               ...prev,
-              message: 'Detecting highlights...',
+              stage: 'processing',
+              message: 'Detecting viral moments...',
               eta: `${Math.max(1, Math.floor((maxAttempts - attempts) * 2 / 60))} min remaining`,
             }));
           } else if (project.status === 'READY') {
@@ -116,8 +140,8 @@ export default function Dashboard() {
               eta: '',
             }));
             return; // Success!
-          } else if (project.status === 'FAILED') {
-            throw new Error('Processing failed');
+          } else if (project.status === 'FAILED' || project.status === 'ERROR') {
+            throw new Error('Processing failed - please try again');
           }
         }
 
