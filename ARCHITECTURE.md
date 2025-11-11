@@ -1,5 +1,5 @@
 # ClipForge Architecture
-**Last Updated:** November 8, 2025
+**Last Updated:** November 11, 2025
 
 ---
 
@@ -610,6 +610,97 @@ MinIO Console: http://localhost:9001
    - Custom models for clip detection
    - Fine-tuned on user feedback
    - A/B testing framework
+
+---
+
+## Caption System Architecture
+
+### Overview
+ClipForge features a comprehensive caption burning system with 14 professional styles optimized for viral social media content.
+
+### Components
+
+**1. Caption Animator Service** (`caption-animator.service.ts`)
+- Frame-by-frame rendering using `node-canvas`
+- Supports 14 animated and static styles
+- Dynamic positioning (55-60% height for optimal face framing)
+- Memory-optimized batch processing (100 frames at a time)
+
+**2. Caption Styles** (`caption-styles.ts`)
+```typescript
+interface CaptionStylePreset {
+  id: string;
+  name: string;
+  fontFamily: string;
+  fontSize: number;
+  textColor: string;
+  backgroundColor: string;
+  position: 'top' | 'center' | 'bottom';
+  stroke: { color: string; width: number };
+  shadow?: { offsetX: number; offsetY: number; blur: number; color: string };
+}
+```
+
+**3. Available Styles**
+
+| Style | Type | Animation | Font Size | Best For |
+|-------|------|-----------|-----------|----------|
+| Minimal | Static | None | 46px | Clean, simple |
+| Bold | Animated | Pop-in | 56px | Attention-grabbing |
+| Elegant | Animated | Slide-up | 48px | Professional |
+| Modern | Animated | Fade-in | 50px | Contemporary |
+| Karaoke | Animated | Word highlight | 48px | Sing-along |
+| Podcast | Static | None | 48px | Interviews |
+| MrBeast | Animated | Scale bounce | 95px | Viral TikTok |
+| Neon | Animated | Glow pulse | 85px | Gen Z content |
+| Highlight | Animated | Box slide | 90px | Hormozi style |
+| Rainbow | Animated | Color rotation | 95px | Max engagement |
+| Fill | Animated | Progressive fill | 90px | Dynamic reveals |
+| 3D Shadow | Animated | Depth effect | 95px | Bold statements |
+| Tricolor | Animated | Accent word | 90px | Emphasis |
+| Bounce | Animated | Vertical bounce | 95px | Motivational |
+
+**4. Technical Details**
+
+**Frame Generation:**
+- 30 FPS rendering
+- PNG format with transparency
+- 1-2 words per caption line (12 char max)
+- Batch processing for memory efficiency
+
+**Animation Parameters:**
+- Duration: 15% of word duration
+- Scale range: 0.3 → 1.5 (strong pop)
+- Positioning: 58% height (below subject's head)
+- Word spacing: 30px
+
+**Memory Management:**
+- 15-second limit for animated styles
+- Batch processing (100 frames)
+- Garbage collection hints
+- Frame cleanup after overlay
+
+**FFmpeg Integration:**
+```bash
+ffmpeg -i input.mp4 -framerate 30 -i frames/caption_%06d.png \
+  -filter_complex "[0:v][1:v]overlay=0:0" \
+  -c:v libx264 -preset fast output.mp4
+```
+
+**5. Limitations**
+
+| Style Type | Max Duration | Reason |
+|------------|--------------|--------|
+| Animated | 15 seconds | Memory constraints during FFmpeg overlay |
+| Karaoke | Unlimited | ASS subtitle burning (efficient) |
+| Static | Unlimited | ASS subtitle burning (efficient) |
+
+**6. Future Enhancements**
+- Support for 60-90 second clips (in progress)
+- Custom style editor
+- Style presets per platform
+- Multi-language support
+- Real-time preview
 
 ---
 

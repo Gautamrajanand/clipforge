@@ -1,6 +1,6 @@
 # ClipForge API Documentation
-**Last Updated:** November 8, 2025  
-**Version:** 1.0.0  
+**Last Updated:** November 11, 2025  
+**Version:** 1.1.0  
 **Base URL:** `http://localhost:3000`
 
 ---
@@ -499,6 +499,99 @@ Content-Type: application/json
 
 ---
 
+## Caption API
+
+### Burn Captions to Clip
+
+Add professional captions to an exported clip.
+
+```http
+POST /v1/projects/:projectId/moments/:momentId/burn-captions
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "captionStyle": "mrbeast"
+}
+```
+
+**Path Parameters:**
+- `projectId` (string, required) - Project ID
+- `momentId` (string, required) - Moment/clip ID
+
+**Body Parameters:**
+- `captionStyle` (string, required) - Caption style ID
+
+**Available Caption Styles:**
+```typescript
+type CaptionStyleId = 
+  | 'minimal'      // Static, clean
+  | 'bold'         // Animated pop-in
+  | 'elegant'      // Animated slide-up
+  | 'modern'       // Animated fade-in
+  | 'karaoke'      // Word-by-word highlight (unlimited duration)
+  | 'podcast'      // Static, professional
+  | 'mrbeast'      // Viral yellow pop (15s max)
+  | 'neon'         // Glow pulse (15s max)
+  | 'highlight'    // Yellow box slide (15s max)
+  | 'rainbow'      // Color rotation (15s max)
+  | 'fill'         // Progressive fill (15s max)
+  | 'shadow3d'     // 3D depth effect (15s max)
+  | 'tricolor'     // Accent word (15s max)
+  | 'bounce';      // Vertical bounce (15s max)
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Captions burned successfully",
+  "outputPath": "/path/to/clip_with_captions.mp4",
+  "duration": 12.5,
+  "style": "mrbeast"
+}
+```
+
+**Error Responses:**
+
+*Clip Too Long (Animated Styles):*
+```json
+{
+  "statusCode": 400,
+  "message": "Clip duration (23.5s) exceeds maximum (15s) for animated captions. Use 'karaoke' style for longer clips.",
+  "error": "Bad Request"
+}
+```
+
+*Invalid Style:*
+```json
+{
+  "statusCode": 400,
+  "message": "Invalid caption style: 'invalid_style'",
+  "error": "Bad Request"
+}
+```
+
+**Duration Limits:**
+
+| Style Type | Max Duration | Reason |
+|------------|--------------|--------|
+| Animated (mrbeast, neon, highlight, rainbow, fill, shadow3d, tricolor, bounce) | 15 seconds | Memory constraints |
+| Karaoke | Unlimited | ASS subtitle burning |
+| Static (minimal, podcast) | Unlimited | ASS subtitle burning |
+
+**Best Practices:**
+- Use `karaoke` for clips over 15 seconds
+- Use viral styles (mrbeast, rainbow, neon) for short, impactful clips
+- Use static styles (minimal, podcast) for professional content
+- Check clip duration before selecting animated styles
+
+**See Also:**
+- `CAPTION_STYLES.md` - Complete style reference
+- `CAPTION_LIMITS.md` - Technical constraints
+
+---
+
 ## SDK Examples
 
 ### JavaScript/TypeScript
@@ -607,6 +700,8 @@ curl -X POST http://localhost:3000/v1/projects/proj_123/clips/pro \
 - **Product Roadmap:** `PRODUCT_ROADMAP.md`
 - **Architecture:** `ARCHITECTURE.md`
 - **Current Status:** `CURRENT_STATUS.md`
+- **Caption Styles:** `CAPTION_STYLES.md`
+- **Caption Limits:** `CAPTION_LIMITS.md`
 
 ### Contact
 - **Email:** support@clipforge.dev
