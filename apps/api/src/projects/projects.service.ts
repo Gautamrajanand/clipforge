@@ -448,6 +448,8 @@ export class ProjectsService {
     // Update project with video info
     // Use video title from metadata if no custom title provided
     const finalTitle = (customTitle && customTitle.trim()) ? customTitle : info.title;
+    this.logger.log(`📝 Setting project title: "${finalTitle}" (custom: "${customTitle}", video: "${info.title}")`);
+    
     await this.prisma.project.update({
       where: { id: projectId },
       data: {

@@ -93,13 +93,16 @@ export class VideoDownloadService {
       
       const data = JSON.parse(stdout);
       
-      return {
+      const videoInfo = {
         title: data.title || 'Untitled Video',
         duration: data.duration || 0,
         thumbnail: data.thumbnail || '',
         platform: this.detectPlatform(url),
         url: url,
       };
+      
+      this.logger.log(`📹 Video info extracted: "${videoInfo.title}" (${videoInfo.duration}s)`);
+      return videoInfo;
     } catch (error) {
       this.logger.error(`Failed to fetch video info: ${error.message}`);
       throw new BadRequestException('Failed to fetch video information. Please check the URL.');
