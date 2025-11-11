@@ -662,6 +662,106 @@ export class ProjectsService {
   }
 
   /**
+   * Render animated captions using chunked approach for long clips
+   */
+  private async renderChunkedCaptions(
+    inputPath: string,
+    outputPath: string,
+    words: any[],
+    captionStyle: string,
+    moment: any,
+  ): Promise<void> {
+    const { ChunkManagerService } = await import('../captions/chunk-manager.service');
+    const { VideoMergerService } = await import('../captions/video-merger.service');
+    const { CaptionAnimatorService } = await import('../captions/caption-animator.service');
+    const { getCaptionStylePreset } = await import('../captions/caption-styles');
+    
+    const chunkManager = new ChunkManagerService();
+    const videoMerger = new VideoMergerService();
+    const animator = new CaptionAnimatorService();
+    const stylePreset = getCaptionStylePreset(captionStyle);
+    
+    // Get video metadata
+    const metadata = await this.ffmpeg.getVideoMetadata(inputPath);
+    const actualDuration = metadata.duration;
+    
+    this.logger.log(`🎬 Starting chunked rendering for ${actualDuration.toFixed(1)}s clip`);
+    
+    // Split into chunks
+    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 15);
+    const chunkMetadata = chunkManager.getChunkMetadata(chunks);
+    
+    this.logger.log(
+      `📊 Split into ${chunkMetadata.totalChunks} chunks (avg ${chunkMetadata.averageChunkSize.toFixed(1)}s each)`,
+    );
+    
+    // Validate chunks
+    const validation = chunkManager.validateChunks(chunks);
+    if (!validation.valid) {
+      this.logger.error(`❌ Chunk validation failed: ${validation.errors.join(', ')}`);
+      throw new Error('Chunk validation failed');
+    }
+    
+    // Process each chunk
+    const chunkVideoPaths: string[] = [];
+    
+    for (const chunk of chunks) {
+      this.logger.log(
+        `🎨 Processing chunk ${chunk.index + 1}/${chunks.length}: ${chunk.startTime.toFixed(1)}s - ${chunk.endTime.toFixed(1)}s`,
+      );
+      
+      // Extract chunk from original video
+      const chunkInputPath = this.video.getTempFilePath(`_chunk_${chunk.index}_input.mp4`);
+      await this.ffmpeg.extractSegment(
+        inputPath,
+        chunkInputPath,
+        chunk.startTime,
+        chunk.duration,
+      );
+      
+      // Generate caption frames for this chunk
+      const frameDir = this.video.getTempFilePath(`_frames_chunk_${chunk.index}`);
+      await fs.mkdir(frameDir, { recursive: true });
+      
+      await animator.generateCaptionFrames(
+        chunk.words,
+        stylePreset,
+        chunk.duration,
+        30,
+        frameDir,
+        metadata.width,
+        metadata.height,
+        { index: chunk.index, total: chunks.length, startTime: chunk.startTime },
+      );
+      
+      // Overlay captions on chunk
+      const chunkOutputPath = this.video.getTempFilePath(`_chunk_${chunk.index}_output.mp4`);
+      const framePattern = `${frameDir}/caption_%06d.png`;
+      await this.ffmpeg.overlayCaptionFrames(chunkInputPath, chunkOutputPath, framePattern, 30);
+      
+      // Cleanup chunk frames
+      await animator.cleanupFrames(frameDir);
+      await fs.unlink(chunkInputPath);
+      
+      chunkVideoPaths.push(chunkOutputPath);
+      
+      this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
+    }
+    
+    // Concatenate all chunks
+    this.logger.log(`🔗 Concatenating ${chunkVideoPaths.length} chunks...`);
+    await videoMerger.concatenate(chunkVideoPaths, {
+      transition: 'cut',
+      outputPath,
+    });
+    
+    // Cleanup chunk videos
+    await videoMerger.cleanupChunks(chunkVideoPaths);
+    
+    this.logger.log(`✅ Chunked rendering completed successfully`);
+  }
+
+  /**
    * Render animated captions using frame-by-frame approach
    */
   private async renderAnimatedCaptions(
@@ -683,16 +783,11 @@ export class ProjectsService {
     
     this.logger.log(`Clip actual duration: ${actualDuration.toFixed(1)}s (moment span: ${(moment.tEnd - moment.tStart).toFixed(1)}s)`);
     
-    // Check duration limit for animated styles (memory constraint)
-    const MAX_DURATION = 15; // 15 seconds max for frame-by-frame rendering (~450 frames, reliable)
-    if (actualDuration > MAX_DURATION) {
-      this.logger.warn(
-        `Clip duration (${actualDuration.toFixed(1)}s) exceeds limit for animated captions (${MAX_DURATION}s). ` +
-        `Falling back to static captions. Use Karaoke style for longer clips.`
-      );
-      // Fallback to copying without captions
-      await fs.copyFile(inputPath, outputPath);
-      return;
+    // Check if we need chunked rendering for long clips
+    const MAX_SINGLE_PASS_DURATION = 15; // 15 seconds max for single-pass rendering
+    if (actualDuration > MAX_SINGLE_PASS_DURATION) {
+      this.logger.log(`⚡ Clip exceeds ${MAX_SINGLE_PASS_DURATION}s, using chunked rendering`);
+      return this.renderChunkedCaptions(inputPath, outputPath, words, captionStyle, moment);
     }
     
     // Generate caption frames with correct video dimensions

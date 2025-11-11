@@ -43,8 +43,10 @@ export class CaptionAnimatorService {
     outputDir: string,
     width: number = 1920,
     height: number = 1080,
+    chunkInfo?: { index: number; total: number; startTime: number }, // NEW: chunk support
   ): Promise<string[]> {
-    this.logger.log(`Generating caption frames: ${words.length} words, ${duration}s, ${fps}fps`);
+    const chunkLabel = chunkInfo ? ` [Chunk ${chunkInfo.index + 1}/${chunkInfo.total}]` : '';
+    this.logger.log(`Generating caption frames${chunkLabel}: ${words.length} words, ${duration}s, ${fps}fps`);
 
     // Create output directory
     if (!fs.existsSync(outputDir)) {
