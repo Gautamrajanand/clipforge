@@ -142,6 +142,91 @@ export default function Dashboard() {
     setShowUploadModal(true);
   };
 
+  const handleImportUrl = async (url: string, title: string, clipSettings?: any) => {
+    if (!token || !isAuthReady) {
+      alert('Please wait for authentication...');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadState({
+      stage: 'uploading',
+      progress: 5,
+      message: 'Creating project...',
+      eta: '',
+      error: '',
+    });
+
+    try {
+      // Create project with clip settings
+      console.log('📥 Importing from URL:', url);
+      const createResponse = await fetch('http://localhost:3000/v1/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          title: title || 'Imported Video',
+          settings: clipSettings 
+        }),
+      });
+
+      if (!createResponse.ok) throw new Error('Failed to create project');
+      const project = await createResponse.json();
+
+      // Import video from URL
+      setUploadState({
+        stage: 'uploading',
+        progress: 20,
+        message: 'Downloading video from URL...',
+        eta: 'This may take 1-2 minutes',
+        error: '',
+      });
+
+      const importResponse = await fetch(`http://localhost:3000/v1/projects/${project.id}/import-url`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ url, title }),
+      });
+
+      if (!importResponse.ok) {
+        const errorData = await importResponse.json();
+        throw new Error(errorData.message || 'Failed to import video');
+      }
+
+      // Import complete - now wait for processing
+      setUploadState({
+        stage: 'processing',
+        progress: 100,
+        message: 'Import complete! Processing video...',
+        eta: 'This may take 1-2 minutes',
+        error: '',
+      });
+      
+      // Poll for project completion
+      await pollProjectStatus(project.id);
+      
+      // Close modal and navigate
+      setShowUploadModal(false);
+      setIsUploading(false);
+      router.push(`/project/${project.id}`);
+    } catch (error: any) {
+      console.error('Import error:', error);
+      setUploadState({
+        stage: 'error',
+        progress: 0,
+        message: '',
+        eta: '',
+        error: error.message || 'Failed to import video. Please check the URL and try again.',
+      });
+      setIsUploading(false);
+    }
+  };
+
   const handleUpload = async (file: File, title: string, clipSettings?: any) => {
     if (!token || !isAuthReady) {
       alert('Please wait for authentication...');
@@ -436,6 +521,7 @@ export default function Dashboard() {
         isOpen={showUploadModal}
         onClose={() => !isUploading && setShowUploadModal(false)}
         onUpload={handleUpload}
+        onImportUrl={handleImportUrl}
         isUploading={isUploading}
         uploadProgress={uploadState.progress}
         uploadStage={uploadState.stage}
