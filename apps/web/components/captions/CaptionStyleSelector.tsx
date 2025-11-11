@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Type, Sparkles, Zap, Mic, Wand2, Star, Flame, Highlighter, Rainbow, Droplet, Box, Palette } from "lucide-react";
+import { Check, Type, Sparkles, Zap, Mic, Wand2, Star, Flame, Highlighter, Rainbow, Droplet, Box, Palette, ArrowUp } from "lucide-react";
 
 /**
  * Caption Style Presets
@@ -112,6 +112,14 @@ export const CAPTION_PRESETS = [
     icon: Palette,
     position: "center",
     gradient: "from-indigo-500 to-purple-600",
+  },
+  {
+    id: "bounce",
+    name: "Bounce",
+    description: "⬆️ Words bounce UP (Hormozi/Gary Vee)",
+    icon: ArrowUp,
+    position: "center",
+    gradient: "from-red-500 to-pink-600",
   },
 ];
 

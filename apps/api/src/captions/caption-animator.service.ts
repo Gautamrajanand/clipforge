@@ -219,6 +219,9 @@ export class CaptionAnimatorService {
       case 'tricolor':
         this.renderTricolorAnimation(ctx, caption, style, animationProgress, width, height);
         break;
+      case 'bounce':
+        this.renderBounceAnimation(ctx, caption, style, animationProgress, width, height);
+        break;
       default:
         this.renderStaticCaption(ctx, caption.text, style, width, height);
     }
@@ -874,6 +877,71 @@ export class CaptionAnimatorService {
         ctx.fillText(word.text, wordCenter, y);
         
         ctx.restore();
+      }
+      
+      currentX += wordWidth + wordSpacing;
+    }
+  }
+
+  /**
+   * Bounce style: Words bounce UP vertically (Hormozi/Gary Vee style)
+   */
+  private renderBounceAnimation(
+    ctx: CanvasRenderingContext2D,
+    caption: { words: Word[]; start: number; end: number; text: string },
+    style: CaptionStylePreset,
+    progress: number,
+    width: number,
+    height: number,
+  ): void {
+    const baseY = height * 0.58;
+    const fontSize = style.fontSize;
+    const wordSpacing = 30;
+    
+    ctx.font = `bold ${fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const words = caption.words;
+    const wordWidths = words.map(w => ctx.measureText(w.text).width);
+    const totalWidth = wordWidths.reduce((sum, w) => sum + w, 0) + (wordSpacing * (words.length - 1));
+    let currentX = (width - totalWidth) / 2;
+
+    const totalDuration = caption.end - caption.start;
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const wordWidth = wordWidths[i];
+      const wordCenter = currentX + wordWidth / 2;
+      const wordStart = (word.start - caption.start) / totalDuration;
+      
+      if (progress >= wordStart) {
+        const wordProgress = Math.min(1, (progress - wordStart) / 0.2);
+        
+        // Vertical bounce: shoots up then settles
+        let offsetY = 0;
+        if (wordProgress < 1) {
+          const t = wordProgress;
+          // Bounce UP: 0 → -80px → 0
+          offsetY = -80 * Math.sin(t * Math.PI);
+        }
+        
+        const y = baseY + offsetY;
+        
+        // Draw drop shadow (offset)
+        if (style.shadow) {
+          ctx.fillStyle = style.shadow.color;
+          ctx.fillText(word.text, wordCenter + style.shadow.offsetX, y + style.shadow.offsetY);
+        }
+        
+        // Draw thick black outline
+        ctx.strokeStyle = style.stroke.color;
+        ctx.lineWidth = style.stroke.width;
+        ctx.strokeText(word.text, wordCenter, y);
+        
+        // Draw white fill
+        ctx.fillStyle = style.textColor;
+        ctx.fillText(word.text, wordCenter, y);
       }
       
       currentX += wordWidth + wordSpacing;

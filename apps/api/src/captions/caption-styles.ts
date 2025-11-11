@@ -249,6 +249,28 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
       width: 10,
     },
   },
+
+  bounce: {
+    id: 'bounce',
+    name: 'Bounce',
+    description: 'Words bounce UP on emphasis (Hormozi/Gary Vee style)',
+    fontFamily: 'Arial Black',
+    fontSize: 95,
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 12,
+    },
+    shadow: {
+      offsetX: 4,
+      offsetY: 4,
+      blur: 0,
+      color: '#000000',
+    },
+  },
 };
 
 /**
