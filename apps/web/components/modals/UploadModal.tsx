@@ -66,13 +66,25 @@ export default function UploadModal({
   };
 
   const handleSubmit = () => {
+    console.log('🎬 handleSubmit called', { activeTab, url, title, hasOnImportUrl: !!onImportUrl });
+    
     if (activeTab === 'upload' && file && title) {
+      console.log('📤 Calling onUpload');
       onUpload(file, title, clipSettings);
       // Don't close modal or clear form during upload
       // The parent component will handle closing after upload completes
     } else if (activeTab === 'url' && url && onImportUrl) {
       // Use title if provided, otherwise let backend auto-fill
+      console.log('📥 Calling onImportUrl with:', { url, title: title || 'Imported Video' });
       onImportUrl(url, title || 'Imported Video', clipSettings);
+    } else {
+      console.warn('⚠️ Submit conditions not met', { 
+        activeTab, 
+        hasUrl: !!url, 
+        hasFile: !!file, 
+        hasTitle: !!title,
+        hasOnImportUrl: !!onImportUrl 
+      });
     }
   };
 

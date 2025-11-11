@@ -231,6 +231,7 @@ export default function Dashboard() {
       router.push(`/project/${project.id}`);
     } catch (error: any) {
       console.error('❌ Import error:', error);
+      console.error('Error stack:', error.stack);
       setUploadState({
         stage: 'error',
         progress: 0,
@@ -238,7 +239,8 @@ export default function Dashboard() {
         eta: '',
         error: error.message || 'Failed to import video. Please check the URL and try again.',
       });
-      setIsUploading(false);
+      // Keep modal open to show error
+      // Don't call setIsUploading(false) immediately
     }
   };
 
