@@ -1,19 +1,23 @@
 # ClipForge
 
-**Version:** 0.1.0 (MVP)  
+**Version:** 0.3.0  
 **Status:** ✅ Production Ready
 
 **ClipForge** is an AI-powered platform that transforms long-form video/audio into engaging social clips. It exposes a multi-tenant B2B API for partners and includes a modern web dashboard.
 
-> 🎉 **v0.1.0 Released!** Core video upload, AI clip detection, and export functionality is now live. See [CHANGELOG.md](./CHANGELOG.md) for details.
+> 🎉 **v0.3.0 Released!** URL import feature now live - import videos directly from YouTube, Vimeo, Rumble, Twitter, and TikTok! See [CHANGELOG.md](./CHANGELOG.md) for details.
 
-## ✨ Features (v0.1.0)
+## ✨ Features
 
-### ✅ Implemented
+### ✅ Core Features (v0.1.0 - v0.3.0)
 - **Video Upload**: Upload videos to MinIO storage with progress tracking
-- **AI Clip Detection**: Simulated AI analysis with scoring (hook, emotion, structure, novelty, clarity, quote, vision_focus)
+- **URL Import** ⭐ NEW: Import videos directly from YouTube, Vimeo, Rumble, Twitter, TikTok
+- **Auto-fill Metadata**: Automatically extract video title, duration, and thumbnail
+- **AI Clip Detection**: Multi-segment viral moment detection with scoring
+- **Animated Captions**: 14 viral caption styles (Bounce, Wave, Rainbow, 3D, etc.)
+- **Long-Form Support**: 60-90+ second clips with chunked rendering
 - **Video Streaming**: Authenticated blob-based video playback
-- **Clip Export**: FFmpeg-powered video cutting with timestamp-based segmentation
+- **Clip Export**: FFmpeg-powered video cutting with professional transitions
 - **Download Clips**: Download exported clips as MP4 files
 - **Web Dashboard**: Modern UI with project management and detailed clip information
 - **Authentication**: JWT-based auth + API keys for partners

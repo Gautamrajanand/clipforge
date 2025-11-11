@@ -119,6 +119,48 @@ title: "My Video"
 }
 ```
 
+### Import Project from URL
+Import a video directly from a URL (YouTube, Vimeo, Rumble, Twitter, TikTok).
+
+```http
+POST /v1/projects/:id/import-url
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "url": "https://www.youtube.com/watch?v=VIDEO_ID",
+  "title": "Optional Custom Title"
+}
+```
+
+**Supported Platforms:**
+- YouTube (all formats)
+- Vimeo (public and unlisted)
+- Rumble
+- Twitter/X
+- TikTok
+
+**Response:**
+```json
+{
+  "message": "Video import started",
+  "projectId": "proj_123",
+  "status": "IMPORTING"
+}
+```
+
+**Status Flow:**
+1. `IMPORTING` - Downloading video from URL (1-3 minutes)
+2. `INGESTING` - Processing video file
+3. `TRANSCRIBING` - Generating transcript
+4. `DETECTING` - Finding viral moments
+5. `READY` - Project ready for editing
+
+**Notes:**
+- If `title` is not provided or empty, the video's original title will be used
+- The import process is asynchronous - poll the project status to track progress
+- Videos are automatically transcribed and analyzed after import
+
 ### Update Project
 ```http
 PUT /v1/projects/:id

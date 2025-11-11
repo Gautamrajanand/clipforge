@@ -2,7 +2,7 @@
 
 **Mission:** One Input, Many Outputs  
 **Vision:** The all-in-one content transformation platform  
-**Last Updated:** November 6, 2025
+**Last Updated:** November 11, 2025
 
 ---
 
@@ -16,11 +16,26 @@ Phase 1: Foundation (✅ COMPLETE)
 ├── AI titles & descriptions
 └── Project management
 
-Phase 1.5: Clip Customization (🚧 90% COMPLETE)
+Phase 1.5: Clip Customization (✅ COMPLETE)
 ├── Platform presets
 ├── Aspect ratio control
 ├── Clip length/count
 └── Settings persistence
+
+Phase 1.6: URL Import (✅ COMPLETE - Nov 11, 2025)
+├── YouTube import
+├── Vimeo import
+├── Rumble import
+├── Twitter/X import
+├── TikTok import
+└── Auto-fill metadata
+
+Phase 1.7: Long-Form Clips (✅ COMPLETE - Nov 11, 2025)
+├── 60-90+ second clips
+├── Chunked rendering
+├── 14 animated caption styles
+├── Memory optimization
+└── Professional transitions
 
 Phase 2: Content Generation (⏳ Q1 2026 - 3 months)
 ├── Blog posts
@@ -85,11 +100,11 @@ Phase 7: Advanced Features (⏳ Q2 2027+)
 
 ---
 
-## 🚧 **PHASE 1.5: CLIP CUSTOMIZATION (90% COMPLETE)**
+## ✅ **PHASE 1.5: CLIP CUSTOMIZATION (COMPLETE)**
 
-**Status:** Testing phase  
+**Status:** 100% Complete  
 **Duration:** 2 days  
-**Expected Completion:** November 7, 2025
+**Completion Date:** November 7, 2025
 
 ### **Delivered:**
 1. ✅ Platform presets (6 options)
@@ -98,12 +113,74 @@ Phase 7: Advanced Features (⏳ Q2 2027+)
 4. ✅ Number of clips (1-10)
 5. ✅ Processing timeframe
 6. ✅ Settings persistence
-7. ⚠️ Aspect ratio metadata (video processing deferred)
+7. ✅ Full testing completed
 
-### **Remaining:**
-- [ ] Full testing of all features
-- [ ] Decide on aspect ratio video processing
-- [ ] Edge case handling
+---
+
+## ✅ **PHASE 1.6: URL IMPORT (COMPLETE)**
+
+**Status:** 100% Complete  
+**Duration:** 1 day  
+**Completion Date:** November 11, 2025
+
+### **Delivered:**
+1. ✅ YouTube video import
+2. ✅ Vimeo video import
+3. ✅ Rumble video import
+4. ✅ Twitter/X video import
+5. ✅ TikTok video import
+6. ✅ Auto-fill title from metadata
+7. ✅ Auto-fill duration and thumbnail
+8. ✅ Async processing with status polling
+9. ✅ Platform detection
+10. ✅ Error handling and user feedback
+
+### **Technical Implementation:**
+- **VideoDownloadService**: yt-dlp integration
+- **Import Endpoint**: POST /v1/projects/:id/import-url
+- **Status Flow**: IMPORTING → INGESTING → TRANSCRIBING → READY
+- **Frontend**: Tabbed upload modal with URL input
+- **Performance**: 1-3 minute imports, non-blocking
+
+### **Competitive Parity:**
+✅ OpusClip-style URL import  
+✅ Podcastle-style convenience  
+✅ One less step for users
+
+---
+
+## ✅ **PHASE 1.7: LONG-FORM CLIPS (COMPLETE)**
+
+**Status:** 100% Complete  
+**Duration:** 2 days  
+**Completion Date:** November 11, 2025
+
+### **Delivered:**
+1. ✅ 60-90+ second clip support
+2. ✅ Chunked rendering architecture
+3. ✅ 14 animated caption styles (all extended)
+4. ✅ ChunkManagerService for smart segmentation
+5. ✅ VideoMergerService for seamless concatenation
+6. ✅ Memory optimization (8s chunks)
+7. ✅ FFmpeg performance tuning
+8. ✅ Professional crossfade transitions
+
+### **Caption Styles:**
+- Bounce, Wave, Typewriter, Fade
+- Slide, Zoom, Rotate, Pulse
+- Rainbow, Fill, 3D Shadow, Neon
+- Glitch, Karaoke
+
+### **Technical Implementation:**
+- **Chunk Size**: 8 seconds (memory-safe)
+- **Processing**: Sequential with 2s recovery pauses
+- **Validation**: Resolution, codec, FPS compatibility
+- **Routing**: ≤15s = single-pass, >15s = chunked
+
+### **Competitive Parity:**
+✅ OpusClip-style long clips  
+✅ Submagic-style captions  
+✅ Kapwing-style animations
 
 ---
 

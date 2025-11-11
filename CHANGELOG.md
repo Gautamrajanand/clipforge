@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2025-11-11
+
+### 🎉 Major Feature: URL Import for Videos
+
+This release adds support for importing videos directly from URLs (YouTube, Vimeo, Rumble, Twitter, TikTok), achieving competitive parity with OpusClip and Podcastle. Users can now skip the download step and import videos with a single click.
+
+### Added
+
+#### URL Import System
+- **VideoDownloadService**: Downloads videos from multiple platforms using yt-dlp
+- **Platform Detection**: Automatic detection of YouTube, Vimeo, Rumble, Twitter/X, TikTok
+- **Metadata Extraction**: Auto-fills project title, duration, and thumbnail from video metadata
+- **Async Processing**: Non-blocking downloads with real-time status updates
+- **Progress Tracking**: Full status polling through IMPORTING → INGESTING → TRANSCRIBING → READY
+
+#### Frontend Enhancements
+- **Tabbed Upload Modal**: Switch between "Upload File" and "Import from URL"
+- **URL Input Field**: Paste any supported video URL
+- **Platform Indicators**: Visual feedback for detected platform
+- **Custom Title Override**: Optional custom title or auto-fill from video
+- **Real-time Progress**: Shows download progress and processing stages
+
+#### Backend Infrastructure
+- **New Project Status**: Added `IMPORTING` and `ERROR` to ProjectStatus enum
+- **Import Endpoint**: `POST /v1/projects/:id/import-url` for URL imports
+- **Database Schema**: Updated Prisma schema with new statuses
+- **Docker Integration**: yt-dlp and python3-pip installed in API container
+
+### Technical Details
+
+#### Supported Platforms
+- ✅ YouTube (all formats)
+- ✅ Vimeo (public and unlisted)
+- ✅ Rumble
+- ✅ Twitter/X
+- ✅ TikTok
+
+#### Processing Flow
+1. User pastes URL in modal
+2. Frontend creates project with temporary title
+3. Backend downloads video using yt-dlp
+4. Extracts metadata (title, duration, thumbnail)
+5. Uploads to MinIO storage
+6. Updates project with video title
+7. Triggers transcription and clip detection
+8. User redirected to project page
+
+#### Performance
+- Async download (1-3 minutes for typical videos)
+- No frontend timeout issues
+- Proper cleanup of temporary files
+- Memory-efficient streaming
+
+### Changed
+- Extended polling timeout to 4 minutes for URL imports
+- Improved error handling with user-friendly messages
+- Enhanced logging for debugging URL imports
+
+### Fixed
+- Title auto-fill from video metadata
+- Polling now handles all project statuses
+- Empty project creation on errors
+- Database enum synchronization
+
+---
+
 ## [0.2.0] - 2025-11-11
 
 ### 🎉 Major Feature: Long-Form Clips with Animated Captions

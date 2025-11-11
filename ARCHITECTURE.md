@@ -369,6 +369,72 @@ def detect_multi_segment_clips():
 
 ---
 
+## Video Import System
+
+### URL Import (v0.3.0)
+
+ClipForge supports importing videos directly from URLs, eliminating the need for users to download videos locally first.
+
+#### Supported Platforms
+- **YouTube**: All formats, playlists, live streams
+- **Vimeo**: Public and unlisted videos
+- **Rumble**: All public videos
+- **Twitter/X**: Video tweets
+- **TikTok**: All public videos
+
+#### Architecture
+
+**VideoDownloadService** (`apps/api/src/video/video-download.service.ts`)
+- Platform detection from URL
+- Video metadata extraction using yt-dlp
+- Async video download with progress tracking
+- Temporary file management and cleanup
+
+**Import Flow:**
+1. User submits URL via frontend modal
+2. Frontend creates project with temporary title
+3. Backend validates URL and platform
+4. yt-dlp extracts video metadata (title, duration, thumbnail)
+5. Video downloaded to `/tmp/clipforge/downloads/`
+6. File uploaded to MinIO storage
+7. Project updated with video title and metadata
+8. Temporary file cleaned up
+9. Transcription and clip detection triggered automatically
+
+**Project Status Flow:**
+```
+PENDING → IMPORTING → INGESTING → TRANSCRIBING → DETECTING → READY
+```
+
+**New Status Values:**
+- `IMPORTING`: Downloading video from URL (1-3 minutes)
+- `ERROR`: Import or processing failed
+
+#### Technical Implementation
+
+**Dependencies:**
+- `yt-dlp`: Video download and metadata extraction
+- `python3-pip`: Package manager for yt-dlp
+- Installed in Docker container via `Dockerfile.api`
+
+**API Endpoint:**
+```
+POST /v1/projects/:id/import-url
+Body: { url: string, title?: string }
+```
+
+**Frontend Components:**
+- `UploadModal.tsx`: Tabbed interface (Upload File | Import from URL)
+- `dashboard/page.tsx`: Import handler with status polling
+
+**Performance:**
+- Async processing (non-blocking)
+- 4-minute polling timeout
+- Automatic cleanup of temp files
+- Memory-efficient streaming
+
+---
+
 ## Video Processing Pipeline
 
 ### FFmpeg Operations
