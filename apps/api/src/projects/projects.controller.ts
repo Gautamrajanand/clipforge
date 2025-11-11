@@ -90,6 +90,20 @@ export class ProjectsController {
     return this.projectsService.uploadVideo(id, orgId, file);
   }
 
+  @Post(':id/import-url')
+  @ApiOperation({ summary: 'Import video from URL (YouTube, Vimeo, Rumble, etc.)' })
+  async importVideoFromUrl(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() dto: { url: string; title?: string },
+  ) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.importVideoFromUrl(id, orgId, dto.url, dto.title);
+  }
+
   @Get(':id/video')
   @ApiOperation({ summary: 'Stream project video' })
   async streamVideo(
