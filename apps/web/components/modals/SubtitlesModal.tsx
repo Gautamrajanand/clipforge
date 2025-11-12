@@ -110,6 +110,8 @@ export default function SubtitlesModal({
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
+    console.log('🎬 SubtitlesModal handleSubmit called', { tab, url, file });
+    
     // Validate input based on tab
     if (tab === 'url' && !url) {
       alert('Please enter a video URL');
@@ -130,6 +132,8 @@ export default function SubtitlesModal({
         position,
       };
 
+      console.log('📤 Calling onUpload/onGenerate with settings:', settings);
+      
       if (tab === 'url') {
         await onGenerate(url, settings);
       } else {
@@ -137,7 +141,7 @@ export default function SubtitlesModal({
       }
       // Modal will be closed by parent component
     } catch (error) {
-      console.error('Subtitles error:', error);
+      console.error('❌ Subtitles error:', error);
       alert('Failed to start subtitle generation');
       setIsProcessing(false);
     }

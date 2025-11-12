@@ -277,11 +277,15 @@ export default function Dashboard() {
   };
 
   const handleUpload = async (file: File, title: string, clipSettings?: any) => {
+    console.log('🚀 handleUpload called', { fileName: file.name, fileSize: file.size, title, clipSettings, token: !!token, isAuthReady });
+    
     if (!token || !isAuthReady) {
+      console.error('❌ No token or auth not ready');
       alert('Please wait for authentication...');
       return;
     }
 
+    console.log('✅ Starting upload process...');
     setIsUploading(true);
     setUploadState({
       stage: 'uploading',
