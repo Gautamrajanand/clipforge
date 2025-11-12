@@ -10,10 +10,14 @@ import AIToolCard from '@/components/cards/AIToolCard';
 import ProjectCard from '@/components/cards/ProjectCard';
 import NewProjectCard from '@/components/cards/NewProjectCard';
 import UploadModal from '@/components/modals/UploadModal';
+import ReframeModal from '@/components/modals/ReframeModal';
+import SubtitlesModal from '@/components/modals/SubtitlesModal';
 
 export default function Dashboard() {
   const router = useRouter();
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showReframeModal, setShowReframeModal] = useState(false);
+  const [showSubtitlesModal, setShowSubtitlesModal] = useState(false);
   const [token, setToken] = useState<string>('');
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
@@ -496,17 +500,17 @@ export default function Dashboard() {
               />
               <AIToolCard
                 title="AI Subtitles"
-                icon={Languages}
-                gradientFrom="from-indigo-400"
-                gradientTo="to-indigo-600"
-                soon
+                icon={Type}
+                gradientFrom="from-purple-400"
+                gradientTo="to-purple-600"
+                onClick={() => setShowSubtitlesModal(true)}
               />
               <AIToolCard
                 title="AI Reframe"
                 icon={Wand2}
                 gradientFrom="from-yellow-400"
                 gradientTo="to-yellow-600"
-                soon
+                onClick={() => setShowReframeModal(true)}
               />
               <AIToolCard
                 title="AI Avatar"
@@ -619,6 +623,20 @@ export default function Dashboard() {
         uploadMessage={uploadState.message}
         uploadEta={uploadState.eta}
         uploadError={uploadState.error}
+      />
+
+      {/* AI Reframe Modal */}
+      <ReframeModal
+        isOpen={showReframeModal}
+        onClose={() => setShowReframeModal(false)}
+        onReframe={async () => {}}
+      />
+
+      {/* AI Subtitles Modal */}
+      <SubtitlesModal
+        isOpen={showSubtitlesModal}
+        onClose={() => setShowSubtitlesModal(false)}
+        onGenerate={async () => {}}
       />
     </div>
   );
