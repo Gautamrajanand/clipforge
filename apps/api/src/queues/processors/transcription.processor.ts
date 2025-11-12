@@ -1,7 +1,9 @@
-import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
+import { Processor, WorkerHost, OnWorkerEvent, InjectQueue } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 import { TranscriptionService } from '../../transcription/transcription.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { ClipDetectionJobData } from './clip-detection.processor';
 
 export interface TranscriptionJobData {
   projectId: string;
@@ -13,7 +15,11 @@ export interface TranscriptionJobData {
 export class TranscriptionProcessor extends WorkerHost {
   private readonly logger = new Logger(TranscriptionProcessor.name);
 
-  constructor(private transcription: TranscriptionService) {
+  constructor(
+    private transcription: TranscriptionService,
+    private prisma: PrismaService,
+    @InjectQueue('clip-detection') private clipDetectionQueue: Queue<ClipDetectionJobData>,
+  ) {
     super();
   }
 
@@ -30,9 +36,35 @@ export class TranscriptionProcessor extends WorkerHost {
       await this.transcription.transcribeProject(projectId);
 
       // Update job progress
-      await job.updateProgress(100);
+      await job.updateProgress(80);
 
       this.logger.log(`✅ Transcription complete for project ${projectId}`);
+
+      // ✅ SCALE-FIRST: Trigger clip detection via queue
+      // Get project clip settings
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+      });
+
+      const clipSettings = (project?.clipSettings as any) || {};
+
+      this.logger.log(`🎬 Queuing clip detection job for project ${projectId}`);
+      await this.clipDetectionQueue.add(
+        'detect-clips',
+        { projectId, settings: clipSettings },
+        {
+          jobId: `detect-${projectId}`,
+          priority: 3,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000,
+          },
+        },
+      );
+
+      // Update job progress
+      await job.updateProgress(100);
 
       return { projectId, status: 'completed' };
     } catch (error) {

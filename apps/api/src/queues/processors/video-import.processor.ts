@@ -1,9 +1,10 @@
-import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
+import { Processor, WorkerHost, OnWorkerEvent, InjectQueue } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../../storage/storage.service';
 import { VideoService } from '../../video/video.service';
+import { TranscriptionJobData } from './transcription.processor';
 import { promises as fs } from 'fs';
 
 export interface VideoImportJobData {
@@ -22,6 +23,7 @@ export class VideoImportProcessor extends WorkerHost {
     private prisma: PrismaService,
     private storage: StorageService,
     private video: VideoService,
+    @InjectQueue('transcription') private transcriptionQueue: Queue<TranscriptionJobData>,
   ) {
     super();
   }
@@ -96,9 +98,28 @@ export class VideoImportProcessor extends WorkerHost {
       });
 
       // Update job progress
-      await job.updateProgress(100);
+      await job.updateProgress(90);
 
       this.logger.log(`✅ Video import complete for project ${projectId}`);
+
+      // ✅ SCALE-FIRST: Trigger transcription via queue (not fire-and-forget)
+      this.logger.log(`🎙️ Queuing transcription job for project ${projectId}`);
+      await this.transcriptionQueue.add(
+        'transcribe',
+        { projectId },
+        {
+          jobId: `transcribe-${projectId}`,
+          priority: 2,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000,
+          },
+        },
+      );
+
+      // Update job progress
+      await job.updateProgress(100);
 
       return {
         projectId,

@@ -15,6 +15,9 @@ import { ClipDetectionProcessor } from './processors/clip-detection.processor';
 // Service
 import { QueuesService } from './queues.service';
 
+// Controller
+import { QueuesController } from './queues.controller';
+
 @Module({
   imports: [
     ConfigModule,
@@ -66,6 +69,7 @@ import { QueuesService } from './queues.service';
     TranscriptionProcessor,
     ClipDetectionProcessor,
   ],
+  controllers: [QueuesController],
   exports: [BullModule, QueuesService],
 })
 export class QueuesModule {}

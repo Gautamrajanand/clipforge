@@ -16,6 +16,7 @@ import { StorageModule } from './storage/storage.module';
 import { ProxyModule } from './proxy/proxy.module';
 import { CaptionsModule } from './captions/captions.module';
 import { QueuesModule } from './queues/queues.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { QueuesModule } from './queues/queues.module';
       envFilePath: '.env',
     }),
     PrismaModule,
+    HealthModule, // Health checks for monitoring
     QueuesModule, // Job queue system for scalability
     AuthModule,
     ProjectsModule,
