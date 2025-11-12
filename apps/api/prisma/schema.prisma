@@ -8,6 +8,10 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  
+  // Connection pooling for scalability
+  // Prevents database connection exhaustion
+  relationMode = "prisma"
 }
 
 // ============ Users & Orgs ============
