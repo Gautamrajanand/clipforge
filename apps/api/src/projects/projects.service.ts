@@ -7,6 +7,7 @@ import { FFmpegService } from '../video/ffmpeg.service';
 import { AIService } from '../ai/ai.service';
 import { TranscriptionService } from '../transcription/transcription.service';
 import { CaptionsService } from '../captions/captions.service';
+import { QueuesService } from '../queues/queues.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -23,6 +24,7 @@ export class ProjectsService {
     private ai: AIService,
     private transcription: TranscriptionService,
     private captions: CaptionsService,
+    private queues: QueuesService,
   ) {}
 
   // Helper to convert BigInt to number for JSON serialization
@@ -401,22 +403,16 @@ export class ProjectsService {
       },
     });
 
-    // Start the import process asynchronously (don't wait for it)
-    this.processUrlImport(projectId, url, customTitle).catch((error) => {
-      this.logger.error(`URL import failed for project ${projectId}:`, error);
-      // Update project status to ERROR
-      this.prisma.project.update({
-        where: { id: projectId },
-        data: {
-          status: 'ERROR',
-        },
-      }).catch(err => this.logger.error('Failed to update project status:', err));
-    });
+    // ✅ SCALE-FIRST: Use job queue instead of fire-and-forget async
+    const job = await this.queues.addVideoImportJob(projectId, url, customTitle);
 
-    // Return immediately
+    this.logger.log(`✅ Video import job queued: ${job.jobId}`);
+
+    // Return immediately with job info
     return {
       message: 'Video import started',
       projectId,
+      jobId: job.jobId,
       status: 'IMPORTING',
     };
   }

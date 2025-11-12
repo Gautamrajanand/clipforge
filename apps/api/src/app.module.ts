@@ -15,6 +15,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { StorageModule } from './storage/storage.module';
 import { ProxyModule } from './proxy/proxy.module';
 import { CaptionsModule } from './captions/captions.module';
+import { QueuesModule } from './queues/queues.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CaptionsModule } from './captions/captions.module';
       envFilePath: '.env',
     }),
     PrismaModule,
+    QueuesModule, // Job queue system for scalability
     AuthModule,
     ProjectsModule,
     IngestionModule,
