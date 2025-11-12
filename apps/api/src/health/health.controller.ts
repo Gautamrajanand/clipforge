@@ -13,11 +13,14 @@ export class HealthController {
     private prisma: PrismaService,
     private storage: StorageService,
   ) {
-    // Initialize Redis client
+    // Initialize Redis client from REDIS_URL
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const url = new URL(redisUrl);
+    
     this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD,
+      host: url.hostname,
+      port: parseInt(url.port) || 6379,
+      password: url.password || process.env.REDIS_PASSWORD,
       maxRetriesPerRequest: 1,
       retryStrategy: () => null, // Don't retry on health checks
     });
