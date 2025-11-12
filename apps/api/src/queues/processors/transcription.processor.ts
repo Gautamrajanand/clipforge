@@ -46,12 +46,11 @@ export class TranscriptionProcessor extends WorkerHost {
         where: { id: projectId },
       });
 
-      const settings = (project?.settings as any) || {};
       const clipSettings = (project?.clipSettings as any) || {};
 
       // Skip clip detection if in subtitles-only or reframe-only mode
-      if (settings.subtitlesMode || settings.reframeMode) {
-        this.logger.log(`⏭️  Skipping clip detection for project ${projectId} (${settings.subtitlesMode ? 'Subtitles' : 'Reframe'} mode)`);
+      if (clipSettings.subtitlesMode || clipSettings.reframeMode) {
+        this.logger.log(`⏭️  Skipping clip detection for project ${projectId} (${clipSettings.subtitlesMode ? 'Subtitles' : 'Reframe'} mode)`);
         
         // Update project status to READY since we're done
         await this.prisma.project.update({

@@ -203,7 +203,7 @@ export default function Dashboard() {
         },
         body: JSON.stringify({ 
           title: title || 'Importing...',
-          settings: clipSettings 
+          clipSettings: clipSettings 
         }),
       });
 
@@ -302,7 +302,7 @@ export default function Dashboard() {
         },
         body: JSON.stringify({ 
           title,
-          settings: clipSettings 
+          clipSettings: clipSettings 
         }),
       });
 
@@ -544,7 +544,7 @@ export default function Dashboard() {
                     updatedAt={formatTimeAgo(project.updatedAt)}
                     videoUrl={project.sourceUrl ? `http://localhost:3000/v1/projects/${project.id}/video` : undefined}
                     isEmpty={!project.sourceUrl}
-                    settings={project.settings}
+                    settings={project.clipSettings}
                     onEdit={handleEditProject}
                     onDelete={handleDeleteProject}
                   />

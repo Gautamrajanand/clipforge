@@ -31,8 +31,9 @@ export default function ProjectCard({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
 
-  // Determine project type from settings
+  // Determine project type from clipSettings
   const getProjectType = () => {
+    // settings prop contains clipSettings from the project
     if (settings?.subtitlesMode) return 'Subtitles';
     if (settings?.reframeMode) return 'Reframe';
     return 'Clips';
