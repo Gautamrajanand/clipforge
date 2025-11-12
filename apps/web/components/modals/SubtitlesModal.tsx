@@ -18,16 +18,66 @@ interface SubtitleSettings {
 }
 
 const captionStyles = [
-  { value: 'karaoke', label: 'Karaoke', desc: 'Word-by-word highlighting' },
-  { value: 'deep_diver', label: 'Deep Diver', desc: 'Bold impact style' },
-  { value: 'pod_p', label: 'Pod P', desc: 'Podcast-style captions' },
-  { value: 'viral_captions', label: 'Viral Captions', desc: 'Social media optimized' },
-  { value: 'mr_beast', label: 'Mr Beast', desc: 'High-energy style' },
-  { value: 'alex_hormozi', label: 'Alex Hormozi', desc: 'Business-focused' },
-  { value: 'minimalist', label: 'Minimalist', desc: 'Clean and simple' },
-  { value: 'bold_impact', label: 'Bold Impact', desc: 'Maximum visibility' },
-  { value: 'neon_glow', label: 'Neon Glow', desc: 'Glowing effect' },
-  { value: 'classic_subtitle', label: 'Classic', desc: 'Traditional subtitles' },
+  { 
+    value: 'karaoke', 
+    label: 'Karaoke', 
+    desc: 'Word-by-word highlighting',
+    preview: 'THIS IS KARAOKE STYLE'
+  },
+  { 
+    value: 'deep_diver', 
+    label: 'Deep Diver', 
+    desc: 'Bold impact style',
+    preview: 'DEEP DIVER BOLD'
+  },
+  { 
+    value: 'pod_p', 
+    label: 'Pod P', 
+    desc: 'Podcast-style captions',
+    preview: 'Pod P Style'
+  },
+  { 
+    value: 'viral_captions', 
+    label: 'Viral Captions', 
+    desc: 'Social media optimized',
+    preview: '🔥 VIRAL STYLE 🔥'
+  },
+  { 
+    value: 'mr_beast', 
+    label: 'Mr Beast', 
+    desc: 'High-energy style',
+    preview: '⚡ MR BEAST ⚡'
+  },
+  { 
+    value: 'alex_hormozi', 
+    label: 'Alex Hormozi', 
+    desc: 'Business-focused',
+    preview: 'ALEX HORMOZI'
+  },
+  { 
+    value: 'minimalist', 
+    label: 'Minimalist', 
+    desc: 'Clean and simple',
+    preview: 'minimalist'
+  },
+  { 
+    value: 'bold_impact', 
+    label: 'Bold Impact', 
+    desc: 'Maximum visibility',
+    preview: '💥 BOLD IMPACT 💥'
+  },
+  { 
+    value: 'neon_glow', 
+    label: 'Neon Glow', 
+    desc: 'Glowing effect',
+    preview: '✨ NEON GLOW ✨'
+  },
+  { 
+    value: 'classic_subtitle', 
+    label: 'Classic', 
+    desc: 'Traditional subtitles',
+    preview: 'Classic Subtitle'
+  },
 ];
 
 export default function SubtitlesModal({ isOpen, onClose, onGenerate }: SubtitlesModalProps) {
@@ -160,8 +210,17 @@ export default function SubtitlesModal({ isOpen, onClose, onGenerate }: Subtitle
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="font-semibold text-gray-900">{style.label}</div>
-                  <div className="text-sm text-gray-500 mt-1">{style.desc}</div>
+                  <div className="font-semibold text-gray-900 mb-2">{style.label}</div>
+                  <div className="text-sm text-gray-500 mb-3">{style.desc}</div>
+                  {/* Preview */}
+                  <div className="bg-black/90 rounded px-3 py-2 text-center">
+                    <div className="text-white font-bold text-xs" style={{ 
+                      textShadow: style.value === 'neon_glow' ? '0 0 10px #fff, 0 0 20px #fff' : 
+                                  style.value === 'bold_impact' ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none'
+                    }}>
+                      {style.preview}
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>
