@@ -41,27 +41,40 @@ export class TranscriptionProcessor extends WorkerHost {
       this.logger.log(`✅ Transcription complete for project ${projectId}`);
 
       // ✅ SCALE-FIRST: Trigger clip detection via queue
-      // Get project clip settings
+      // Get project settings to check mode
       const project = await this.prisma.project.findUnique({
         where: { id: projectId },
       });
 
+      const settings = (project?.settings as any) || {};
       const clipSettings = (project?.clipSettings as any) || {};
 
-      this.logger.log(`🎬 Queuing clip detection job for project ${projectId}`);
-      await this.clipDetectionQueue.add(
-        'detect-clips',
-        { projectId, settings: clipSettings },
-        {
-          jobId: `detect-${projectId}`,
-          priority: 3,
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 2000,
+      // Skip clip detection if in subtitles-only or reframe-only mode
+      if (settings.subtitlesMode || settings.reframeMode) {
+        this.logger.log(`⏭️  Skipping clip detection for project ${projectId} (${settings.subtitlesMode ? 'Subtitles' : 'Reframe'} mode)`);
+        
+        // Update project status to READY since we're done
+        await this.prisma.project.update({
+          where: { id: projectId },
+          data: { status: 'READY' },
+        });
+      } else {
+        // Normal flow: queue clip detection
+        this.logger.log(`🎬 Queuing clip detection job for project ${projectId}`);
+        await this.clipDetectionQueue.add(
+          'detect-clips',
+          { projectId, settings: clipSettings },
+          {
+            jobId: `detect-${projectId}`,
+            priority: 3,
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 2000,
+            },
           },
-        },
-      );
+        );
+      }
 
       // Update job progress
       await job.updateProgress(100);

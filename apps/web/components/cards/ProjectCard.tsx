@@ -11,6 +11,7 @@ interface ProjectCardProps {
   thumbnail?: string;
   videoUrl?: string;
   isEmpty?: boolean;
+  settings?: any;
   onEdit?: (id: string, newTitle: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -22,12 +23,20 @@ export default function ProjectCard({
   thumbnail, 
   videoUrl,
   isEmpty,
+  settings,
   onEdit,
   onDelete 
 }: ProjectCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
+
+  // Determine project type from settings
+  const getProjectType = () => {
+    if (settings?.subtitlesMode) return 'Subtitles';
+    if (settings?.reframeMode) return 'Reframe';
+    return 'Clips';
+  };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -86,7 +95,7 @@ export default function ProjectCard({
           {/* Badge */}
           <div className="absolute top-3 left-3 bg-gray-900 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 z-10">
             <Video className="w-3 h-3" />
-            Video
+            {getProjectType()}
           </div>
           
           {/* Empty Badge */}

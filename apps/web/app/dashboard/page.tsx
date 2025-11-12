@@ -544,6 +544,7 @@ export default function Dashboard() {
                     updatedAt={formatTimeAgo(project.updatedAt)}
                     videoUrl={project.sourceUrl ? `http://localhost:3000/v1/projects/${project.id}/video` : undefined}
                     isEmpty={!project.sourceUrl}
+                    settings={project.settings}
                     onEdit={handleEditProject}
                     onDelete={handleDeleteProject}
                   />
@@ -631,7 +632,8 @@ export default function Dashboard() {
         onClose={() => setShowReframeModal(false)}
         onReframe={async (url, settings) => {
           // Import video with reframe settings
-          await handleImportUrl(url, 'AI Reframe Project', {
+          // Title will be extracted from video URL automatically
+          await handleImportUrl(url, '', {
             aspectRatio: settings.aspectRatio,
             // Store reframe-specific settings
             reframeMode: true,
@@ -648,7 +650,8 @@ export default function Dashboard() {
         onClose={() => setShowSubtitlesModal(false)}
         onGenerate={async (url, settings) => {
           // Import video with subtitle settings
-          await handleImportUrl(url, 'AI Subtitles Project', {
+          // Title will be extracted from video URL automatically
+          await handleImportUrl(url, '', {
             captionStyle: settings.captionStyle,
             // Store subtitle-specific settings
             subtitlesMode: true,
