@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [token, setToken] = useState<string>('');
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadState, setUploadState] = useState({
     stage: 'uploading' as 'uploading' | 'processing' | 'transcribing' | 'detecting' | 'complete' | 'error',
@@ -25,6 +26,8 @@ export default function Dashboard() {
     eta: '',
     error: '',
   });
+
+  const PROJECTS_PER_PAGE = 11; // 11 projects + 1 "New Project" card = 12 total (3x4 grid)
 
   useEffect(() => {
     const getToken = async () => {
@@ -517,22 +520,68 @@ export default function Dashboard() {
 
           {/* Recent Projects section */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Recent</h2>
+              {projects.length > PROJECTS_PER_PAGE && (
+                <div className="text-sm text-gray-600">
+                  Showing {Math.min((currentPage - 1) * PROJECTS_PER_PAGE + 1, projects.length)}-{Math.min(currentPage * PROJECTS_PER_PAGE, projects.length)} of {projects.length} projects
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-4 gap-6">
               <NewProjectCard onClick={() => setShowUploadModal(true)} />
-              {projects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  id={project.id}
-                  title={project.title}
-                  updatedAt={formatTimeAgo(project.updatedAt)}
-                  videoUrl={project.sourceUrl ? `http://localhost:3000/v1/projects/${project.id}/video` : undefined}
-                  isEmpty={!project.sourceUrl}
-                  onEdit={handleEditProject}
-                  onDelete={handleDeleteProject}
-                />
-              ))}
+              {projects
+                .slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE)
+                .map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    id={project.id}
+                    title={project.title}
+                    updatedAt={formatTimeAgo(project.updatedAt)}
+                    videoUrl={project.sourceUrl ? `http://localhost:3000/v1/projects/${project.id}/video` : undefined}
+                    isEmpty={!project.sourceUrl}
+                    onEdit={handleEditProject}
+                    onDelete={handleDeleteProject}
+                  />
+                ))}
             </div>
+
+            {/* Pagination */}
+            {projects.length > PROJECTS_PER_PAGE && (
+              <div className="flex items-center justify-center gap-2 mt-8">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.ceil(projects.length / PROJECTS_PER_PAGE) }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-10 h-10 rounded-lg transition-colors ${
+                        currentPage === page
+                          ? 'bg-gray-900 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(Math.min(Math.ceil(projects.length / PROJECTS_PER_PAGE), currentPage + 1))}
+                  disabled={currentPage === Math.ceil(projects.length / PROJECTS_PER_PAGE)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Empty state if no projects */}
