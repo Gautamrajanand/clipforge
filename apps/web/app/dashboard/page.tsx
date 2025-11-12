@@ -83,7 +83,7 @@ export default function Dashboard() {
   };
 
   const pollProjectStatus = async (projectId: string) => {
-    const maxAttempts = 120; // 4 minutes max (2s interval) - increased for URL imports
+    const maxAttempts = 600; // 20 minutes max (2s interval) - enough for long videos
     let attempts = 0;
 
     while (attempts < maxAttempts) {
@@ -154,8 +154,8 @@ export default function Dashboard() {
       }
     }
 
-    // Timeout
-    throw new Error('Processing timeout - please refresh the page');
+    // Timeout after 20 minutes
+    throw new Error('Processing is taking longer than expected. The video is still being processed in the background. Please refresh the page in a few minutes to check the status.');
   };
 
   const handleOpenUploadModal = () => {
