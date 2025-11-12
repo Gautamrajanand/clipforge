@@ -1,5 +1,5 @@
 # ClipForge Architecture
-**Last Updated:** November 11, 2025
+**Last Updated:** November 12, 2025 (Phase 1 Complete)
 
 ---
 
@@ -12,51 +12,58 @@ ClipForge is a self-hosted, AI-powered video repurposing platform that transform
 ## High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIPFORGE SYSTEM                          │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        CLIPFORGE SYSTEM (v0.4.0)                        │
+│                     Phase 1: Scalability Complete ✅                     │
+└─────────────────────────────────────────────────────────────────────────┘
 
-                    ┌──────────────────┐
-                    │   End Users      │
-                    │   (Web Browser)  │
-                    └────────┬─────────┘
-                             │
-                    ┌────────▼─────────┐
-                    │  Next.js Web App │
-                    │  (Port 3001)     │
-                    │  ┌─────────────┐ │
-                    │  │ Dashboard   │ │
-                    │  │ Upload UI   │ │
-                    │  │ Clips Grid  │ │
-                    │  │ Settings    │ │
-                    │  └─────────────┘ │
-                    └────────┬─────────┘
-                             │ HTTP/REST
-                    ┌────────▼─────────┐
-                    │  NestJS API      │
-                    │  (Port 3000)     │
-                    │  ┌─────────────┐ │
-                    │  │ Auth        │ │
-                    │  │ Projects    │ │
-                    │  │ Clips       │ │
-                    │  │ Transcripts │ │
-                    │  │ Exports     │ │
-                    │  └─────────────┘ │
-                    └────┬────┬────┬───┘
-                         │    │    │
-        ┌────────────────┘    │    └─────────────────┐
-        │                     │                      │
-   ┌────▼────┐          ┌─────▼──────┐        ┌─────▼──────┐
-   │FastAPI  │          │ PostgreSQL │        │   MinIO    │
-   │ML Worker│          │ (Database) │        │ (Storage)  │
-   │(Port    │          │            │        │            │
-   │8000)    │          │            │        │            │
-   │┌───────┐│          └────────────┘        └────────────┘
-   ││Ranker ││
-   ││Engine ││          ┌────────────┐        ┌────────────┐
-   │└───────┘│          │   Redis    │        │ AssemblyAI │
-   └─────────┘          │  (Queue)   │        │  (External)│
-                        └────────────┘        └────────────┘
+                         ┌──────────────────┐
+                         │   End Users      │
+                         │   (Web Browser)  │
+                         └────────┬─────────┘
+                                  │
+                         ┌────────▼─────────┐
+                         │  Next.js Web App │
+                         │  (Port 3001)     │
+                         │  ┌─────────────┐ │
+                         │  │ Dashboard   │ │
+                         │  │ Upload UI   │ │
+                         │  │ Clips Grid  │ │
+                         │  │ Settings    │ │
+                         │  └─────────────┘ │
+                         └────────┬─────────┘
+                                  │ HTTP/REST
+                         ┌────────▼─────────────────────┐
+                         │  NestJS API (Port 3000)      │
+                         │  ┌─────────────────────────┐ │
+                         │  │ Auth & Projects         │ │
+                         │  │ Clips & Transcripts     │ │
+                         │  │ Exports & Brand Kits    │ │
+                         │  │ ✨ Health Checks        │ │
+                         │  │ ✨ Queue Monitoring     │ │
+                         │  └─────────────────────────┘ │
+                         └──┬────┬────┬────┬───────────┘
+                            │    │    │    │
+           ┌────────────────┘    │    │    └──────────────────┐
+           │                     │    │                       │
+      ┌────▼────┐          ┌─────▼────▼──────┐        ┌─────▼──────┐
+      │FastAPI  │          │ ✨ Redis         │        │ PostgreSQL │
+      │ML Worker│          │ (Job Queues)     │        │ (Database) │
+      │(Port    │          │ ┌──────────────┐ │        │ + Pooling  │
+      │8000)    │          │ │ BullMQ       │ │        │ (20 conn)  │
+      │┌───────┐│          │ │ - video-     │ │        └────────────┘
+      ││Ranker ││          │ │   import     │ │
+      ││Engine ││          │ │ - transcribe │ │        ┌────────────┐
+      │└───────┘│          │ │ - detect     │ │        │   MinIO    │
+      └─────────┘          │ │ - export     │ │        │ (Storage)  │
+                           │ └──────────────┘ │        └────────────┘
+                           │ Rate Limiting    │
+                           │ Caching          │        ┌────────────┐
+                           └──────────────────┘        │ AssemblyAI │
+                                                       │  (External)│
+                                                       └────────────┘
+
+✨ = Phase 1 Additions (Job Queues, Health Checks, Connection Pooling)
 ```
 
 ---
@@ -92,7 +99,9 @@ ClipForge is a self-hosted, AI-powered video repurposing platform that transform
 - Business logic orchestration
 - Database operations
 - File upload handling
-- Job queue management
+- ✨ **Job queue management (BullMQ)**
+- ✨ **Health checks & monitoring**
+- ✨ **Queue metrics API**
 
 **Key Modules:**
 
@@ -122,6 +131,33 @@ ClipForge is a self-hosted, AI-powered video repurposing platform that transform
 - `apps/api/src/clips/clips.service.ts` - Clip orchestration
 - `apps/api/src/video/ffmpeg.service.ts` - Video processing
 - `apps/api/src/transcription/transcription.service.ts` - Transcription
+- ✨ `apps/api/src/queues/queues.module.ts` - Job queue configuration
+- ✨ `apps/api/src/queues/queues.service.ts` - Queue management
+- ✨ `apps/api/src/queues/processors/*.processor.ts` - Job processors
+- ✨ `apps/api/src/health/health.controller.ts` - Health checks
+
+#### ✨ Queues Module (Phase 1)
+- **Video Import Queue** - Downloads videos from URLs
+- **Transcription Queue** - Generates transcripts
+- **Clip Detection Queue** - Analyzes transcripts for clips
+- **Video Export Queue** - Renders final clips
+- **Features:**
+  - Job persistence in Redis
+  - Automatic retry (3 attempts, exponential backoff)
+  - Progress tracking (0-100%)
+  - Concurrency control per queue
+  - Job monitoring API
+
+#### ✨ Health Module (Phase 1)
+- **GET /health** - Overall system health
+- **GET /health/live** - Liveness probe (Kubernetes)
+- **GET /health/ready** - Readiness probe (Kubernetes)
+- **Checks:** Database, Redis, Storage connectivity
+
+#### ✨ Queue Monitoring (Phase 1)
+- **GET /v1/queues/metrics** - All queue statistics
+- **GET /v1/queues/:queue/metrics** - Specific queue metrics
+- **GET /v1/queues/:queue/jobs/:id** - Job status & progress
 
 ---
 
