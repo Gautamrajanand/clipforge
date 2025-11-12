@@ -8,6 +8,11 @@ interface SubtitlesModalProps {
   onClose: () => void;
   onGenerate: (url: string, settings: SubtitleSettings) => Promise<void>;
   onUpload: (file: File, settings: SubtitleSettings) => Promise<void>;
+  isUploading?: boolean;
+  uploadProgress?: number;
+  uploadStage?: string;
+  uploadMessage?: string;
+  uploadError?: string;
 }
 
 interface SubtitleSettings {
@@ -81,7 +86,17 @@ const captionStyles = [
   },
 ];
 
-export default function SubtitlesModal({ isOpen, onClose, onGenerate, onUpload }: SubtitlesModalProps) {
+export default function SubtitlesModal({ 
+  isOpen, 
+  onClose, 
+  onGenerate, 
+  onUpload,
+  isUploading = false,
+  uploadProgress = 0,
+  uploadStage = '',
+  uploadMessage = '',
+  uploadError = ''
+}: SubtitlesModalProps) {
   const [tab, setTab] = useState<'upload' | 'url'>('url');
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -365,21 +380,41 @@ export default function SubtitlesModal({ isOpen, onClose, onGenerate, onUpload }
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={onClose}
-            disabled={isProcessing}
-            className="px-6 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isProcessing || (tab === 'url' ? !url : !file)}
-            className="px-8 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/30"
-          >
-            {isProcessing ? 'Processing...' : 'Generate Subtitles'}
-          </button>
+        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
+          {isUploading ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-700 font-medium">{uploadMessage}</span>
+                <span className="text-gray-500">{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              {uploadError && (
+                <div className="text-red-600 text-sm">{uploadError}</div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <button
+                onClick={onClose}
+                disabled={isProcessing}
+                className="px-6 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={isProcessing || (tab === 'url' ? !url : !file)}
+                className="px-8 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/30"
+              >
+                {isProcessing ? 'Processing...' : 'Generate Subtitles'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

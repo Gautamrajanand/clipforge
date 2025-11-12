@@ -629,7 +629,12 @@ export default function Dashboard() {
       {/* AI Reframe Modal */}
       <ReframeModal
         isOpen={showReframeModal}
-        onClose={() => setShowReframeModal(false)}
+        onClose={() => !isUploading && setShowReframeModal(false)}
+        isUploading={isUploading}
+        uploadProgress={uploadState.progress}
+        uploadStage={uploadState.stage}
+        uploadMessage={uploadState.message}
+        uploadError={uploadState.error}
         onReframe={async (url, settings) => {
           // Import video with reframe settings
           // Title will be extracted from video URL automatically
@@ -644,21 +649,32 @@ export default function Dashboard() {
         }}
         onUpload={async (file, settings) => {
           // Upload video with reframe settings
-          await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
-            aspectRatio: settings.aspectRatio,
-            // Store reframe-specific settings
-            reframeMode: true,
-            framingStrategy: settings.strategy,
-            backgroundColor: settings.backgroundColor,
-          });
-          setShowReframeModal(false);
+          try {
+            await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
+              aspectRatio: settings.aspectRatio,
+              // Store reframe-specific settings
+              reframeMode: true,
+              framingStrategy: settings.strategy,
+              backgroundColor: settings.backgroundColor,
+            });
+            // Only close modal after successful upload
+            setShowReframeModal(false);
+          } catch (error) {
+            // Keep modal open on error so user can see the error
+            console.error('Upload failed:', error);
+          }
         }}
       />
 
       {/* AI Subtitles Modal */}
       <SubtitlesModal
         isOpen={showSubtitlesModal}
-        onClose={() => setShowSubtitlesModal(false)}
+        onClose={() => !isUploading && setShowSubtitlesModal(false)}
+        isUploading={isUploading}
+        uploadProgress={uploadState.progress}
+        uploadStage={uploadState.stage}
+        uploadMessage={uploadState.message}
+        uploadError={uploadState.error}
         onGenerate={async (url, settings) => {
           // Import video with subtitle settings
           // Title will be extracted from video URL automatically
@@ -675,16 +691,22 @@ export default function Dashboard() {
         }}
         onUpload={async (file, settings) => {
           // Upload video with subtitle settings
-          await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
-            captionStyle: settings.captionStyle,
-            // Store subtitle-specific settings
-            subtitlesMode: true,
-            primaryColor: settings.primaryColor,
-            secondaryColor: settings.secondaryColor,
-            fontSize: settings.fontSize,
-            captionPosition: settings.position,
-          });
-          setShowSubtitlesModal(false);
+          try {
+            await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
+              captionStyle: settings.captionStyle,
+              // Store subtitle-specific settings
+              subtitlesMode: true,
+              primaryColor: settings.primaryColor,
+              secondaryColor: settings.secondaryColor,
+              fontSize: settings.fontSize,
+              captionPosition: settings.position,
+            });
+            // Only close modal after successful upload
+            setShowSubtitlesModal(false);
+          } catch (error) {
+            // Keep modal open on error so user can see the error
+            console.error('Upload failed:', error);
+          }
         }}
       />
     </div>
