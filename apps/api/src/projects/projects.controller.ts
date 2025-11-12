@@ -22,6 +22,8 @@ import { ProjectsService } from './projects.service';
 import { ExportMomentsDto } from './dto/export-moments.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { DetectClipsDto } from './dto/clip-settings.dto';
+import { ReframeDto } from './dto/reframe.dto';
+import { SubtitlesDto } from './dto/subtitles.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -178,5 +180,33 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     return this.projectsService.delete(id, orgId);
+  }
+
+  @Post(':id/reframe')
+  @ApiOperation({ summary: 'Reframe video to different aspect ratio' })
+  async reframe(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() dto: ReframeDto,
+  ) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.reframeVideo(id, orgId, dto);
+  }
+
+  @Post(':id/subtitles')
+  @ApiOperation({ summary: 'Generate subtitles for video' })
+  async subtitles(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() dto: SubtitlesDto,
+  ) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.generateSubtitles(id, orgId, dto);
   }
 }

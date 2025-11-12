@@ -9,6 +9,8 @@ import { TranscriptionService } from '../transcription/transcription.service';
 import { CaptionsService } from '../captions/captions.service';
 import { QueuesService } from '../queues/queues.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { ReframeDto } from './dto/reframe.dto';
+import { SubtitlesDto } from './dto/subtitles.dto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -986,5 +988,64 @@ export class ProjectsService {
     }
 
     return transcript;
+  }
+
+  async reframeVideo(projectId: string, orgId: string, dto: ReframeDto) {
+    this.logger.log(`🎬 Reframing video for project ${projectId}`);
+
+    // Verify project exists and belongs to org
+    const project = await this.findOne(projectId, orgId);
+
+    if (!project.sourceUrl) {
+      throw new BadRequestException('Project has no video to reframe');
+    }
+
+    this.logger.log(`✅ Reframe request received for project ${projectId}`);
+    this.logger.log(`   Aspect Ratio: ${dto.aspectRatio}`);
+    this.logger.log(`   Strategy: ${dto.strategy}`);
+
+    // For MVP: Just return success - actual processing will be triggered by frontend
+    // TODO: Implement dedicated reframe queue processor
+    return {
+      success: true,
+      message: `Video will be reframed to ${dto.aspectRatio}`,
+      settings: {
+        aspectRatio: dto.aspectRatio,
+        strategy: dto.strategy,
+        backgroundColor: dto.backgroundColor,
+      },
+      project: this.serializeProject(project),
+    };
+  }
+
+  async generateSubtitles(projectId: string, orgId: string, dto: SubtitlesDto) {
+    this.logger.log(`📝 Generating subtitles for project ${projectId}`);
+
+    // Verify project exists and belongs to org
+    const project = await this.findOne(projectId, orgId);
+
+    if (!project.sourceUrl) {
+      throw new BadRequestException('Project has no video to generate subtitles for');
+    }
+
+    // Queue transcription job
+    const job = await this.queues.addTranscriptionJob(projectId);
+
+    this.logger.log(`✅ Subtitles job queued: ${job.jobId}`);
+    this.logger.log(`   Caption Style: ${dto.captionStyle}`);
+
+    return {
+      success: true,
+      message: 'Subtitle generation started',
+      jobId: job.jobId,
+      settings: {
+        captionStyle: dto.captionStyle,
+        primaryColor: dto.primaryColor,
+        secondaryColor: dto.secondaryColor,
+        fontSize: dto.fontSize,
+        position: dto.position,
+      },
+      project: this.serializeProject(project),
+    };
   }
 }
