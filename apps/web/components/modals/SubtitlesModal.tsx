@@ -7,6 +7,7 @@ interface SubtitlesModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerate: (url: string, settings: SubtitleSettings) => Promise<void>;
+  onUpload: (file: File, settings: SubtitleSettings) => Promise<void>;
 }
 
 interface SubtitleSettings {
@@ -80,9 +81,10 @@ const captionStyles = [
   },
 ];
 
-export default function SubtitlesModal({ isOpen, onClose, onGenerate }: SubtitlesModalProps) {
+export default function SubtitlesModal({ isOpen, onClose, onGenerate, onUpload }: SubtitlesModalProps) {
   const [tab, setTab] = useState<'upload' | 'url'>('url');
   const [url, setUrl] = useState('');
+  const [file, setFile] = useState<File | null>(null);
   const [captionStyle, setCaptionStyle] = useState('karaoke');
   const [primaryColor, setPrimaryColor] = useState('#FFFFFF');
   const [secondaryColor, setSecondaryColor] = useState('#FFD700');
@@ -93,25 +95,43 @@ export default function SubtitlesModal({ isOpen, onClose, onGenerate }: Subtitle
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    if (!url) {
+    // Validate input based on tab
+    if (tab === 'url' && !url) {
       alert('Please enter a video URL');
+      return;
+    }
+    if (tab === 'upload' && !file) {
+      alert('Please select a video file');
       return;
     }
 
     setIsProcessing(true);
     try {
-      await onGenerate(url, {
+      const settings = {
         captionStyle,
         primaryColor,
         secondaryColor,
         fontSize,
         position,
-      });
+      };
+
+      if (tab === 'url') {
+        await onGenerate(url, settings);
+      } else {
+        await onUpload(file!, settings);
+      }
       // Modal will be closed by parent component
     } catch (error) {
       console.error('Subtitles error:', error);
       alert('Failed to start subtitle generation');
       setIsProcessing(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
     }
   };
 
@@ -185,12 +205,46 @@ export default function SubtitlesModal({ isOpen, onClose, onGenerate }: Subtitle
             </div>
           )}
 
-          {/* Upload (Coming Soon) */}
+          {/* Upload */}
           {tab === 'upload' && (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 font-medium">Upload coming soon</p>
-              <p className="text-sm text-gray-500 mt-2">Use URL import for now</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Video File
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors cursor-pointer">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="subtitle-video-upload"
+                />
+                <label htmlFor="subtitle-video-upload" className="cursor-pointer">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  {file ? (
+                    <div>
+                      <p className="text-gray-900 font-medium">{file.name}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFile(null);
+                        }}
+                        className="mt-2 text-sm text-purple-600 hover:text-purple-700"
+                      >
+                        Change file
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-gray-600 font-medium">Click to upload video</p>
+                      <p className="text-sm text-gray-500 mt-2">MP4, MOV, AVI, or WebM</p>
+                    </div>
+                  )}
+                </label>
+              </div>
             </div>
           )}
 
@@ -321,7 +375,7 @@ export default function SubtitlesModal({ isOpen, onClose, onGenerate }: Subtitle
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isProcessing || !url}
+            disabled={isProcessing || (tab === 'url' ? !url : !file)}
             className="px-8 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/30"
           >
             {isProcessing ? 'Processing...' : 'Generate Subtitles'}

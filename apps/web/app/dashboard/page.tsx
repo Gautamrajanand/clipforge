@@ -642,6 +642,17 @@ export default function Dashboard() {
           });
           setShowReframeModal(false);
         }}
+        onUpload={async (file, settings) => {
+          // Upload video with reframe settings
+          await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
+            aspectRatio: settings.aspectRatio,
+            // Store reframe-specific settings
+            reframeMode: true,
+            framingStrategy: settings.strategy,
+            backgroundColor: settings.backgroundColor,
+          });
+          setShowReframeModal(false);
+        }}
       />
 
       {/* AI Subtitles Modal */}
@@ -652,6 +663,19 @@ export default function Dashboard() {
           // Import video with subtitle settings
           // Title will be extracted from video URL automatically
           await handleImportUrl(url, '', {
+            captionStyle: settings.captionStyle,
+            // Store subtitle-specific settings
+            subtitlesMode: true,
+            primaryColor: settings.primaryColor,
+            secondaryColor: settings.secondaryColor,
+            fontSize: settings.fontSize,
+            captionPosition: settings.position,
+          });
+          setShowSubtitlesModal(false);
+        }}
+        onUpload={async (file, settings) => {
+          // Upload video with subtitle settings
+          await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
             captionStyle: settings.captionStyle,
             // Store subtitle-specific settings
             subtitlesMode: true,

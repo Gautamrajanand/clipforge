@@ -7,6 +7,7 @@ interface ReframeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onReframe: (url: string, settings: ReframeSettings) => Promise<void>;
+  onUpload: (file: File, settings: ReframeSettings) => Promise<void>;
 }
 
 interface ReframeSettings {
@@ -29,9 +30,10 @@ const strategies = [
   { value: 'pad_color', label: 'Pad with Color', desc: 'Solid color padding' },
 ];
 
-export default function ReframeModal({ isOpen, onClose, onReframe }: ReframeModalProps) {
+export default function ReframeModal({ isOpen, onClose, onReframe, onUpload }: ReframeModalProps) {
   const [tab, setTab] = useState<'upload' | 'url'>('url');
   const [url, setUrl] = useState('');
+  const [file, setFile] = useState<File | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1' | '4:5'>('9:16');
   const [strategy, setStrategy] = useState<'smart_crop' | 'center_crop' | 'pad_blur' | 'pad_color'>('smart_crop');
   const [backgroundColor, setBackgroundColor] = useState('#000000');
@@ -40,23 +42,41 @@ export default function ReframeModal({ isOpen, onClose, onReframe }: ReframeModa
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    if (!url) {
+    // Validate input based on tab
+    if (tab === 'url' && !url) {
       alert('Please enter a video URL');
+      return;
+    }
+    if (tab === 'upload' && !file) {
+      alert('Please select a video file');
       return;
     }
 
     setIsProcessing(true);
     try {
-      await onReframe(url, {
+      const settings = {
         aspectRatio,
         strategy,
         backgroundColor,
-      });
+      };
+
+      if (tab === 'url') {
+        await onReframe(url, settings);
+      } else {
+        await onUpload(file!, settings);
+      }
       // Modal will be closed by parent component
     } catch (error) {
       console.error('Reframe error:', error);
       alert('Failed to start reframe process');
       setIsProcessing(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
     }
   };
 
@@ -130,12 +150,46 @@ export default function ReframeModal({ isOpen, onClose, onReframe }: ReframeModa
             </div>
           )}
 
-          {/* Upload (Coming Soon) */}
+          {/* Upload */}
           {tab === 'upload' && (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 font-medium">Upload coming soon</p>
-              <p className="text-sm text-gray-500 mt-2">Use URL import for now</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Video File
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-yellow-400 transition-colors cursor-pointer">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="reframe-video-upload"
+                />
+                <label htmlFor="reframe-video-upload" className="cursor-pointer">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  {file ? (
+                    <div>
+                      <p className="text-gray-900 font-medium">{file.name}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFile(null);
+                        }}
+                        className="mt-2 text-sm text-yellow-600 hover:text-yellow-700"
+                      >
+                        Change file
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-gray-600 font-medium">Click to upload video</p>
+                      <p className="text-sm text-gray-500 mt-2">MP4, MOV, AVI, or WebM</p>
+                    </div>
+                  )}
+                </label>
+              </div>
             </div>
           )}
 
@@ -221,7 +275,7 @@ export default function ReframeModal({ isOpen, onClose, onReframe }: ReframeModa
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isProcessing || !url}
+            disabled={isProcessing || (tab === 'url' ? !url : !file)}
             className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg font-semibold hover:from-yellow-600 hover:to-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-yellow-500/30"
           >
             {isProcessing ? 'Processing...' : 'Reframe Video'}
