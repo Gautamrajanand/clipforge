@@ -6,7 +6,7 @@ import { X, Upload, Link as LinkIcon, Type } from 'lucide-react';
 interface SubtitlesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onGenerate: (projectId: string, settings: SubtitleSettings) => Promise<void>;
+  onGenerate: (url: string, settings: SubtitleSettings) => Promise<void>;
 }
 
 interface SubtitleSettings {
@@ -50,13 +50,17 @@ export default function SubtitlesModal({ isOpen, onClose, onGenerate }: Subtitle
 
     setIsProcessing(true);
     try {
-      // For MVP: Create project first, then generate subtitles
-      // TODO: Implement proper flow
-      alert('Subtitles feature coming soon! Backend API is ready.');
+      await onGenerate(url, {
+        captionStyle,
+        primaryColor,
+        secondaryColor,
+        fontSize,
+        position,
+      });
+      // Modal will be closed by parent component
     } catch (error) {
       console.error('Subtitles error:', error);
       alert('Failed to start subtitle generation');
-    } finally {
       setIsProcessing(false);
     }
   };

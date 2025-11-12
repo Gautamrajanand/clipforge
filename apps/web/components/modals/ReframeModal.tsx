@@ -6,7 +6,7 @@ import { X, Upload, Link as LinkIcon, Wand2 } from 'lucide-react';
 interface ReframeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onReframe: (projectId: string, settings: ReframeSettings) => Promise<void>;
+  onReframe: (url: string, settings: ReframeSettings) => Promise<void>;
 }
 
 interface ReframeSettings {
@@ -47,13 +47,15 @@ export default function ReframeModal({ isOpen, onClose, onReframe }: ReframeModa
 
     setIsProcessing(true);
     try {
-      // For MVP: Create project first, then reframe
-      // TODO: Implement proper flow
-      alert('Reframe feature coming soon! Backend API is ready.');
+      await onReframe(url, {
+        aspectRatio,
+        strategy,
+        backgroundColor,
+      });
+      // Modal will be closed by parent component
     } catch (error) {
       console.error('Reframe error:', error);
       alert('Failed to start reframe process');
-    } finally {
       setIsProcessing(false);
     }
   };

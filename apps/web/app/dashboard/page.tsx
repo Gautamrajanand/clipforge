@@ -629,14 +629,36 @@ export default function Dashboard() {
       <ReframeModal
         isOpen={showReframeModal}
         onClose={() => setShowReframeModal(false)}
-        onReframe={async () => {}}
+        onReframe={async (url, settings) => {
+          // Import video with reframe settings
+          await handleImportUrl(url, 'AI Reframe Project', {
+            aspectRatio: settings.aspectRatio,
+            // Store reframe-specific settings
+            reframeMode: true,
+            framingStrategy: settings.strategy,
+            backgroundColor: settings.backgroundColor,
+          });
+          setShowReframeModal(false);
+        }}
       />
 
       {/* AI Subtitles Modal */}
       <SubtitlesModal
         isOpen={showSubtitlesModal}
         onClose={() => setShowSubtitlesModal(false)}
-        onGenerate={async () => {}}
+        onGenerate={async (url, settings) => {
+          // Import video with subtitle settings
+          await handleImportUrl(url, 'AI Subtitles Project', {
+            captionStyle: settings.captionStyle,
+            // Store subtitle-specific settings
+            subtitlesMode: true,
+            primaryColor: settings.primaryColor,
+            secondaryColor: settings.secondaryColor,
+            fontSize: settings.fontSize,
+            captionPosition: settings.position,
+          });
+          setShowSubtitlesModal(false);
+        }}
       />
     </div>
   );
