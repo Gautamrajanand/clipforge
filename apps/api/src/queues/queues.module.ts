@@ -33,7 +33,9 @@ import { QueuesController } from './queues.controller';
       useFactory: async (configService: ConfigService) => {
         // Parse REDIS_URL (format: redis://host:port)
         const redisUrl = configService.get('REDIS_URL') || 'redis://localhost:6379';
+        console.log('🔧 BullMQ Redis URL:', redisUrl);
         const url = new URL(redisUrl);
+        console.log('🔧 BullMQ connecting to:', url.hostname, ':', url.port);
         
         return {
           connection: {
