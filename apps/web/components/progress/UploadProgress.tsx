@@ -3,7 +3,7 @@
 import { CheckCircle2, Loader2, AlertCircle, Clock } from 'lucide-react';
 
 interface UploadProgressProps {
-  stage: 'uploading' | 'transcribing' | 'detecting' | 'complete' | 'error';
+  stage: 'uploading' | 'processing' | 'transcribing' | 'detecting' | 'complete' | 'error';
   progress: number;
   message?: string;
   eta?: string;
@@ -24,6 +24,12 @@ export default function UploadProgress({
           icon: <Loader2 className="w-5 h-5 animate-spin text-blue-500" />,
           title: 'Uploading video...',
           color: 'bg-blue-500',
+        };
+      case 'processing':
+        return {
+          icon: <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />,
+          title: 'Processing video...',
+          color: 'bg-indigo-500',
         };
       case 'transcribing':
         return {

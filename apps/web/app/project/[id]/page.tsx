@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Download, Share2, Sparkles, Play, Check } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Sparkles } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
+import ClipsGrid from '@/components/clips/ClipsGrid';
+import VideoPlayer from '@/components/video/VideoPlayer';
+import ClipSettings from '@/components/clips/ClipSettings';
+import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
 
 export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [project, setProject] = useState<any>(null);
@@ -12,9 +16,18 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [selectedClips, setSelectedClips] = useState<string[]>([]);
   const [token, setToken] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [exportedClips, setExportedClips] = useState<any[]>([]);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportVideoUrls, setExportVideoUrls] = useState<Record<string, string>>({});
+  const [selectedClipForPlayback, setSelectedClipForPlayback] = useState<any>(null);
+  const [clipSettings, setClipSettings] = useState({
+    clipLength: 45,
+    clipCount: 5,
+    minLength: 15,
+    maxLength: 180,
+  });
+  const [isDetecting, setIsDetecting] = useState(false);
 
   useEffect(() => {
     const getToken = async () => {
@@ -52,9 +65,46 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         if (data?.sourceUrl) {
           await loadVideoBlob(authToken);
         }
+        
+        // Auto-generate Smart Clips if none exist and transcript is available
+        // Only do this once per session to avoid duplicate generations
+        const hasSmartClips = data.moments?.some((m: any) => m.features?.isProClip);
+        const hasAttemptedGeneration = sessionStorage.getItem(`smart-clips-generated-${params.id}`);
+        
+        if (!hasSmartClips && !hasAttemptedGeneration && data.transcript && data.moments?.length > 0) {
+          console.log('No Smart Clips found, auto-generating...');
+          sessionStorage.setItem(`smart-clips-generated-${params.id}`, 'true');
+          // Generate Smart Clips in background (don't await)
+          generateSmartClipsInBackground(authToken);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch project:', error);
+    }
+  };
+  
+  const generateSmartClipsInBackground = async (authToken: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/clips/pro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          numClips: 10, // Try to generate up to 10, but return however many are actually found
+          targetDuration: clipSettings.clipLength,
+          withCrossfade: false,
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('Smart Clips generated in background');
+        // Refresh to show new Smart Clips
+        await fetchProjectData(authToken);
+      }
+    } catch (error) {
+      console.error('Background Smart Clips generation failed:', error);
     }
   };
 
@@ -100,12 +150,15 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     );
   };
 
-  const handleExport = async () => {
+  const handleExportClick = () => {
     if (selectedClips.length === 0) {
       alert('Please select at least one clip to export');
       return;
     }
+    setShowExportModal(true);
+  };
 
+  const handleExport = async (options: ExportOptions) => {
     setIsExporting(true);
     try {
       const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/export`, {
@@ -114,7 +167,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ momentIds: selectedClips }),
+        body: JSON.stringify({
+          momentIds: selectedClips,
+          aspectRatio: options.aspectRatio,
+          cropMode: options.cropMode,
+          cropPosition: options.cropPosition,
+          burnCaptions: options.burnCaptions,
+          captionStyle: options.captionStyle,
+        }),
       });
 
       if (response.ok) {
@@ -128,7 +188,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         }
         setExportVideoUrls(urls);
         
-        alert(`Successfully exported ${data.exports.length} clips!`);
+        alert(`Successfully exported ${data.exports.length} clips with ${options.aspectRatio} aspect ratio!`);
       } else {
         alert('Failed to export clips');
       }
@@ -139,6 +199,37 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       setIsExporting(false);
     }
   };
+
+  const handleDetectClips = async () => {
+    setIsDetecting(true);
+    try {
+      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/detect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          clipLength: clipSettings.clipLength,
+          clipCount: clipSettings.clipCount,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh project data to get new clips
+        await fetchProjectData(token);
+        alert('Clips detected successfully!');
+      } else {
+        alert('Failed to detect clips');
+      }
+    } catch (error) {
+      console.error('Detection error:', error);
+      alert('Failed to detect clips');
+    } finally {
+      setIsDetecting(false);
+    }
+  };
+
 
   const handleDownloadExport = async (exportId: string) => {
     try {
@@ -207,7 +298,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 Share
               </button>
               <button
-                onClick={handleExport}
+                onClick={handleExportClick}
                 disabled={selectedClips.length === 0 || isExporting}
                 className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
@@ -236,132 +327,37 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
             </div>
           )}
 
-          {/* AI-Detected Clips */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">AI-Detected Clips</h2>
-              <p className="text-sm text-gray-600">
-                Select clips to export
-              </p>
+          {/* AI-Detected Clips Grid */}
+          {clips.length > 0 && (
+            <div className="mb-8">
+              <ClipsGrid
+                clips={clips}
+                selectedClips={selectedClips}
+                onClipSelect={toggleClip}
+                onClipPlay={(clip: any) => setSelectedClipForPlayback(clip)}
+              />
             </div>
+          )}
 
-            <div className="grid gap-4">
-              {clips.map((clip) => (
-                <div
-                  key={clip.id}
-                  onClick={() => toggleClip(clip.id)}
-                  className={`bg-white rounded-xl p-6 cursor-pointer transition-all border-2 ${
-                    selectedClips.includes(clip.id)
-                      ? 'border-primary-500 shadow-md'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    {/* Checkbox */}
-                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-1 transition-colors ${
-                      selectedClips.includes(clip.id)
-                        ? 'bg-primary-500 border-primary-500'
-                        : 'border-gray-300'
-                    }`}>
-                      {selectedClips.includes(clip.id) && (
-                        <Check className="w-4 h-4 text-white" />
-                      )}
-                    </div>
-
-                    <div className="flex-1">
-                      {/* Title and Score */}
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            {clip.title || 'Untitled Clip'}
-                          </h3>
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="text-lg font-bold text-primary-600">{clip.score}%</span>
-                            <span className="text-sm font-medium text-gray-600">{clip.reason}</span>
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            {clip.tStart?.toFixed(1)}s - {clip.tEnd?.toFixed(1)}s • {clip.duration}s duration
-                          </p>
-                        </div>
-                        <Sparkles className="w-6 h-6 text-yellow-500 flex-shrink-0" />
-                      </div>
-
-                      {/* Description */}
-                      {clip.description && (
-                        <div className="mb-4 pb-4 border-b border-gray-100">
-                          <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-                            Scene Analysis
-                          </p>
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {clip.description}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Feature Breakdown */}
-                      {clip.features && (
-                        <div className="mb-4 pb-4 border-b border-gray-100">
-                          <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">
-                            AI Analysis
-                          </p>
-                          <div className="grid grid-cols-2 gap-3">
-                            {Object.entries(clip.features).map(([key, value]: [string, any]) => {
-                              const percentage = Math.round(value * 100);
-                              const label = key.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-                              return (
-                                <div key={key}>
-                                  <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-xs text-gray-600">{label}</span>
-                                    <span className="text-xs font-semibold text-gray-800">{percentage}%</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
-                                      className={`h-2 rounded-full transition-all ${
-                                        percentage >= 80 ? 'bg-green-500' : 
-                                        percentage >= 60 ? 'bg-primary-500' : 
-                                        'bg-gray-400'
-                                      }`}
-                                      style={{ width: `${percentage}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Why This Clip */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-                          Why This Clip Stands Out
-                        </p>
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {clip.score >= 90 && "Exceptional content with strong engagement potential. "}
-                          {clip.score >= 80 && clip.score < 90 && "High-quality content that resonates well. "}
-                          {clip.score < 80 && "Good content with solid fundamentals. "}
-                          {clip.features?.hook > 0.8 && "Opens with a compelling hook that grabs attention. "}
-                          {clip.features?.emotion > 0.8 && "Emotionally engaging and relatable. "}
-                          {clip.features?.structure > 0.8 && "Well-structured narrative flow. "}
-                          {clip.features?.novelty > 0.8 && "Presents unique or novel insights. "}
-                          {clip.features?.clarity > 0.8 && "Clear and easy to understand. "}
-                          {clip.features?.quote > 0.7 && "Contains memorable quotes. "}
-                          {clip.features?.vision_focus > 0.7 && "Strong visual focus and composition. "}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Video Player Modal */}
+          {selectedClipForPlayback && (
+            <VideoPlayer
+              src={selectedClipForPlayback.proxyUrl || videoUrl || ''}
+              onClose={() => setSelectedClipForPlayback(null)}
+            />
+          )}
 
           {/* Exported Clips */}
           {exportedClips.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Exported Clips</h2>
               <div className="grid grid-cols-2 gap-6">
-                {exportedClips.map((exportItem) => (
+                {exportedClips.map((exportItem) => {
+                  // Find the corresponding moment to get its title
+                  const moment = clips.find(c => c.id === exportItem.momentId);
+                  const clipTitle = moment?.title || `Clip ${exportItem.momentId?.slice(-6)}`;
+                  
+                  return (
                   <div key={exportItem.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
                     <div className="aspect-video bg-black">
                       <video
@@ -376,7 +372,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-gray-800">
-                          Clip {exportItem.momentId?.slice(-6)}
+                          {clipTitle}
                         </span>
                         <span className="text-xs text-gray-500">{exportItem.format}</span>
                       </div>
@@ -389,12 +385,21 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
       </main>
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        selectedClips={selectedClips}
+        onExport={handleExport}
+      />
     </div>
   );
 }

@@ -44,15 +44,31 @@ export class TranscriptionService {
 
       console.log(`🎙️  Starting transcription for project: ${project.title}`);
 
-      // Get signed URL for the video
-      const videoUrl = await this.storage.getSignedUrl(project.sourceUrl);
+      // Download file from storage as a stream
+      console.log(`📥 Downloading video from storage: ${project.sourceUrl}`);
+      const fileStream = this.storage.getFileStream(project.sourceUrl);
+      
+      // Convert stream to buffer
+      const chunks: Buffer[] = [];
+      for await (const chunk of fileStream) {
+        chunks.push(Buffer.from(chunk));
+      }
+      const fileBuffer = Buffer.concat(chunks);
+      console.log(`✅ Downloaded ${fileBuffer.length} bytes`);
+
+      // Upload to AssemblyAI
+      console.log(`📤 Uploading to AssemblyAI...`);
+      const uploadUrl = await this.assemblyai.files.upload(fileBuffer);
+      console.log(`✅ Uploaded to AssemblyAI: ${uploadUrl}`);
 
       // Start transcription with AssemblyAI
+      console.log(`🎙️  Starting transcription...`);
       const transcript = await this.assemblyai.transcripts.transcribe({
-        audio: videoUrl,
+        audio: uploadUrl,
         speaker_labels: true, // Enable speaker diarization
         language_code: 'en', // Auto-detect or specify
       });
+      console.log(`✅ Transcription status: ${transcript.status}`);
 
       if (transcript.status === 'error') {
         throw new Error(`Transcription failed: ${transcript.error}`);
@@ -73,6 +89,7 @@ export class TranscriptionService {
         create: {
           projectId,
           language: transcript.language_code || 'en',
+          status: 'COMPLETED',
           data: {
             words,
             text: transcript.text,
@@ -82,6 +99,7 @@ export class TranscriptionService {
         },
         update: {
           language: transcript.language_code || 'en',
+          status: 'COMPLETED',
           data: {
             words,
             text: transcript.text,
@@ -94,8 +112,60 @@ export class TranscriptionService {
       console.log(`✅ Transcription completed for project: ${project.title}`);
       console.log(`   Words: ${words.length}, Duration: ${transcript.audio_duration}s`);
 
+      // Auto-trigger clip detection after transcription
+      const savedTranscript = await this.prisma.transcript.findUnique({
+        where: { projectId },
+      });
+      
+      if (savedTranscript) {
+        console.log(`🎬 Auto-triggering clip detection for project: ${projectId}`);
+        this.triggerDetection(projectId, savedTranscript.id).catch((error) => {
+          console.error('Failed to trigger detection:', error);
+        });
+      }
+
     } catch (error) {
       console.error('Error transcribing project:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Trigger clip detection on ML worker
+   */
+  private async triggerDetection(projectId: string, transcriptId: string): Promise<void> {
+    try {
+      // Get project to fetch clip settings
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+      });
+
+      const clipSettings = (project?.clipSettings as any) || {};
+      const numClips = clipSettings.numberOfClips || 5;
+      const clipLength = clipSettings.clipLength || 60;
+
+      console.log(`🎬 Using clip settings: ${numClips} clips, ${clipLength}s each`);
+
+      const mlWorkerUrl = process.env.ML_WORKER_URL || 'http://ml-workers:8000';
+      const response = await fetch(`${mlWorkerUrl}/v1/ranker/detect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          transcriptId,
+          numClips,
+          clipLength,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`ML worker returned ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(`✅ Detection triggered for project ${projectId}:`, result);
+    } catch (error) {
+      console.error(`❌ Failed to trigger detection for ${projectId}:`, error);
       throw error;
     }
   }

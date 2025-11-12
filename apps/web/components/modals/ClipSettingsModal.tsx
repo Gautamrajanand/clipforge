@@ -79,50 +79,6 @@ export default function ClipSettingsModal({
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Platform Presets */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Platform Presets</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {PLATFORM_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => handlePresetSelect(preset.id)}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    selectedPreset === preset.id
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-3xl mb-2">{preset.icon}</div>
-                  <div className="font-semibold text-sm text-gray-900">{preset.name}</div>
-                  <div className="text-xs text-gray-500 mt-1">{preset.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Aspect Ratio */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Aspect Ratio</h3>
-            <div className="grid grid-cols-4 gap-3">
-              {ASPECT_RATIOS.map((ratio) => (
-                <button
-                  key={ratio.value}
-                  onClick={() => setAspectRatio(ratio.value as any)}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    aspectRatio === ratio.value
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{ratio.icon}</div>
-                  <div className="font-semibold text-sm text-gray-900">{ratio.value}</div>
-                  <div className="text-xs text-gray-500 mt-1">{ratio.label}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Clip Length */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -138,13 +94,6 @@ export default function ClipSettingsModal({
               onChange={(e) => setClipLength(Number(e.target.value))}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-500"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>15s</span>
-              <span>30s</span>
-              <span>60s</span>
-              <span>90s</span>
-              <span>180s</span>
-            </div>
           </div>
 
           {/* Number of Clips */}
@@ -162,12 +111,6 @@ export default function ClipSettingsModal({
               onChange={(e) => setNumberOfClips(Number(e.target.value))}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-500"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>1</span>
-              <span>3</span>
-              <span>5</span>
-              <span>10</span>
-            </div>
           </div>
 
           {/* Processing Timeframe */}

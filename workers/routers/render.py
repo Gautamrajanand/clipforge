@@ -9,6 +9,8 @@ import requests
 import json
 from services.render_pipeline import RenderPipeline, AspectRatio
 from services.caption_engine import CaptionEngine, CaptionFormat
+from services.caption_presets import CaptionPreset
+from services.boundary_detector import BoundaryDetector
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -24,6 +26,8 @@ class RenderRequest(BaseModel):
     aspectRatio: str = "9:16"
     template: Optional[str] = None
     brandKitId: Optional[str] = None
+    captionStyle: Optional[str] = "karaoke"  # Caption preset name
+    captionsEnabled: bool = True
 
 class RenderResponse(BaseModel):
     exportId: str
@@ -72,16 +76,51 @@ async def _render_worker(request: RenderRequest):
         # Initialize services
         pipeline = RenderPipeline()
         caption_engine = CaptionEngine()
+        boundary_detector = BoundaryDetector()
         
         # Download source
         logger.info(f"Downloading source from {request.sourceUrl}")
         source_path = f"{temp_dir}/source.mp4"
         _download_file(request.sourceUrl, source_path)
         
-        # Extract clip
-        logger.info(f"Extracting clip {request.tStart}-{request.tEnd}")
+        # Fetch transcript from database for boundary detection
+        transcript_words = []
+        try:
+            # Fetch transcript from API
+            transcript_response = requests.get(
+                f"{os.getenv('API_BASE_URL', 'http://localhost:3000')}/v1/projects/{request.projectId}/transcript"
+            )
+            if transcript_response.status_code == 200:
+                transcript_data = transcript_response.json()
+                transcript_words = transcript_data.get('data', {}).get('words', [])
+                logger.info(f"Fetched {len(transcript_words)} words from transcript")
+            else:
+                logger.warning(f"Failed to fetch transcript: {transcript_response.status_code}")
+        except Exception as e:
+            logger.error(f"Error fetching transcript: {e}")
+        
+        # Adjust boundaries for natural start/end (only if transcript available)
+        if transcript_words:
+            logger.info("Adjusting clip boundaries using transcript")
+            adjusted_start, adjusted_end = boundary_detector.adjust_boundaries(
+                source_path,
+                request.tStart,
+                request.tEnd,
+                transcript_words,
+                min_duration=15.0,
+                max_duration=180.0
+            )
+        else:
+            logger.warning("No transcript available, using original boundaries")
+            adjusted_start = request.tStart
+            adjusted_end = request.tEnd
+        
+        logger.info(f"Boundaries adjusted: {request.tStart:.2f}-{request.tEnd:.2f} → {adjusted_start:.2f}-{adjusted_end:.2f}")
+        
+        # Extract clip with adjusted boundaries
+        logger.info(f"Extracting clip {adjusted_start:.2f}-{adjusted_end:.2f}")
         clip_path = f"{temp_dir}/clip.mp4"
-        pipeline.extract_clip(source_path, clip_path, request.tStart, request.tEnd)
+        pipeline.extract_clip(source_path, clip_path, adjusted_start, adjusted_end)
         
         # Map aspect ratio
         aspect_ratio_map = {
@@ -101,8 +140,8 @@ async def _render_worker(request: RenderRequest):
         normalized_path = f"{temp_dir}/normalized.mp4"
         pipeline.normalize_audio(reframed_path, normalized_path)
         
-        # Generate captions
-        logger.info("Generating captions")
+        # Generate captions with preset styling
+        logger.info(f"Generating captions with style: {request.captionStyle}")
         srt_path = f"{temp_dir}/captions.srt"
         ass_path = f"{temp_dir}/captions.ass"
         
@@ -116,12 +155,23 @@ async def _render_worker(request: RenderRequest):
         captions = caption_engine.from_transcript(sample_words, words_per_caption=3)
         
         # Generate SRT
-        with open(srt_path, 'w') as f:
+        with open(srt_path, 'w', encoding='utf-8') as f:
             f.write(caption_engine.generate_srt(captions, use_emojis=True))
         
-        # Generate ASS with styling
-        with open(ass_path, 'w') as f:
-            f.write(caption_engine.generate_ass(captions, use_emojis=True))
+        # Generate ASS with preset styling
+        try:
+            preset = CaptionPreset(request.captionStyle or "karaoke")
+        except ValueError:
+            logger.warning(f"Invalid preset {request.captionStyle}, using karaoke")
+            preset = CaptionPreset.KARAOKE
+        
+        with open(ass_path, 'w', encoding='utf-8') as f:
+            f.write(caption_engine.generate_ass_with_preset(
+                captions, 
+                preset=preset,
+                brand_font=None,  # TODO: Get from brandKitId
+                keyword_paint=True
+            ))
         
         # Add captions
         logger.info("Adding captions to video")

@@ -8,6 +8,10 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  
+  // Connection pooling for scalability
+  // Prevents database connection exhaustion
+  relationMode = "prisma"
 }
 
 // ============ Users & Orgs ============
@@ -87,11 +91,13 @@ model Project {
 
 enum ProjectStatus {
   PENDING
+  IMPORTING
   INGESTING
   TRANSCRIBING
   DETECTING
   READY
   FAILED
+  ERROR
 }
 
 model Asset {
@@ -121,15 +127,20 @@ enum AssetKind {
 // ============ Transcription & Diarization ============
 
 model Transcript {
-  id        String   @id @default(cuid())
-  projectId String   @unique
-  language  String   @default("en")
-  data      Json     // { words: [{text, start, end, speaker}], diarization: [...] }
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  projectId   String   @unique
+  externalId  String?  @unique // AssemblyAI transcript ID
+  status      String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  language    String   @default("en")
+  data        Json     // { words: [{text, start, end, speaker}], segments: [...], wpm, confidence }
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
+  @@index([externalId])
+  @@index([status])
 }
 
 // ============ Moments (Clips) ============
@@ -140,19 +151,20 @@ model Moment {
   tStart         Float    // seconds
   tEnd           Float    // seconds
   duration       Float    // calculated
+  title          String
+  description    String?
   score          Float    @default(0.0)
-  features       Json     // { hook, novelty, structure, emotion, clarity, quote, vision_focus }
-  reason         String?  // human-readable explanation
-  title          String?  // AI-generated title for the clip
-  description    String?  // AI-generated description/summary
-  aspectRatio    String   @default("16:9") // 9:16, 16:9, 1:1, 4:5
-  targetPlatform String?  // youtube-shorts, tiktok, instagram-reels, etc.
+  aspectRatio    String   @default("9:16")
+  features       Json?    // { hasMusic: bool, hasFace: bool, keywords: [] }
+  
+  // In-page playback fields
+  proxyUrl       String?  // Lightweight preview video (720p)
+  thumbnailUrl   String?  // First frame thumbnail
+  
   createdAt      DateTime @default(now())
 
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   exports Export[]
-
-  @@index([projectId])
   @@index([score])
 }
 
@@ -177,17 +189,35 @@ model BrandKit {
 // ============ Exports ============
 
 model Export {
-  id            String   @id @default(cuid())
-  projectId     String
-  momentId      String
-  status        ExportStatus @default(PENDING)
-  format        ExportFormat @default(MP4)
-  template      String?  // template name
-  artifacts     Json     // { mp4_url, srt_url, thumbnail_url }
-  metrics       Json?    // { views, engagement, retention }
-  publishedTo   String[] @default([]) // ["youtube_shorts", "instagram_reels"]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  projectId             String
+  momentId              String
+  status                ExportStatus @default(PENDING)
+  format                ExportFormat @default(MP4)
+  template              String?  // template name
+  artifacts             Json     // { mp4_url, srt_url, thumbnail_url }
+  metrics               Json?    // { views, engagement, retention }
+  publishedTo           String[] @default([]) // ["youtube_shorts", "instagram_reels"]
+  
+  // Video processing fields (for aspect ratio conversion)
+  processingStatus      String?  // PENDING, PROCESSING, COMPLETED, FAILED
+  processedUrl          String?  // URL to processed video
+  processingError       String?  // Error message if failed
+  processingStartedAt   DateTime?
+  processingCompletedAt DateTime?
+  
+  // Aspect ratio fields (premium feature)
+  aspectRatio           String?  // "9:16", "16:9", "1:1", "4:5", null = original
+  cropMode              String?  @default("crop") // "crop", "pad", "smart"
+  cropPosition          Json?    // { x, y } or "center", "top", "bottom"
+  
+  // Caption styling fields (premium feature)
+  captionStyle          String?  @default("karaoke") // Caption preset ID
+  captionsEnabled       Boolean  @default(true)
+  burnCaptions          Boolean  @default(false) // Burn into video vs separate file
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   moment  Moment  @relation(fields: [momentId], references: [id], onDelete: Cascade)

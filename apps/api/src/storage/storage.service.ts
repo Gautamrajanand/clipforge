@@ -161,9 +161,25 @@ export class StorageService {
       .promise();
     
     return {
-      contentType: result.ContentType,
-      contentLength: result.ContentLength,
-      lastModified: result.LastModified,
+      ContentType: result.ContentType,
+      ContentLength: result.ContentLength,
+      LastModified: result.LastModified,
     };
+  }
+
+  /**
+   * Download file range (for HTTP Range requests)
+   * Supports streaming large files
+   */
+  async downloadFileRange(key: string, start: number, end: number): Promise<Buffer> {
+    const result = await this.s3
+      .getObject({
+        Bucket: process.env.S3_BUCKET || 'clipforge',
+        Key: key,
+        Range: `bytes=${start}-${end}`,
+      })
+      .promise();
+
+    return result.Body as Buffer;
   }
 }

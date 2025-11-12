@@ -19,6 +19,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ProjectsService } from './projects.service';
+import { ExportMomentsDto } from './dto/export-moments.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { DetectClipsDto } from './dto/clip-settings.dto';
 
@@ -89,6 +90,20 @@ export class ProjectsController {
     return this.projectsService.uploadVideo(id, orgId, file);
   }
 
+  @Post(':id/import-url')
+  @ApiOperation({ summary: 'Import video from URL (YouTube, Vimeo, Rumble, etc.)' })
+  async importVideoFromUrl(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() dto: { url: string; title?: string },
+  ) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.importVideoFromUrl(id, orgId, dto.url, dto.title);
+  }
+
   @Get(':id/video')
   @ApiOperation({ summary: 'Stream project video' })
   async streamVideo(
@@ -103,18 +118,28 @@ export class ProjectsController {
     return this.projectsService.streamVideo(id, orgId, res);
   }
 
+  @Get(':id/transcript')
+  @ApiOperation({ summary: 'Get project transcript' })
+  async getTranscript(@Request() req: any, @Param('id') id: string) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.getTranscript(id, orgId);
+  }
+
   @Post(':id/export')
-  @ApiOperation({ summary: 'Export selected moments as video clips' })
+  @ApiOperation({ summary: 'Export selected moments as video clips with aspect ratio conversion' })
   async exportMoments(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() dto: { momentIds: string[] },
+    @Body() dto: ExportMomentsDto,
   ) {
     const orgId = req.user.memberships[0]?.org?.id;
     if (!orgId) {
       throw new Error('No organization found');
     }
-    return this.projectsService.exportMoments(id, orgId, dto.momentIds);
+    return this.projectsService.exportMoments(id, orgId, dto);
   }
 
   @Get('exports/:exportId/download')
