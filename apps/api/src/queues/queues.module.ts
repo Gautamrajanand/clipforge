@@ -30,28 +30,34 @@ import { QueuesController } from './queues.controller';
     // Register BullMQ with Redis connection
     BullModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        connection: {
-          host: configService.get('REDIS_HOST') || 'localhost',
-          port: configService.get('REDIS_PORT') || 6379,
-          password: configService.get('REDIS_PASSWORD'),
-        },
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 2000,
+      useFactory: async (configService: ConfigService) => {
+        // Parse REDIS_URL (format: redis://host:port)
+        const redisUrl = configService.get('REDIS_URL') || 'redis://localhost:6379';
+        const url = new URL(redisUrl);
+        
+        return {
+          connection: {
+            host: url.hostname,
+            port: parseInt(url.port) || 6379,
+            password: url.password || configService.get('REDIS_PASSWORD'),
           },
-          removeOnComplete: {
-            age: 3600, // Keep completed jobs for 1 hour
-            count: 1000, // Keep max 1000 completed jobs
+          defaultJobOptions: {
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 2000,
+            },
+            removeOnComplete: {
+              age: 3600, // Keep completed jobs for 1 hour
+              count: 1000, // Keep max 1000 completed jobs
+            },
+            removeOnFail: {
+              age: 86400, // Keep failed jobs for 24 hours
+              count: 5000, // Keep max 5000 failed jobs
+            },
           },
-          removeOnFail: {
-            age: 86400, // Keep failed jobs for 24 hours
-            count: 5000, // Keep max 5000 failed jobs
-          },
-        },
-      }),
+        };
+      },
       inject: [ConfigService],
     }),
 
