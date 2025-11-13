@@ -1,15 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AssemblyAI } from 'assemblyai';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { FFmpegService } from '../video/ffmpeg.service';
+import { VideoService } from '../video/video.service';
+import * as path from 'path';
 
 @Injectable()
 export class TranscriptionService {
+  private readonly logger = new Logger(TranscriptionService.name);
   private assemblyai: AssemblyAI | null = null;
 
   constructor(
     private prisma: PrismaService,
     private storage: StorageService,
+    private ffmpeg: FFmpegService,
+    private video: VideoService,
   ) {
     // Initialize AssemblyAI if API key is provided
     const apiKey = process.env.ASSEMBLYAI_API_KEY;
@@ -153,13 +159,32 @@ export class TranscriptionService {
       const clipSettings = (project?.clipSettings as any) || {};
       
       // Skip clip detection if in subtitles-only or reframe-only mode
-      if (clipSettings.subtitlesMode || clipSettings.reframeMode) {
-        console.log(`⏭️  Skipping clip detection for project ${projectId} (${clipSettings.subtitlesMode ? 'Subtitles' : 'Reframe'} mode)`);
+      if (clipSettings.subtitlesMode) {
+        console.log(`⏭️  Skipping clip detection for project ${projectId} (Subtitles mode)`);
         
         // Update project status to READY since we're done
         await this.prisma.project.update({
           where: { id: projectId },
           data: { status: 'READY' },
+        });
+        return;
+      }
+      
+      // Trigger reframe processing if in reframe mode
+      if (clipSettings.reframeMode) {
+        console.log(`📐 Triggering reframe processing for project ${projectId}`);
+        console.log(`   Aspect Ratio: ${clipSettings.aspectRatio || '9:16'}`);
+        console.log(`   Strategy: ${clipSettings.framingStrategy || 'Smart Crop'}`);
+        
+        // Update status to DETECTING (reusing this status for reframe processing)
+        await this.prisma.project.update({
+          where: { id: projectId },
+          data: { status: 'DETECTING' },
+        });
+        
+        // Trigger reframe processing (async, don't wait)
+        this.processReframe(projectId, clipSettings).catch((error) => {
+          console.error('Failed to process reframe:', error);
         });
         return;
       }
@@ -249,5 +274,96 @@ export class TranscriptionService {
       provider: 'none',
       message: 'AssemblyAI API key not configured. Add ASSEMBLYAI_API_KEY to environment.',
     };
+  }
+
+  /**
+   * Process reframe for a project
+   * Downloads source video, applies aspect ratio conversion, uploads result
+   */
+  private async processReframe(projectId: string, clipSettings: any): Promise<void> {
+    try {
+      this.logger.log(`📐 Starting reframe processing for project ${projectId}`);
+      
+      // Get project
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+      });
+      
+      if (!project || !project.sourceUrl) {
+        throw new Error('Project or source video not found');
+      }
+      
+      // Download source video from storage
+      this.logger.log(`📥 Downloading source video: ${project.sourceUrl}`);
+      const sourceBuffer = await this.storage.downloadFile(project.sourceUrl);
+      const sourcePath = this.video.getTempFilePath('.mp4');
+      await require('fs/promises').writeFile(sourcePath, sourceBuffer);
+      this.logger.log(`✅ Downloaded ${sourceBuffer.length} bytes`);
+      
+      // Prepare output path
+      const outputPath = this.video.getTempFilePath('.mp4');
+      
+      // Get reframe settings
+      const aspectRatio = clipSettings.aspectRatio || '9:16';
+      const strategy = clipSettings.framingStrategy || 'Smart Crop';
+      const backgroundColor = clipSettings.backgroundColor || '#000000';
+      
+      // Map strategy to crop mode
+      const cropMode = strategy === 'Letterbox' ? 'pad' : 'crop';
+      
+      this.logger.log(`🎬 Converting to ${aspectRatio} using ${cropMode} mode`);
+      
+      // Apply aspect ratio conversion
+      await this.ffmpeg.convertAspectRatio(
+        sourcePath,
+        outputPath,
+        aspectRatio,
+        cropMode,
+        'center',
+      );
+      
+      this.logger.log(`✅ Reframe complete, uploading result...`);
+      
+      // Upload reframed video
+      const reframedBuffer = await require('fs/promises').readFile(outputPath);
+      const reframedKey = `projects/${projectId}/reframed.mp4`;
+      await this.storage.uploadFile(reframedKey, reframedBuffer, 'video/mp4');
+      
+      this.logger.log(`✅ Uploaded reframed video: ${reframedKey}`);
+      
+      // Create asset record for reframed video
+      await this.prisma.asset.create({
+        data: {
+          projectId,
+          kind: 'CLIP', // Using CLIP kind for reframed video
+          url: reframedKey,
+          size: BigInt(reframedBuffer.length),
+          mimeType: 'video/mp4',
+        },
+      });
+      
+      // Update project status to READY
+      await this.prisma.project.update({
+        where: { id: projectId },
+        data: { status: 'READY' },
+      });
+      
+      this.logger.log(`✅ Reframe processing complete for project ${projectId}`);
+      
+      // Clean up temp files
+      await require('fs/promises').unlink(sourcePath).catch(() => {});
+      await require('fs/promises').unlink(outputPath).catch(() => {});
+      
+    } catch (error) {
+      this.logger.error(`❌ Reframe processing failed for project ${projectId}:`, error);
+      
+      // Update project status to FAILED
+      await this.prisma.project.update({
+        where: { id: projectId },
+        data: { status: 'FAILED' },
+      });
+      
+      throw error;
+    }
   }
 }

@@ -68,15 +68,21 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         setProject(data);
         setClips(data.moments || []);
         setTranscript(data.transcript || null);
-        if (data?.sourceUrl) {
-          await loadVideoBlob(authToken);
-        }
         
         // Check if this is a subtitles or reframe project
         const isSubtitlesMode = data.clipSettings?.subtitlesMode;
         const isReframeMode = data.clipSettings?.reframeMode;
+        const reframedAsset = data.assets?.find((a: any) => a.url?.includes('reframed.mp4'));
         
-        console.log('🎯 Project mode:', { isSubtitlesMode, isReframeMode });
+        console.log('🎯 Project mode:', { isSubtitlesMode, isReframeMode, hasReframedAsset: !!reframedAsset });
+        
+        // Load reframed video if available, otherwise load source
+        if (isReframeMode && reframedAsset) {
+          console.log('📐 Loading reframed video:', reframedAsset.url);
+          await loadReframedVideo(authToken, reframedAsset.url);
+        } else if (data?.sourceUrl) {
+          await loadVideoBlob(authToken);
+        }
         
         // Skip Smart Clips generation for subtitles/reframe modes
         if (isSubtitlesMode || isReframeMode) {
@@ -145,6 +151,29 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       setVideoUrl(url);
     } catch (e) {
       console.error('Error loading video blob:', e);
+    }
+  };
+
+  const loadReframedVideo = async (authToken: string, assetUrl: string) => {
+    try {
+      setVideoUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev);
+        return prev;
+      });
+
+      // Fetch the reframed video from storage
+      const resp = await fetch(`http://localhost:3000/v1/storage/${encodeURIComponent(assetUrl)}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` },
+      });
+      if (!resp.ok) {
+        console.error('Failed to fetch reframed video');
+        return;
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      setVideoUrl(url);
+    } catch (e) {
+      console.error('Error loading reframed video:', e);
     }
   };
 
