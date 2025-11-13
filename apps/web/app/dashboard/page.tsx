@@ -203,7 +203,7 @@ export default function Dashboard() {
         },
         body: JSON.stringify({ 
           title: title || 'Importing...',
-          clipSettings: clipSettings 
+          settings: clipSettings  // API expects 'settings', not 'clipSettings'
         }),
       });
 
@@ -306,7 +306,7 @@ export default function Dashboard() {
         },
         body: JSON.stringify({ 
           title,
-          clipSettings: clipSettings 
+          settings: clipSettings  // API expects 'settings', not 'clipSettings'
         }),
       });
 
