@@ -492,8 +492,17 @@ export class ProjectsService {
       throw new NotFoundException('No video file found for this project');
     }
 
-    const metadata = await this.storage.getFileMetadata(project.sourceUrl);
-    const stream = this.storage.getFileStream(project.sourceUrl);
+    // Check if this is a reframe project with a reframed video
+    const isReframeMode = (project.clipSettings as any)?.reframeMode;
+    const reframedAsset = project.assets?.find((a: any) => a.url?.includes('reframed.mp4'));
+    
+    // Use reframed video if available, otherwise use source
+    const videoUrl = (isReframeMode && reframedAsset) ? reframedAsset.url : project.sourceUrl;
+    
+    this.logger.log(`Streaming video: ${videoUrl} (reframe: ${!!reframedAsset})`);
+
+    const metadata = await this.storage.getFileMetadata(videoUrl);
+    const stream = this.storage.getFileStream(videoUrl);
 
     res.set({
       'Content-Type': metadata.ContentType || 'video/mp4',
