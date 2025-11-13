@@ -43,13 +43,16 @@ export class ProjectsService {
   }
 
   async create(orgId: string, dto: CreateProjectDto) {
-    // Process clip settings if provided
+    // Process clip settings if provided - preserve ALL settings
     const clipSettings = dto.settings ? {
+      // Default clip settings
       aspectRatio: dto.settings.aspectRatio || '16:9',
       clipLength: dto.settings.clipLength || 60,
       numberOfClips: dto.settings.numberOfClips || 5,
       timeframe: dto.settings.timeframe,
       targetPlatform: dto.settings.targetPlatform,
+      // Preserve all other settings (subtitlesMode, reframeMode, etc.)
+      ...dto.settings,
     } : null;
 
     console.log('📝 Creating project with settings:', JSON.stringify(clipSettings, null, 2));
