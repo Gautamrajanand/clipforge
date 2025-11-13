@@ -7,6 +7,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import ClipsGrid from '@/components/clips/ClipsGrid';
 import VideoPlayer from '@/components/video/VideoPlayer';
+import CaptionedVideoPlayer from '@/components/video/CaptionedVideoPlayer';
 import ClipSettings from '@/components/clips/ClipSettings';
 import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
 
@@ -28,6 +29,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     maxLength: 180,
   });
   const [isDetecting, setIsDetecting] = useState(false);
+  const [transcript, setTranscript] = useState<any>(null);
 
   useEffect(() => {
     const getToken = async () => {
@@ -65,6 +67,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         
         setProject(data);
         setClips(data.moments || []);
+        setTranscript(data.transcript || null);
         if (data?.sourceUrl) {
           await loadVideoBlob(authToken);
         }
@@ -336,16 +339,24 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           {videoUrl && (
             <div className="bg-white rounded-2xl p-6 mb-8 shadow-sm">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Source Video</h2>
-              <div className="aspect-video bg-black rounded-xl overflow-hidden">
-                <video
-                  controls
-                  className="w-full h-full"
-                  src={videoUrl}
-                  preload="metadata"
-                >
-                  Your browser does not support the video tag.
-                </video>
-              </div>
+              {projectMode === 'subtitles' && transcript ? (
+                <CaptionedVideoPlayer
+                  videoUrl={videoUrl}
+                  transcript={transcript}
+                  settings={project?.clipSettings}
+                />
+              ) : (
+                <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                  <video
+                    controls
+                    className="w-full h-full"
+                    src={videoUrl}
+                    preload="metadata"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              )}
             </div>
           )}
 
