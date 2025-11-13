@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, Link as LinkIcon } from 'lucide-react';
+import { X, Upload, Link as LinkIcon, Type } from 'lucide-react';
 import CaptionStyleSelector from '../captions/CaptionStyleSelector';
 
 interface SubtitlesModalProps {
