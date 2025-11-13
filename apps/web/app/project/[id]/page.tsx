@@ -324,14 +324,35 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 <Share2 className="w-4 h-4" />
                 Share
               </button>
-              <button
-                onClick={handleExportClick}
-                disabled={selectedClips.length === 0 || isExporting}
-                className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                {isExporting ? 'Exporting...' : `Export ${selectedClips.length > 0 ? `(${selectedClips.length})` : ''}`}
-              </button>
+              
+              {/* Show Download button for subtitles/reframe, Export button for clips */}
+              {(projectMode === 'subtitles' || projectMode === 'reframe') ? (
+                <button
+                  onClick={() => {
+                    // Download the video
+                    const link = document.createElement('a');
+                    link.href = videoUrl || '';
+                    link.download = `${project.title}-${projectMode}.mp4`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  disabled={!videoUrl}
+                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Video
+                </button>
+              ) : (
+                <button
+                  onClick={handleExportClick}
+                  disabled={selectedClips.length === 0 || isExporting}
+                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {isExporting ? 'Exporting...' : `Export ${selectedClips.length > 0 ? `(${selectedClips.length})` : ''}`}
+                </button>
+              )}
             </div>
           </div>
         </div>
