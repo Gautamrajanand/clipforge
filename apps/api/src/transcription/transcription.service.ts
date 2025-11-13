@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { FFmpegService } from '../video/ffmpeg.service';
 import { VideoService } from '../video/video.service';
+import { CaptionsService } from '../captions/captions.service';
 import * as path from 'path';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class TranscriptionService {
     private storage: StorageService,
     private ffmpeg: FFmpegService,
     private video: VideoService,
+    private captions: CaptionsService,
   ) {
     // Initialize AssemblyAI if API key is provided
     const apiKey = process.env.ASSEMBLYAI_API_KEY;
@@ -395,18 +397,43 @@ export class TranscriptionService {
       const sourcePath = this.video.getTempFilePath('.mp4');
       await require('fs/promises').writeFile(sourcePath, sourceBuffer);
       
-      // Generate SRT file from transcript
-      const srtPath = this.video.getTempFilePath('.srt');
-      const srtContent = this.generateSRT(project.transcript.data as any);
-      await require('fs/promises').writeFile(srtPath, srtContent, 'utf-8');
+      // Get caption style from clipSettings
+      const clipSettings = project.clipSettings as any;
+      const captionStyle = clipSettings?.captionStyle || 'mr_beast';
+      const primaryColor = clipSettings?.primaryColor || '#FFFFFF';
+      const secondaryColor = clipSettings?.secondaryColor || '#FFD700';
+      const fontSize = clipSettings?.fontSize || 48;
+      const position = clipSettings?.position || 'bottom';
+      
+      this.logger.log(`🎨 Applying caption style: ${captionStyle}`);
+      
+      // Get transcript words
+      const transcriptData = project.transcript.data as any;
+      const words = transcriptData.words.map((w: any) => ({
+        text: w.text,
+        start: w.start,
+        end: w.end,
+        confidence: w.confidence || 1.0,
+      }));
+      
+      // Generate styled ASS file
+      const assPath = this.video.getTempFilePath('.ass');
+      const assContent = this.captions.generateASS(words, {
+        preset: captionStyle as any,
+        textColor: primaryColor,
+        backgroundColor: secondaryColor,
+        fontSize,
+        position,
+      });
+      await require('fs/promises').writeFile(assPath, assContent, 'utf-8');
       
       // Prepare output path
       const outputPath = this.video.getTempFilePath('.mp4');
       
-      this.logger.log(`🎨 Burning captions into video...`);
+      this.logger.log(`🎨 Burning styled captions into video...`);
       
       // Burn captions using FFmpeg
-      await this.ffmpeg.burnCaptions(sourcePath, outputPath, srtPath);
+      await this.ffmpeg.burnCaptions(sourcePath, outputPath, assPath);
       
       this.logger.log(`✅ Captions burned, uploading result...`);
       
@@ -419,7 +446,7 @@ export class TranscriptionService {
       
       // Clean up temp files
       await require('fs/promises').unlink(sourcePath).catch(() => {});
-      await require('fs/promises').unlink(srtPath).catch(() => {});
+      await require('fs/promises').unlink(assPath).catch(() => {});
       await require('fs/promises').unlink(outputPath).catch(() => {});
       
       return captionedKey;

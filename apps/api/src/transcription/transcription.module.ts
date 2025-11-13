@@ -3,9 +3,10 @@ import { TranscriptionService } from './transcription.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { StorageModule } from '../storage/storage.module';
 import { VideoModule } from '../video/video.module';
+import { CaptionsModule } from '../captions/captions.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, VideoModule],
+  imports: [PrismaModule, StorageModule, VideoModule, CaptionsModule],
   providers: [TranscriptionService],
   exports: [TranscriptionService],
 })
