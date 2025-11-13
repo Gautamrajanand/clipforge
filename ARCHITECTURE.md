@@ -1,5 +1,5 @@
 # ClipForge Architecture
-**Last Updated:** November 12, 2025 (Phase 1 Complete)
+**Last Updated:** November 13, 2025 (AI Subtitles & Reframe Complete)
 
 ---
 
@@ -82,10 +82,13 @@ ClipForge is a self-hosted, AI-powered video repurposing platform that transform
 - Real-time progress updates
 
 **Key Files:**
-- `apps/web/app/dashboard/page.tsx` - Main dashboard
-- `apps/web/app/project/[id]/page.tsx` - Project detail view
+- `apps/web/app/dashboard/page.tsx` - Main dashboard with AI tool modals
+- `apps/web/app/project/[id]/page.tsx` - Project detail view with mode detection
 - `apps/web/components/clips/ClipsGrid.tsx` - Clips display
 - `apps/web/components/clips/TranscriptViewer.tsx` - Pro Clips visualization
+- `apps/web/components/video/CaptionedVideoPlayer.tsx` - 🆕 Live caption overlay
+- `apps/web/components/modals/SubtitlesModal.tsx` - 🆕 AI Subtitles configuration
+- `apps/web/components/modals/ReframeModal.tsx` - 🆕 AI Reframe configuration
 
 ---
 
@@ -117,15 +120,23 @@ ClipForge is a self-hosted, AI-powered video repurposing platform that transform
 - Clip metadata management
 
 #### Transcription Module
-- Trigger transcription jobs
-- Fetch transcripts from AssemblyAI
-- Store transcript data
+- AssemblyAI integration for speech-to-text
+- Transcript storage and retrieval
+- 🆕 **Caption burning with FFmpeg**
+- 🆕 **SRT subtitle generation**
+- 🆕 **Reframe video processing**
 
 #### Video Module
-- **FFmpeg video processing** 🆕
-- **Multi-segment stitching** 🆕
-- Aspect ratio conversion (future)
-- Caption burning (future)
+- FFmpeg service for video processing
+- Aspect ratio conversion (9:16, 16:9, 1:1, 4:5)
+- 🆕 **Caption burning into video**
+- Video metadata extraction
+- Segment extraction
+
+#### AI Features
+- 🆕 **AI Subtitles:** Live caption overlay + burned captions
+- 🆕 **AI Reframe:** Aspect ratio conversion with smart crop
+- **AI Clips:** Viral moment detection and export
 
 **Key Files:**
 - `apps/api/src/clips/clips.service.ts` - Clip orchestration
