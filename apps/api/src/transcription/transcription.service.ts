@@ -126,6 +126,16 @@ export class TranscriptionService {
 
     } catch (error) {
       console.error('Error transcribing project:', error);
+      console.error('Transcription failed:', error instanceof Error ? error.message : 'Unknown error');
+      
+      // Update project status to FAILED so frontend knows
+      await this.prisma.project.update({
+        where: { id: projectId },
+        data: { 
+          status: 'FAILED'
+        },
+      });
+      
       throw error;
     }
   }
