@@ -1030,6 +1030,34 @@ export class ProjectsService {
     };
   }
 
+  async downloadCaptionedVideo(projectId: string, orgId: string, res: Response) {
+    const project = await this.findOne(projectId, orgId);
+
+    if (!project.sourceUrl) {
+      throw new NotFoundException('No video file found for this project');
+    }
+
+    // Generate captioned video on-the-fly
+    this.logger.log(`Generating captioned video for download: ${projectId}`);
+    const captionedKey = await this.transcription.generateCaptionedVideo(projectId);
+
+    // Stream the captioned video
+    const metadata = await this.storage.getFileMetadata(captionedKey);
+    const stream = this.storage.getFileStream(captionedKey);
+
+    res.set({
+      'Content-Type': metadata.ContentType || 'video/mp4',
+      'Content-Length': metadata.ContentLength,
+      'Content-Disposition': `attachment; filename="${project.title}-subtitles.mp4"`,
+    });
+
+    return new Promise((resolve, reject) => {
+      stream.pipe(res);
+      stream.on('error', reject);
+      stream.on('end', resolve);
+    });
+  }
+
   async generateSubtitles(projectId: string, orgId: string, dto: SubtitlesDto) {
     this.logger.log(`📝 Generating subtitles for project ${projectId}`);
 

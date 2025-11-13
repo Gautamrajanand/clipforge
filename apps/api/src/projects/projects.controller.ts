@@ -130,6 +130,20 @@ export class ProjectsController {
     return this.projectsService.getTranscript(id, orgId);
   }
 
+  @Get(':id/download-captioned')
+  @ApiOperation({ summary: 'Download video with burned-in captions' })
+  async downloadCaptioned(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.downloadCaptionedVideo(id, orgId, res);
+  }
+
   @Post(':id/export')
   @ApiOperation({ summary: 'Export selected moments as video clips with aspect ratio conversion' })
   async exportMoments(

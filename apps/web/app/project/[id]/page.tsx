@@ -326,13 +326,43 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               </button>
               
               {/* Show Download button for subtitles/reframe, Export button for clips */}
-              {(projectMode === 'subtitles' || projectMode === 'reframe') ? (
+              {projectMode === 'subtitles' ? (
+                <button
+                  onClick={async () => {
+                    // Download video with burned-in captions
+                    try {
+                      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/download-captioned`, {
+                        headers: { 'Authorization': `Bearer ${token}` },
+                      });
+                      if (!response.ok) throw new Error('Download failed');
+                      
+                      const blob = await response.blob();
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `${project.title}-subtitles.mp4`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                    } catch (error) {
+                      console.error('Download failed:', error);
+                      alert('Failed to download video. Please try again.');
+                    }
+                  }}
+                  disabled={!videoUrl}
+                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download with Captions
+                </button>
+              ) : projectMode === 'reframe' ? (
                 <button
                   onClick={() => {
-                    // Download the video
+                    // Download the reframed video
                     const link = document.createElement('a');
                     link.href = videoUrl || '';
-                    link.download = `${project.title}-${projectMode}.mp4`;
+                    link.download = `${project.title}-reframe.mp4`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);

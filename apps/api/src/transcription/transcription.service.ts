@@ -366,4 +366,112 @@ export class TranscriptionService {
       throw error;
     }
   }
+
+  /**
+   * Generate video with burned-in captions for subtitle projects
+   * Downloads source, generates SRT, burns captions, uploads result
+   */
+  async generateCaptionedVideo(projectId: string): Promise<string> {
+    try {
+      this.logger.log(`🎬 Generating captioned video for project ${projectId}`);
+      
+      // Get project with transcript
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        include: { transcript: true },
+      });
+      
+      if (!project || !project.sourceUrl) {
+        throw new Error('Project or source video not found');
+      }
+      
+      if (!project.transcript) {
+        throw new Error('No transcript available for captions');
+      }
+      
+      // Download source video
+      this.logger.log(`📥 Downloading source video: ${project.sourceUrl}`);
+      const sourceBuffer = await this.storage.downloadFile(project.sourceUrl);
+      const sourcePath = this.video.getTempFilePath('.mp4');
+      await require('fs/promises').writeFile(sourcePath, sourceBuffer);
+      
+      // Generate SRT file from transcript
+      const srtPath = this.video.getTempFilePath('.srt');
+      const srtContent = this.generateSRT(project.transcript.data as any);
+      await require('fs/promises').writeFile(srtPath, srtContent, 'utf-8');
+      
+      // Prepare output path
+      const outputPath = this.video.getTempFilePath('.mp4');
+      
+      this.logger.log(`🎨 Burning captions into video...`);
+      
+      // Burn captions using FFmpeg
+      await this.ffmpeg.burnCaptions(sourcePath, outputPath, srtPath);
+      
+      this.logger.log(`✅ Captions burned, uploading result...`);
+      
+      // Upload captioned video
+      const captionedBuffer = await require('fs/promises').readFile(outputPath);
+      const captionedKey = `projects/${projectId}/captioned.mp4`;
+      await this.storage.uploadFile(captionedKey, captionedBuffer, 'video/mp4');
+      
+      this.logger.log(`✅ Uploaded captioned video: ${captionedKey}`);
+      
+      // Clean up temp files
+      await require('fs/promises').unlink(sourcePath).catch(() => {});
+      await require('fs/promises').unlink(srtPath).catch(() => {});
+      await require('fs/promises').unlink(outputPath).catch(() => {});
+      
+      return captionedKey;
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to generate captioned video:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate SRT subtitle file from transcript data
+   */
+  private generateSRT(transcriptData: any): string {
+    if (!transcriptData || !transcriptData.words) {
+      return '';
+    }
+
+    const words = transcriptData.words;
+    const subtitles: string[] = [];
+    let index = 1;
+
+    // Group words into phrases (2-3 words per subtitle for readability)
+    const wordsPerSubtitle = 3;
+    for (let i = 0; i < words.length; i += wordsPerSubtitle) {
+      const phraseWords = words.slice(i, i + wordsPerSubtitle);
+      if (phraseWords.length === 0) continue;
+
+      const startTime = phraseWords[0].start;
+      const endTime = phraseWords[phraseWords.length - 1].end;
+      const text = phraseWords.map((w: any) => w.text).join(' ');
+
+      // Format times as SRT format (HH:MM:SS,mmm)
+      const startSRT = this.formatSRTTime(startTime);
+      const endSRT = this.formatSRTTime(endTime);
+
+      subtitles.push(`${index}\n${startSRT} --> ${endSRT}\n${text}\n`);
+      index++;
+    }
+
+    return subtitles.join('\n');
+  }
+
+  /**
+   * Format time in seconds to SRT format (HH:MM:SS,mmm)
+   */
+  private formatSRTTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const millis = Math.floor((seconds % 1) * 1000);
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${millis.toString().padStart(3, '0')}`;
+  }
 }
