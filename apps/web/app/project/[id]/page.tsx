@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Download, Share2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Sparkles, Type, Wand2 } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import ClipsGrid from '@/components/clips/ClipsGrid';
@@ -60,10 +60,25 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       });
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Project data:', data);
+        console.log('🎬 Clip settings:', data.clipSettings);
+        
         setProject(data);
         setClips(data.moments || []);
         if (data?.sourceUrl) {
           await loadVideoBlob(authToken);
+        }
+        
+        // Check if this is a subtitles or reframe project
+        const isSubtitlesMode = data.clipSettings?.subtitlesMode;
+        const isReframeMode = data.clipSettings?.reframeMode;
+        
+        console.log('🎯 Project mode:', { isSubtitlesMode, isReframeMode });
+        
+        // Skip Smart Clips generation for subtitles/reframe modes
+        if (isSubtitlesMode || isReframeMode) {
+          console.log('⏭️  Skipping Smart Clips generation (subtitles/reframe mode)');
+          return;
         }
         
         // Auto-generate Smart Clips if none exist and transcript is available
@@ -270,6 +285,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     );
   }
 
+  // Check project mode
+  const isSubtitlesMode = project?.clipSettings?.subtitlesMode;
+  const isReframeMode = project?.clipSettings?.reframeMode;
+  const projectMode = isSubtitlesMode ? 'subtitles' : isReframeMode ? 'reframe' : 'clips';
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
@@ -288,7 +308,9 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{project.title}</h1>
                 <p className="text-sm text-gray-500">
-                  {clips.length} clips detected • {selectedClips.length} selected
+                  {projectMode === 'subtitles' && '🎬 AI Subtitles Project'}
+                  {projectMode === 'reframe' && '📐 AI Reframe Project'}
+                  {projectMode === 'clips' && `${clips.length} clips detected • ${selectedClips.length} selected`}
                 </p>
               </div>
             </div>
@@ -327,8 +349,62 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
             </div>
           )}
 
+          {/* Mode-specific content */}
+          {projectMode === 'subtitles' && (
+            <div className="bg-white rounded-2xl p-8 mb-8 shadow-sm text-center">
+              <div className="max-w-2xl mx-auto">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Type className="w-8 h-8 text-purple-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">AI Subtitles Processing</h2>
+                <p className="text-gray-600 mb-6">
+                  Your video is being processed with AI-generated subtitles using the <strong>{project.clipSettings?.captionStyle || 'Karaoke'}</strong> style.
+                </p>
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-left">
+                  <h3 className="font-semibold text-purple-900 mb-2">Subtitle Settings:</h3>
+                  <ul className="space-y-1 text-sm text-purple-800">
+                    <li>• Style: {project.clipSettings?.captionStyle || 'Karaoke'}</li>
+                    <li>• Primary Color: {project.clipSettings?.primaryColor || '#FFFFFF'}</li>
+                    <li>• Secondary Color: {project.clipSettings?.secondaryColor || '#FFD700'}</li>
+                    <li>• Font Size: {project.clipSettings?.fontSize || 48}px</li>
+                  </ul>
+                </div>
+                <p className="text-sm text-gray-500 mt-4">
+                  Subtitle editor coming soon! For now, your video will be processed with these settings.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {projectMode === 'reframe' && (
+            <div className="bg-white rounded-2xl p-8 mb-8 shadow-sm text-center">
+              <div className="max-w-2xl mx-auto">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Wand2 className="w-8 h-8 text-yellow-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">AI Reframe Processing</h2>
+                <p className="text-gray-600 mb-6">
+                  Your video is being reframed to <strong>{project.clipSettings?.aspectRatio || '9:16'}</strong> aspect ratio using AI.
+                </p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left">
+                  <h3 className="font-semibold text-yellow-900 mb-2">Reframe Settings:</h3>
+                  <ul className="space-y-1 text-sm text-yellow-800">
+                    <li>• Aspect Ratio: {project.clipSettings?.aspectRatio || '9:16'}</li>
+                    <li>• Strategy: {project.clipSettings?.framingStrategy || 'Smart Crop'}</li>
+                    {project.clipSettings?.backgroundColor && (
+                      <li>• Background: {project.clipSettings.backgroundColor}</li>
+                    )}
+                  </ul>
+                </div>
+                <p className="text-sm text-gray-500 mt-4">
+                  Reframe editor coming soon! For now, your video will be processed with these settings.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* AI-Detected Clips Grid */}
-          {clips.length > 0 && (
+          {projectMode === 'clips' && clips.length > 0 && (
             <div className="mb-8">
               <ClipsGrid
                 clips={clips}
