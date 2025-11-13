@@ -339,24 +339,37 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           {videoUrl && (
             <div className="bg-white rounded-2xl p-6 mb-8 shadow-sm">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Source Video</h2>
-              {projectMode === 'subtitles' && transcript ? (
-                <CaptionedVideoPlayer
-                  videoUrl={videoUrl}
-                  transcript={transcript}
-                  settings={project?.clipSettings}
-                />
-              ) : (
-                <div className="aspect-video bg-black rounded-xl overflow-hidden">
-                  <video
-                    controls
-                    className="w-full h-full"
-                    src={videoUrl}
-                    preload="metadata"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-              )}
+              {(() => {
+                console.log('🎥 Video Player Render Check:', {
+                  projectMode,
+                  hasTranscript: !!transcript,
+                  transcriptData: transcript,
+                  shouldShowCaptions: projectMode === 'subtitles' && !!transcript
+                });
+                
+                if (projectMode === 'subtitles' && transcript) {
+                  return (
+                    <CaptionedVideoPlayer
+                      videoUrl={videoUrl}
+                      transcript={transcript}
+                      settings={project?.clipSettings}
+                    />
+                  );
+                } else {
+                  return (
+                    <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                      <video
+                        controls
+                        className="w-full h-full"
+                        src={videoUrl}
+                        preload="metadata"
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  );
+                }
+              })()}
             </div>
           )}
 
