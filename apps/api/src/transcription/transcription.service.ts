@@ -141,6 +141,19 @@ export class TranscriptionService {
       });
 
       const clipSettings = (project?.clipSettings as any) || {};
+      
+      // Skip clip detection if in subtitles-only or reframe-only mode
+      if (clipSettings.subtitlesMode || clipSettings.reframeMode) {
+        console.log(`⏭️  Skipping clip detection for project ${projectId} (${clipSettings.subtitlesMode ? 'Subtitles' : 'Reframe'} mode)`);
+        
+        // Update project status to READY since we're done
+        await this.prisma.project.update({
+          where: { id: projectId },
+          data: { status: 'READY' },
+        });
+        return;
+      }
+      
       const numClips = clipSettings.numberOfClips || 5;
       const clipLength = clipSettings.clipLength || 60;
 
