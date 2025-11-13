@@ -46,6 +46,14 @@ export default function CaptionedVideoPlayer({
     captionPosition = 'bottom',
   } = settings;
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🎬 CaptionedVideoPlayer mounted');
+    console.log('📊 Transcript:', transcript);
+    console.log('📊 Words count:', transcript?.data?.words?.length || 0);
+    console.log('⚙️  Settings:', settings);
+  }, [transcript, settings]);
+
   // Update current time as video plays
   useEffect(() => {
     const video = videoRef.current;
@@ -62,6 +70,7 @@ export default function CaptionedVideoPlayer({
   // Update caption based on current time
   useEffect(() => {
     if (!transcript?.data?.words) {
+      console.log('⚠️  No transcript words available');
       setCurrentCaption('');
       return;
     }
@@ -89,6 +98,7 @@ export default function CaptionedVideoPlayer({
     const captionWords = words.slice(startIndex, endIndex);
     const caption = captionWords.map((w) => w.text).join(' ');
     
+    console.log(`💬 Caption at ${currentTime.toFixed(2)}s:`, caption);
     setCurrentCaption(caption);
   }, [currentTime, transcript, captionStyle]);
 
