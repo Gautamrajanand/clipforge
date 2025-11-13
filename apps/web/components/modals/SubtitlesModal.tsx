@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, Link as LinkIcon, Type } from 'lucide-react';
+import { X, Upload, Link as LinkIcon } from 'lucide-react';
+import CaptionStyleSelector from '../captions/CaptionStyleSelector';
 
 interface SubtitlesModalProps {
   isOpen: boolean;
@@ -23,68 +24,6 @@ interface SubtitleSettings {
   position?: 'top' | 'center' | 'bottom';
 }
 
-const captionStyles = [
-  { 
-    value: 'karaoke', 
-    label: 'Karaoke', 
-    desc: 'Word-by-word highlighting',
-    preview: 'THIS IS KARAOKE STYLE'
-  },
-  { 
-    value: 'deep_diver', 
-    label: 'Deep Diver', 
-    desc: 'Bold impact style',
-    preview: 'DEEP DIVER BOLD'
-  },
-  { 
-    value: 'pod_p', 
-    label: 'Pod P', 
-    desc: 'Podcast-style captions',
-    preview: 'Pod P Style'
-  },
-  { 
-    value: 'viral_captions', 
-    label: 'Viral Captions', 
-    desc: 'Social media optimized',
-    preview: '🔥 VIRAL STYLE 🔥'
-  },
-  { 
-    value: 'mr_beast', 
-    label: 'Mr Beast', 
-    desc: 'High-energy style',
-    preview: '⚡ MR BEAST ⚡'
-  },
-  { 
-    value: 'alex_hormozi', 
-    label: 'Alex Hormozi', 
-    desc: 'Business-focused',
-    preview: 'ALEX HORMOZI'
-  },
-  { 
-    value: 'minimalist', 
-    label: 'Minimalist', 
-    desc: 'Clean and simple',
-    preview: 'minimalist'
-  },
-  { 
-    value: 'bold_impact', 
-    label: 'Bold Impact', 
-    desc: 'Maximum visibility',
-    preview: '💥 BOLD IMPACT 💥'
-  },
-  { 
-    value: 'neon_glow', 
-    label: 'Neon Glow', 
-    desc: 'Glowing effect',
-    preview: '✨ NEON GLOW ✨'
-  },
-  { 
-    value: 'classic_subtitle', 
-    label: 'Classic', 
-    desc: 'Traditional subtitles',
-    preview: 'Classic Subtitle'
-  },
-];
 
 export default function SubtitlesModal({ 
   isOpen, 
@@ -100,7 +39,7 @@ export default function SubtitlesModal({
   const [tab, setTab] = useState<'upload' | 'url'>('url');
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [captionStyle, setCaptionStyle] = useState('karaoke');
+  const [captionStyle, setCaptionStyle] = useState('mrbeast');
   const [primaryColor, setPrimaryColor] = useState('#FFFFFF');
   const [secondaryColor, setSecondaryColor] = useState('#FFD700');
   const [fontSize, setFontSize] = useState(48);
@@ -272,31 +211,10 @@ export default function SubtitlesModal({
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Caption Style
             </label>
-            <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-              {captionStyles.map((style) => (
-                <button
-                  key={style.value}
-                  onClick={() => setCaptionStyle(style.value)}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    captionStyle === style.value
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="font-semibold text-gray-900 mb-2">{style.label}</div>
-                  <div className="text-sm text-gray-500 mb-3">{style.desc}</div>
-                  {/* Preview */}
-                  <div className="bg-black/90 rounded px-3 py-2 text-center">
-                    <div className="text-white font-bold text-xs" style={{ 
-                      textShadow: style.value === 'neon_glow' ? '0 0 10px #fff, 0 0 20px #fff' : 
-                                  style.value === 'bold_impact' ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none'
-                    }}>
-                      {style.preview}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <CaptionStyleSelector
+              selectedStyle={captionStyle}
+              onStyleChange={setCaptionStyle}
+            />
           </div>
 
           {/* Color Customization */}
