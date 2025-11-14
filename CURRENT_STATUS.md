@@ -1,7 +1,7 @@
 # ClipForge - Current Status & Progress
-**Last Updated:** November 8, 2025
+**Last Updated:** November 14, 2025
 
-## 🎉 **MAJOR MILESTONE: PRO CLIPS SYSTEM COMPLETE!**
+## 🎉 **MAJOR MILESTONE: AI CLIPS/SUBTITLES/REFRAME UI PARITY COMPLETE!**
 
 ---
 
@@ -191,6 +191,52 @@
   - Validates data format for UI
   - Outputs JSON results for inspection
 - **Status:** ✅ Complete
+
+---
+
+### **AI FEATURES - UI Parity & Consistency** (November 14, 2025)
+
+#### **1. Caption Style Parity** ✅
+- **AI Subtitles** integrated with `CaptionStyleSelector` (14 professional presets)
+- Backend caption rendering unified with AI Clips export pipeline
+- Animated styles (bounce, wave, typewriter, etc.) work identically in both features
+- Normalized legacy style IDs for consistency
+- Preview component updated to match Clips visual style
+- **Files:**
+  - `apps/web/components/modals/SubtitlesModal.tsx`
+  - `apps/api/src/transcription/transcription.service.ts`
+  - `apps/web/components/video/CaptionedVideoPlayer.tsx`
+- **Status:** ✅ Complete, ready for pixel-perfect verification
+
+#### **2. AI Reframe UI Redesign** ✅
+- **Reframe modal** now uses same components as Export Clips:
+  - `AspectRatioSelector` - 4 aspect ratio cards
+  - `CropModeSelector` - Crop / Pad / Smart
+  - `CropPositionSelector` - Center / Top / Bottom
+- Visual design matches Export Clips exactly
+- Backend mapping preserved for compatibility
+- **Files:**
+  - `apps/web/components/modals/ReframeModal.tsx`
+  - Shared: `AspectRatioSelector`, `CropModeSelector`, `CropPositionSelector`
+- **Status:** ✅ Complete, UI symmetry achieved
+
+#### **3. Modal Tab Order Consistency** ✅
+- All modals (Clips, Subtitles, Reframe) now have:
+  - **Left tab (default):** Upload Video
+  - **Right tab:** Import from URL
+- Prevents user confusion across workflows
+- **Files:**
+  - `apps/web/components/modals/SubtitlesModal.tsx`
+  - `apps/web/components/modals/ReframeModal.tsx`
+- **Status:** ✅ Complete
+
+#### **4. Export Clips Download Fix** ✅
+- Blue "Download" button now reuses cached blob URLs
+- Eliminates redundant fetches and silent failures
+- Added error handling and user feedback
+- **Files:**
+  - `apps/web/app/project/[id]/page.tsx`
+- **Status:** ✅ Complete, tested
 
 ---
 
@@ -402,68 +448,65 @@ Frontend
 
 ## 🎯 **NEXT STEPS**
 
-### **Immediate (Today)**
-1. ✅ Test Pro Clips generation end-to-end
-2. ✅ Verify transcript visualization works
-3. ✅ Test with different video lengths
-4. ✅ Commit all changes
-5. ✅ Update documentation
+### **Immediate (Next Session)**
+1. Verify pixel-perfect caption parity between AI Subtitles downloads and AI Clips exports
+2. Fine-tune `CaptionedVideoPlayer` preview for exact visual match
+3. Implement ML worker fallback when ranker returns zero clips
+4. Add advanced reframe options (side-by-side, above/below layouts)
+5. Test 120-minute video handling
 
-### **Short-term (Next Session)**
-1. Add aspect ratio video processing
-2. Implement auto-generated captions
-3. Add clip editing features
-4. Optimize performance
-5. Add more tests
+### **Short-term (This Week)**
+1. Complete Opus Clip parity checklist
+2. Add watermark feature
+3. Implement email notifications for AI processing completion
+4. Add grid pagination for large clip sets
+5. Handle timeout errors on longer video links
 
 ### **Medium-term (Next Week)**
-1. User testing and feedback
-2. Performance optimization
-3. UI/UX improvements
-4. Additional platform integrations
-5. Documentation completion
+1. Build pricing/credits/hours system
+2. Add SaaS metering and usage tracking
+3. Implement remaining free features from Opus
+4. User testing and feedback
+5. Performance optimization
 
 ---
 
 ## 💾 **GIT STATUS**
 
-**Branch:** `feature/fix-core-flow`
-**Commits:** 8+ commits today
-**Status:** Ready for merge to main
+**Branch:** `main`
+**Last Commit:** November 14, 2025
+**Status:** Up to date
 
-**Key Commits:**
-1. AI-powered clip intelligence system
-2. Multi-segment clip stitching (Pro Clips Phase 1 & 2)
-3. Transcript visualization (Pro Clips Phase 3)
-4. Pro Clips integration - API and ML worker endpoints
-5. Bug fixes (procps, module dependencies, TypeScript)
-6. UI button for Pro Clips generation
+**Recent Commits:**
+1. AI Clips/Subtitles/Reframe UI parity and export download fix
+2. AI-powered clip intelligence system
+3. Multi-segment clip stitching (Pro Clips Phase 1 & 2)
+4. Transcript visualization (Pro Clips Phase 3)
+5. Pro Clips integration - API and ML worker endpoints
+6. Bug fixes (procps, module dependencies, TypeScript)
 
 ---
 
 ## 🎉 **SUMMARY**
 
-### **What We Built Today**
-- ✅ Complete FREE tier (Basic Clips)
-- ✅ Complete PRO tier core (Pro Clips)
-- ✅ End-to-end integration
-- ✅ UI for testing
-- ✅ Bug fixes
-- ✅ Documentation
+### **What We Built (November 14, 2025)**
+- ✅ AI Subtitles caption style parity with AI Clips
+- ✅ AI Reframe UI redesign matching Export Clips
+- ✅ Modal tab order consistency across all AI features
+- ✅ Export clips download button fix
+- ✅ Unified caption rendering pipeline
+- ✅ Documentation updates
 
-### **Lines of Code**
-- ~1,500+ lines added
-- 67+ files changed
-- 8+ commits
-
-### **Status**
+### **Current Status**
 - **FREE Tier:** ✅ Production-ready
 - **PRO Tier:** ✅ Core complete, ready for testing
-- **Future Features:** 📋 Planned and documented
+- **AI Subtitles:** ✅ Integrated with caption styles
+- **AI Reframe:** ✅ UI parity with Export Clips
+- **UI Consistency:** ✅ All modals aligned
 
 ### **Next Milestone**
-Test Pro Clips generation, then move to aspect ratios and captions!
+Complete Opus Clip parity checklist, then move to pricing/credits system and 120-minute handling!
 
 ---
 
-**ClipForge is now a competitive, production-ready clip generation platform with FREE and PRO tiers!** 🚀
+**ClipForge is now a competitive, production-ready clip generation platform with consistent UI/UX across all AI features!** 🚀

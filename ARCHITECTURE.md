@@ -1,5 +1,5 @@
 # ClipForge Architecture
-**Last Updated:** November 13, 2025 (AI Subtitles & Reframe Complete)
+**Last Updated:** November 14, 2025 (AI Clips/Subtitles/Reframe UI Parity)
 
 ---
 
@@ -843,6 +843,69 @@ ffmpeg -i input.mp4 -framerate 30 -i frames/caption_%06d.png \
 
 ---
 
+## UI Parity & Consistency (November 14, 2025)
+
+### **AI Clips / AI Subtitles / AI Reframe Alignment**
+
+**Goal:** Ensure all three AI features (Clips, Subtitles, Reframe) share consistent UI/UX and backend rendering pipelines.
+
+#### **1. Caption Style Parity** ✅
+- **AI Subtitles** now uses the same `CaptionStyleSelector` component as AI Clips
+- 14 professional caption presets shared across both features
+- Backend `generateCaptionedVideo()` uses identical animated caption pipeline as AI Clips exports
+- Normalized legacy style IDs (`mr_beast` → `mrbeast`) for consistency
+- Removed separate font scaling—both use exact same presets with small subtitles-only downscale for center-heavy styles
+- Preview component `CaptionedVideoPlayer` maps new style IDs to legacy preview styles for visual parity
+
+**Files:**
+- `apps/web/components/modals/SubtitlesModal.tsx` - Integrated `CaptionStyleSelector`
+- `apps/api/src/transcription/transcription.service.ts` - Unified caption rendering pipeline
+- `apps/web/components/video/CaptionedVideoPlayer.tsx` - Style normalization for preview
+
+#### **2. AI Reframe UI Parity** ✅
+- **AI Reframe modal** now reuses the same UI components as Export Clips:
+  - `AspectRatioSelector` - 4 aspect ratio cards (Vertical, Landscape, Square, Portrait)
+  - `CropModeSelector` - Crop / Pad / Smart options
+  - `CropPositionSelector` - Center / Top / Bottom (shown when Crop mode selected)
+- Visual design matches Export Clips modal exactly (colors, spacing, icons, descriptions)
+- Backend mapping: UI `cropMode` → existing `strategy` field:
+  - `crop` → `smart_crop`
+  - `pad` → `pad_blur`
+  - `smart` → `smart_crop` (placeholder)
+- Extra metadata (`cropMode`, `cropPosition`) stored with project for future use
+
+**Files:**
+- `apps/web/components/modals/ReframeModal.tsx` - Refactored to use shared components
+- `apps/web/components/export/AspectRatioSelector.tsx` - Shared component
+- `apps/web/components/export/CropModeSelector.tsx` - Shared component
+- `apps/web/components/export/CropPositionSelector.tsx` - Shared component
+
+#### **3. Modal Tab Order Consistency** ✅
+- All three modals (AI Clips, AI Subtitles, AI Reframe) now have consistent tab order:
+  - **Left tab (default):** Upload Video
+  - **Right tab:** Import from URL
+- Prevents user confusion by maintaining symmetry across all upload flows
+
+**Files:**
+- `apps/web/components/modals/SubtitlesModal.tsx` - Tab order updated
+- `apps/web/components/modals/ReframeModal.tsx` - Tab order updated
+
+#### **4. Export Clips Download Fix** ✅
+- Blue "Download" button for exported clips now reuses already-loaded blob URLs
+- Eliminates redundant fetch requests and silent failures
+- Added proper error handling and user alerts
+
+**Files:**
+- `apps/web/app/project/[id]/page.tsx` - Download handler fixed
+
+#### **Known Issues & Next Steps**
+- **Caption sizing:** Verify pixel-perfect parity between AI Subtitles downloads and AI Clips exports
+- **Preview alignment:** Fine-tune `CaptionedVideoPlayer` for exact visual match (kerning, line-height, stroke)
+- **AI Clips generation:** Implement fallback heuristics in ML worker when ranker returns zero clips
+- **Reframe advanced options:** Add side-by-side, above/below layouts from Opus
+
+---
+
 ## Summary
 
 ClipForge is a modern, scalable platform built with:
@@ -852,5 +915,6 @@ ClipForge is a modern, scalable platform built with:
 - ✅ **Production-Ready** - Robust error handling
 - ✅ **Extensible** - Easy to add features
 - ✅ **Self-Hosted** - Full control
+- ✅ **UI Consistency** - Shared components across AI features
 
-**Status:** Production-ready for FREE tier, PRO tier core complete and ready for testing.
+**Status:** Production-ready for FREE tier, PRO tier core complete, AI Subtitles & Reframe integrated with UI parity.

@@ -2,7 +2,7 @@
 
 **Mission:** One Input, Many Outputs  
 **Vision:** The all-in-one content transformation platform  
-**Last Updated:** November 11, 2025
+**Last Updated:** November 14, 2025
 
 ---
 
@@ -36,6 +36,13 @@ Phase 1.7: Long-Form Clips (✅ COMPLETE - Nov 11, 2025)
 ├── 14 animated caption styles
 ├── Memory optimization
 └── Professional transitions
+
+Phase 1.8: UI Parity & Consistency (✅ COMPLETE - Nov 14, 2025)
+├── AI Subtitles caption style integration
+├── AI Reframe UI redesign
+├── Modal tab order consistency
+├── Export clips download fix
+└── Unified caption rendering pipeline
 
 Phase 2: Content Generation (⏳ Q1 2026 - 3 months)
 ├── Blog posts
@@ -181,6 +188,45 @@ Phase 7: Advanced Features (⏳ Q2 2027+)
 ✅ OpusClip-style long clips  
 ✅ Submagic-style captions  
 ✅ Kapwing-style animations
+
+---
+
+## ✅ **PHASE 1.8: UI PARITY & CONSISTENCY (COMPLETE)**
+
+**Status:** 100% Complete  
+**Duration:** 1 day  
+**Completion Date:** November 14, 2025
+
+### **Delivered:**
+1. ✅ AI Subtitles caption style integration
+   - Replaced basic dropdown with `CaptionStyleSelector` (14 presets)
+   - Backend unified with AI Clips caption rendering pipeline
+   - Normalized legacy style IDs for consistency
+   - Preview component updated for visual parity
+
+2. ✅ AI Reframe UI redesign
+   - Reuses `AspectRatioSelector`, `CropModeSelector`, `CropPositionSelector`
+   - Visual design matches Export Clips modal exactly
+   - Backend mapping preserved for compatibility
+
+3. ✅ Modal tab order consistency
+   - All modals (Clips, Subtitles, Reframe) have Upload left, Import URL right
+   - Prevents user confusion across workflows
+
+4. ✅ Export clips download fix
+   - Blue Download button reuses cached blob URLs
+   - Eliminates redundant fetches and silent failures
+
+### **Technical Implementation:**
+- **Shared Components:** `AspectRatioSelector`, `CropModeSelector`, `CropPositionSelector`, `CaptionStyleSelector`
+- **Unified Pipeline:** `generateCaptionedVideo()` uses same animated caption rendering as AI Clips
+- **Style Normalization:** Legacy IDs mapped to new canonical IDs
+- **Files Modified:** `SubtitlesModal.tsx`, `ReframeModal.tsx`, `transcription.service.ts`, `CaptionedVideoPlayer.tsx`, `page.tsx`
+
+### **Competitive Parity:**
+✅ Opus Clip-style UI consistency  
+✅ Submagic-style caption integration  
+✅ User-friendly modal symmetry
 
 ---
 
