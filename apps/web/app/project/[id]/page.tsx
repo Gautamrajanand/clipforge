@@ -350,12 +350,21 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   onClick={async () => {
                     // Download video with burned-in captions
                     try {
+                      console.log('🎬 Starting AI Subtitles download...');
                       const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/download-captioned`, {
                         headers: { 'Authorization': `Bearer ${token}` },
                       });
-                      if (!response.ok) throw new Error('Download failed');
                       
+                      if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Download failed:', response.status, errorText);
+                        throw new Error(`Download failed: ${response.status}`);
+                      }
+                      
+                      console.log('📥 Downloading blob...');
                       const blob = await response.blob();
+                      console.log('✅ Blob received:', blob.size, 'bytes');
+                      
                       const url = URL.createObjectURL(blob);
                       const link = document.createElement('a');
                       link.href = url;
@@ -364,12 +373,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       link.click();
                       document.body.removeChild(link);
                       URL.revokeObjectURL(url);
+                      
+                      console.log('✅ Download complete');
                     } catch (error) {
-                      console.error('Download failed:', error);
-                      alert('Failed to download video. Please try again.');
+                      console.error('❌ Download failed:', error);
+                      alert('Failed to download video with captions. Please try again.');
                     }
                   }}
-                  disabled={!videoUrl}
+                  disabled={!videoUrl || !project?.transcript}
                   className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
@@ -377,14 +388,39 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 </button>
               ) : projectMode === 'reframe' ? (
                 <button
-                  onClick={() => {
-                    // Download the reframed video
-                    const link = document.createElement('a');
-                    link.href = videoUrl || '';
-                    link.download = `${project.title}-reframe.mp4`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                  onClick={async () => {
+                    // Download the reframed video from storage
+                    try {
+                      console.log('📐 Starting AI Reframe download...');
+                      
+                      // Fetch the reframed video from the API
+                      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/video`, {
+                        headers: { 'Authorization': `Bearer ${token}` },
+                      });
+                      
+                      if (!response.ok) {
+                        console.error('Download failed:', response.status);
+                        throw new Error(`Download failed: ${response.status}`);
+                      }
+                      
+                      console.log('📥 Downloading blob...');
+                      const blob = await response.blob();
+                      console.log('✅ Blob received:', blob.size, 'bytes');
+                      
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `${project.title}-reframe.mp4`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                      
+                      console.log('✅ Download complete');
+                    } catch (error) {
+                      console.error('❌ Download failed:', error);
+                      alert('Failed to download reframed video. Please try again.');
+                    }
                   }}
                   disabled={!videoUrl}
                   className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
