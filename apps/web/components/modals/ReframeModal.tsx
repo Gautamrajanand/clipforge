@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { X, Upload, Link as LinkIcon, Wand2 } from 'lucide-react';
+import AspectRatioSelector from '../export/AspectRatioSelector';
+import CropModeSelector from '../export/CropModeSelector';
+import CropPositionSelector from '../export/CropPositionSelector';
 
 interface ReframeModalProps {
   isOpen: boolean;
@@ -19,21 +22,10 @@ interface ReframeSettings {
   aspectRatio: '9:16' | '16:9' | '1:1' | '4:5';
   strategy: 'smart_crop' | 'center_crop' | 'pad_blur' | 'pad_color';
   backgroundColor?: string;
+  // Extra metadata to stay in sync with Export Clips UI
+  cropMode?: 'crop' | 'pad' | 'smart';
+  cropPosition?: 'center' | 'top' | 'bottom';
 }
-
-const aspectRatios = [
-  { value: '9:16', label: '9:16 Vertical', desc: 'TikTok, Reels, Shorts' },
-  { value: '16:9', label: '16:9 Horizontal', desc: 'YouTube, Desktop' },
-  { value: '1:1', label: '1:1 Square', desc: 'Instagram Post' },
-  { value: '4:5', label: '4:5 Portrait', desc: 'Instagram Feed' },
-];
-
-const strategies = [
-  { value: 'smart_crop', label: 'Smart Crop', desc: 'AI-powered intelligent cropping' },
-  { value: 'center_crop', label: 'Center Crop', desc: 'Crop from center' },
-  { value: 'pad_blur', label: 'Pad with Blur', desc: 'Blur background padding' },
-  { value: 'pad_color', label: 'Pad with Color', desc: 'Solid color padding' },
-];
 
 export default function ReframeModal({ 
   isOpen, 
@@ -46,12 +38,13 @@ export default function ReframeModal({
   uploadMessage = '',
   uploadError = ''
 }: ReframeModalProps) {
-  const [tab, setTab] = useState<'upload' | 'url'>('url');
+  // Default to Upload tab for symmetry with AI Clips
+  const [tab, setTab] = useState<'upload' | 'url'>('upload');
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1' | '4:5'>('9:16');
-  const [strategy, setStrategy] = useState<'smart_crop' | 'center_crop' | 'pad_blur' | 'pad_color'>('smart_crop');
-  const [backgroundColor, setBackgroundColor] = useState('#000000');
+  const [cropMode, setCropMode] = useState<'crop' | 'pad' | 'smart'>('crop');
+  const [cropPosition, setCropPosition] = useState<'center' | 'top' | 'bottom'>('center');
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
@@ -69,10 +62,20 @@ export default function ReframeModal({
 
     setIsProcessing(true);
     try {
-      const settings = {
+      // Map UI crop mode to existing framing strategy + background color
+      const strategy: ReframeSettings['strategy'] =
+        cropMode === 'crop'
+          ? 'smart_crop'
+          : cropMode === 'pad'
+          ? 'pad_blur'
+          : 'smart_crop';
+
+      const settings: ReframeSettings = {
         aspectRatio,
         strategy,
-        backgroundColor,
+        backgroundColor: '#000000',
+        cropMode,
+        cropPosition,
       };
 
       if (tab === 'url') {
@@ -122,17 +125,7 @@ export default function ReframeModal({
         <div className="p-6 space-y-6">
           {/* Upload Tabs */}
           <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
-            <button
-              onClick={() => setTab('url')}
-              className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-                tab === 'url'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <LinkIcon className="w-4 h-4 inline mr-2" />
-              Import from URL
-            </button>
+            {/* Upload on the left, default selected */}
             <button
               onClick={() => setTab('upload')}
               className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
@@ -143,6 +136,18 @@ export default function ReframeModal({
             >
               <Upload className="w-4 h-4 inline mr-2" />
               Upload Video
+            </button>
+            {/* Import from URL on the right */}
+            <button
+              onClick={() => setTab('url')}
+              className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                tab === 'url'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <LinkIcon className="w-4 h-4 inline mr-2" />
+              Import from URL
             </button>
           </div>
 
@@ -209,73 +214,29 @@ export default function ReframeModal({
           )}
 
           {/* Aspect Ratio Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Target Aspect Ratio
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {aspectRatios.map((ratio) => (
-                <button
-                  key={ratio.value}
-                  onClick={() => setAspectRatio(ratio.value as any)}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    aspectRatio === ratio.value
-                      ? 'border-yellow-500 bg-yellow-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="font-semibold text-gray-900">{ratio.label}</div>
-                  <div className="text-sm text-gray-500 mt-1">{ratio.desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+          <AspectRatioSelector
+            selected={aspectRatio}
+            onChange={(ratio) => setAspectRatio(ratio as any)}
+          />
 
-          {/* Framing Strategy */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Framing Strategy
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {strategies.map((strat) => (
-                <button
-                  key={strat.value}
-                  onClick={() => setStrategy(strat.value as any)}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    strategy === strat.value
-                      ? 'border-yellow-500 bg-yellow-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="font-semibold text-gray-900">{strat.label}</div>
-                  <div className="text-sm text-gray-500 mt-1">{strat.desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Divider */}
+          <div className="border-t border-gray-200" />
 
-          {/* Background Color (only for pad_color) */}
-          {strategy === 'pad_color' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Background Color
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="w-16 h-12 rounded-lg cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm"
-                  placeholder="#000000"
-                />
-              </div>
-            </div>
+          {/* Crop Mode / Framing Strategy */}
+          <CropModeSelector
+            selected={cropMode}
+            onChange={setCropMode}
+          />
+
+          {/* Crop Position - only relevant when cropping */}
+          {cropMode === 'crop' && (
+            <>
+              <div className="border-t border-gray-200" />
+              <CropPositionSelector
+                selected={cropPosition}
+                onChange={setCropPosition}
+              />
+            </>
           )}
         </div>
 

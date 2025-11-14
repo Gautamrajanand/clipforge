@@ -253,22 +253,41 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const handleDownloadExport = async (exportId: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+      // Prefer the already-loaded blob URL used for the preview video to avoid
+      // an extra network call and any auth/header issues
+      const existingUrl = exportVideoUrls[exportId];
+      if (existingUrl) {
         const a = document.createElement('a');
-        a.href = url;
+        a.href = existingUrl;
         a.download = `clip-${exportId}.mp4`;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        return;
       }
+
+      // Fallback: fetch from API if for some reason we don't have the blob URL cached
+      const response = await fetch(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        console.error('Download failed with status', response.status);
+        alert('Failed to download clip. Please try again.');
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clip-${exportId}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
       console.error('Download error:', error);
+      alert('Failed to download clip. Please try again.');
     }
   };
 

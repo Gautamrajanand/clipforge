@@ -399,13 +399,38 @@ export class TranscriptionService {
       
       // Get caption style from clipSettings
       const clipSettings = project.clipSettings as any;
-      const captionStyle = clipSettings?.captionStyle || 'mr_beast';
+      const rawCaptionStyle = (clipSettings?.captionStyle as string) || 'mr_beast';
+
+      // Normalize legacy IDs from older subtitles flow to canonical IDs
+      const normalizeCaptionStyle = (style: string): string => {
+        switch (style) {
+          case 'mr_beast':
+            return 'mrbeast';
+          case 'neon_glow':
+            return 'neon';
+          case 'bold_impact':
+          case 'deep_diver':
+            return 'bold';
+          case 'pod_p':
+            return 'podcast';
+          case 'viral_captions':
+            return 'rainbow';
+          case 'minimalist':
+            return 'minimal';
+          case 'classic_subtitle':
+            return 'minimal';
+          default:
+            return style;
+        }
+      };
+
+      const captionStyle = normalizeCaptionStyle(rawCaptionStyle);
       const primaryColor = clipSettings?.primaryColor || '#FFFFFF';
       const secondaryColor = clipSettings?.secondaryColor || '#FFD700';
       const fontSize = clipSettings?.fontSize || 48;
       const position = clipSettings?.position || 'bottom';
       
-      this.logger.log(`🎨 Applying caption style: ${captionStyle}`);
+      this.logger.log(`🎨 Applying caption style: ${captionStyle} (raw: ${rawCaptionStyle})`);
       
       // Get transcript words
       const transcriptData = project.transcript.data as any;
@@ -437,54 +462,142 @@ export class TranscriptionService {
       this.logger.log(`⏱️  Video duration for subtitles: ${actualDuration.toFixed(1)}s`);
 
       const useAnimatedPipeline = animatedStyles.includes(captionStyle);
-      const MAX_SINGLE_PASS_DURATION = 15; // match clips animated limits
-
       let outputPath = this.video.getTempFilePath('.mp4');
 
-      if (useAnimatedPipeline && actualDuration <= MAX_SINGLE_PASS_DURATION) {
+      if (useAnimatedPipeline) {
         this.logger.log(`🎞️ Using animated caption pipeline for style: ${captionStyle}`);
 
         const fs = await import('fs/promises');
         const { CaptionAnimatorService } = await import('../captions/caption-animator.service');
+        const { ChunkManagerService } = await import('../captions/chunk-manager.service');
+        const { VideoMergerService } = await import('../captions/video-merger.service');
         const { getCaptionStylePreset } = await import('../captions/caption-styles');
 
         const animator = new CaptionAnimatorService();
-        const stylePreset = getCaptionStylePreset(captionStyle);
+        const chunkManager = new ChunkManagerService();
+        const videoMerger = new VideoMergerService();
 
-        // Generate caption frames for the full video
-        const frameDir = this.video.getTempFilePath('_frames_full');
-        await fs.mkdir(frameDir, { recursive: true });
+        // Use the same preset as AI Clips for animated styles, but apply a small
+        // subtitles-only downscale for center-heavy viral styles so they don't
+        // dominate full-frame landscape videos. This does NOT affect Clips exports.
+        const basePreset = getCaptionStylePreset(captionStyle);
+
+        const centerHeavyStyles = ['mrbeast', 'highlight', 'fill', 'rainbow', 'shadow3d', 'tricolor', 'bounce'];
+        const isCenterHeavy = centerHeavyStyles.includes(captionStyle);
+        const subtitlesScale = isCenterHeavy ? 0.7 : 0.85; // slightly smaller than Clips
+
+        const stylePreset = {
+          ...basePreset,
+          fontSize: Math.round(basePreset.fontSize * subtitlesScale),
+        };
 
         const fps = 30;
-        await animator.generateCaptionFrames(
-          words,
-          stylePreset,
-          actualDuration,
-          fps,
-          frameDir,
-          metadata.width,
-          metadata.height,
-          { index: 0, total: 1, startTime: 0 },
-        );
 
-        // Overlay frames onto the source video
-        const framePattern = `${frameDir}/caption_%06d.png`;
-        await this.ffmpeg.overlayCaptionFrames(sourcePath, outputPath, framePattern, fps);
+        if (actualDuration <= 15) {
+          // Single-pass rendering for short videos (same as renderAnimatedCaptions)
+          this.logger.log('🎨 Using single-pass animated rendering for subtitles');
 
-        // Cleanup frames
-        await animator.cleanupFrames(frameDir);
+          const frameDir = this.video.getTempFilePath('_frames_full');
+          await fs.mkdir(frameDir, { recursive: true });
 
-        this.logger.log(`✅ Animated captions rendered successfully`);
-      } else {
-        if (useAnimatedPipeline) {
-          this.logger.log(
-            `⚠️ Video is too long for animated pipeline (${actualDuration.toFixed(
-              1,
-            )}s). Falling back to ASS-based styled captions.`,
+          await animator.generateCaptionFrames(
+            words,
+            stylePreset,
+            actualDuration,
+            fps,
+            frameDir,
+            metadata.width,
+            metadata.height,
+            { index: 0, total: 1, startTime: 0 },
           );
+
+          const framePattern = `${frameDir}/caption_%06d.png`;
+          await this.ffmpeg.overlayCaptionFrames(sourcePath, outputPath, framePattern, fps);
+
+          await animator.cleanupFrames(frameDir);
         } else {
-          this.logger.log('🎨 Using ASS-based styled captions (static/karaoke style)');
+          // Chunked rendering for long videos (same as renderChunkedCaptions)
+          this.logger.log('⚡ Using chunked animated rendering for long subtitles video');
+
+          const chunks = chunkManager.splitIntoChunks(words, actualDuration, 8);
+          const chunkMetadata = chunkManager.getChunkMetadata(chunks);
+          this.logger.log(
+            `📊 Split into ${chunkMetadata.totalChunks} chunks (avg ${chunkMetadata.averageChunkSize.toFixed(
+              1,
+            )}s each)`,
+          );
+
+          const validation = chunkManager.validateChunks(chunks);
+          if (!validation.valid) {
+            this.logger.error(`❌ Chunk validation failed: ${validation.errors.join(', ')}`);
+            throw new Error('Chunk validation failed');
+          }
+
+          const chunkVideoPaths: string[] = [];
+
+          for (const chunk of chunks) {
+            this.logger.log(
+              `🎨 Processing chunk ${chunk.index + 1}/${chunks.length}: ${chunk.startTime.toFixed(
+                1,
+              )}s - ${chunk.endTime.toFixed(1)}s`,
+            );
+
+            // Extract chunk from original video
+            const chunkInputPath = this.video.getTempFilePath(`_chunk_${chunk.index}_input.mp4`);
+            await this.ffmpeg.extractSegment(
+              sourcePath,
+              chunkInputPath,
+              chunk.startTime,
+              chunk.duration,
+            );
+
+            // Generate caption frames for this chunk
+            const frameDir = this.video.getTempFilePath(`_frames_chunk_${chunk.index}`);
+            await fs.mkdir(frameDir, { recursive: true });
+
+            await animator.generateCaptionFrames(
+              chunk.words,
+              stylePreset,
+              chunk.duration,
+              fps,
+              frameDir,
+              metadata.width,
+              metadata.height,
+              { index: chunk.index, total: chunks.length, startTime: chunk.startTime },
+            );
+
+            // Overlay captions on chunk
+            const chunkOutputPath = this.video.getTempFilePath(`_chunk_${chunk.index}_output.mp4`);
+            const framePattern = `${frameDir}/caption_%06d.png`;
+            await this.ffmpeg.overlayCaptionFrames(chunkInputPath, chunkOutputPath, framePattern, fps);
+
+            // Cleanup chunk frames and input
+            await animator.cleanupFrames(frameDir);
+            await fs.unlink(chunkInputPath);
+
+            chunkVideoPaths.push(chunkOutputPath);
+
+            // Optional GC + small delay between chunks for memory stability
+            if (global.gc) {
+              global.gc();
+            }
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
+          }
+
+          // Concatenate all chunks into final output
+          this.logger.log(`🔗 Concatenating ${chunkVideoPaths.length} chunks for subtitles video...`);
+          await videoMerger.concatenate(chunkVideoPaths, {
+            transition: 'cut',
+            outputPath,
+          });
+
+          await videoMerger.cleanupChunks(chunkVideoPaths);
+          this.logger.log('✅ Chunked animated subtitles rendering completed successfully');
         }
+      } else {
+        this.logger.log('🎨 Using ASS-based styled captions (static/karaoke style)');
 
         // Generate styled ASS file (static path, same as before)
         const assPath = this.video.getTempFilePath('.ass');

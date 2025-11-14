@@ -36,7 +36,8 @@ export default function SubtitlesModal({
   uploadMessage = '',
   uploadError = ''
 }: SubtitlesModalProps) {
-  const [tab, setTab] = useState<'upload' | 'url'>('url');
+  // Default to Upload tab for symmetry with AI Clips
+  const [tab, setTab] = useState<'upload' | 'url'>('upload');
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [captionStyle, setCaptionStyle] = useState('mrbeast');
@@ -120,17 +121,7 @@ export default function SubtitlesModal({
         <div className="p-6 space-y-6">
           {/* Upload Tabs */}
           <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
-            <button
-              onClick={() => setTab('url')}
-              className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-                tab === 'url'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <LinkIcon className="w-4 h-4 inline mr-2" />
-              Import from URL
-            </button>
+            {/* Upload on the left, default selected */}
             <button
               onClick={() => setTab('upload')}
               className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
@@ -141,6 +132,18 @@ export default function SubtitlesModal({
             >
               <Upload className="w-4 h-4 inline mr-2" />
               Upload Video
+            </button>
+            {/* Import from URL on the right */}
+            <button
+              onClick={() => setTab('url')}
+              className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                tab === 'url'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <LinkIcon className="w-4 h-4 inline mr-2" />
+              Import from URL
             </button>
           </div>
 

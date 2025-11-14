@@ -46,6 +46,35 @@ export default function CaptionedVideoPlayer({
     captionPosition = 'bottom',
   } = settings;
 
+  // Normalize new caption style IDs (used by AI Clips/Subtitles presets)
+  // to the legacy style keys used in this preview component
+  const normalizeCaptionStyle = (style: string): string => {
+    switch (style) {
+      case 'mrbeast':
+        return 'mr_beast';
+      case 'highlight':
+        // Hormozi-style yellow box
+        return 'alex_hormozi';
+      case 'minimal':
+        return 'minimalist';
+      case 'bold':
+        return 'bold_impact';
+      case 'neon':
+        return 'viral_style';
+      // Map other new IDs to the closest existing visual style
+      case 'rainbow':
+      case 'fill':
+      case 'shadow3d':
+      case 'tricolor':
+      case 'bounce':
+        return 'bold_impact';
+      default:
+        return style;
+    }
+  };
+
+  const effectiveCaptionStyle = normalizeCaptionStyle(captionStyle);
+
   // Debug logging
   useEffect(() => {
     console.log('🎬 CaptionedVideoPlayer mounted');
@@ -79,7 +108,7 @@ export default function CaptionedVideoPlayer({
     
     // Find words that should be displayed at current time
     // Group words into phrases (2-4 words at a time for better readability)
-    const wordsPerCaption = captionStyle === 'karaoke' ? 2 : 3;
+    const wordsPerCaption = effectiveCaptionStyle === 'karaoke' ? 2 : 3;
     
     // Find the current word index
     const currentWordIndex = words.findIndex(
@@ -100,7 +129,7 @@ export default function CaptionedVideoPlayer({
     
     console.log(`💬 Caption at ${currentTime.toFixed(2)}s:`, caption);
     setCurrentCaption(caption);
-  }, [currentTime, transcript, captionStyle]);
+  }, [currentTime, transcript, effectiveCaptionStyle]);
 
   // Get caption style classes
   const getCaptionClasses = () => {
@@ -124,7 +153,7 @@ export default function CaptionedVideoPlayer({
       textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
     };
 
-    switch (captionStyle) {
+    switch (effectiveCaptionStyle) {
       case 'mr_beast':
         return {
           ...baseStyle,
