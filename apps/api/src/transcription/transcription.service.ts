@@ -416,25 +416,94 @@ export class TranscriptionService {
         confidence: w.confidence || 1.0,
       }));
       
-      // Generate styled ASS file
-      const assPath = this.video.getTempFilePath('.ass');
-      const assContent = this.captions.generateASS(words, {
-        preset: captionStyle as any,
-        textColor: primaryColor,
-        backgroundColor: secondaryColor,
-        fontSize,
-        position,
-      });
-      await require('fs/promises').writeFile(assPath, assContent, 'utf-8');
-      
-      // Prepare output path
-      const outputPath = this.video.getTempFilePath('.mp4');
-      
-      this.logger.log(`🎨 Burning styled captions into video...`);
-      
-      // Burn captions using FFmpeg
-      await this.ffmpeg.burnCaptions(sourcePath, outputPath, assPath);
-      
+      // Determine rendering path based on caption style
+      const animatedStyles = [
+        'bold',
+        'modern',
+        'elegant',
+        'mrbeast',
+        'neon',
+        'highlight',
+        'rainbow',
+        'fill',
+        'shadow3d',
+        'tricolor',
+        'bounce',
+      ];
+
+      // Get video metadata for duration and dimensions
+      const metadata = await this.ffmpeg.getVideoMetadata(sourcePath);
+      const actualDuration = metadata.duration;
+      this.logger.log(`⏱️  Video duration for subtitles: ${actualDuration.toFixed(1)}s`);
+
+      const useAnimatedPipeline = animatedStyles.includes(captionStyle);
+      const MAX_SINGLE_PASS_DURATION = 15; // match clips animated limits
+
+      let outputPath = this.video.getTempFilePath('.mp4');
+
+      if (useAnimatedPipeline && actualDuration <= MAX_SINGLE_PASS_DURATION) {
+        this.logger.log(`🎞️ Using animated caption pipeline for style: ${captionStyle}`);
+
+        const fs = await import('fs/promises');
+        const { CaptionAnimatorService } = await import('../captions/caption-animator.service');
+        const { getCaptionStylePreset } = await import('../captions/caption-styles');
+
+        const animator = new CaptionAnimatorService();
+        const stylePreset = getCaptionStylePreset(captionStyle);
+
+        // Generate caption frames for the full video
+        const frameDir = this.video.getTempFilePath('_frames_full');
+        await fs.mkdir(frameDir, { recursive: true });
+
+        const fps = 30;
+        await animator.generateCaptionFrames(
+          words,
+          stylePreset,
+          actualDuration,
+          fps,
+          frameDir,
+          metadata.width,
+          metadata.height,
+          { index: 0, total: 1, startTime: 0 },
+        );
+
+        // Overlay frames onto the source video
+        const framePattern = `${frameDir}/caption_%06d.png`;
+        await this.ffmpeg.overlayCaptionFrames(sourcePath, outputPath, framePattern, fps);
+
+        // Cleanup frames
+        await animator.cleanupFrames(frameDir);
+
+        this.logger.log(`✅ Animated captions rendered successfully`);
+      } else {
+        if (useAnimatedPipeline) {
+          this.logger.log(
+            `⚠️ Video is too long for animated pipeline (${actualDuration.toFixed(
+              1,
+            )}s). Falling back to ASS-based styled captions.`,
+          );
+        } else {
+          this.logger.log('🎨 Using ASS-based styled captions (static/karaoke style)');
+        }
+
+        // Generate styled ASS file (static path, same as before)
+        const assPath = this.video.getTempFilePath('.ass');
+        const assContent = this.captions.generateASS(words, {
+          preset: captionStyle as any,
+          textColor: primaryColor,
+          backgroundColor: secondaryColor,
+          fontSize,
+          position,
+        });
+        await require('fs/promises').writeFile(assPath, assContent, 'utf-8');
+
+        this.logger.log(`🎨 Burning styled captions into video via ASS...`);
+        await this.ffmpeg.burnCaptions(sourcePath, outputPath, assPath);
+
+        // Cleanup ASS file
+        await require('fs/promises').unlink(assPath).catch(() => {});
+      }
+
       this.logger.log(`✅ Captions burned, uploading result...`);
       
       // Upload captioned video
@@ -446,7 +515,6 @@ export class TranscriptionService {
       
       // Clean up temp files
       await require('fs/promises').unlink(sourcePath).catch(() => {});
-      await require('fs/promises').unlink(assPath).catch(() => {});
       await require('fs/promises').unlink(outputPath).catch(() => {});
       
       return captionedKey;
