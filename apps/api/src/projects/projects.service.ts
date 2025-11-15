@@ -557,6 +557,16 @@ export class ProjectsService {
       throw new BadRequestException('No moments selected');
     }
 
+    // Check organization tier for watermark
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { tier: true },
+    });
+    const addWatermark = organization?.tier === 'FREE';
+    if (addWatermark) {
+      this.logger.log('🏷️  FREE tier detected - watermark will be added to exports');
+    }
+
     // Get the moments
     const moments = await this.prisma.moment.findMany({
       where: {
@@ -615,10 +625,17 @@ export class ProjectsService {
         if (burnCaptions) {
           this.logger.log(`Burning captions for Pro Clip ${moment.id}`);
           const captionedPath = this.video.getTempFilePath('.mp4');
-          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize, position);
+          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize, position, addWatermark);
           // Clean up the non-captioned file
           await this.video.cleanupTempFile(finalPath);
           finalPath = captionedPath;
+        } else if (addWatermark) {
+          // Add watermark even without captions for FREE tier
+          this.logger.log(`Adding watermark to Pro Clip ${moment.id} (no captions)`);
+          const watermarkedPath = this.video.getTempFilePath('.mp4');
+          await this.ffmpeg.addWatermark(finalPath, watermarkedPath);
+          await this.video.cleanupTempFile(finalPath);
+          finalPath = watermarkedPath;
         }
         
         // Upload the final clip
@@ -660,10 +677,17 @@ export class ProjectsService {
         if (burnCaptions) {
           this.logger.log(`Burning captions for clip ${moment.id}`);
           const captionedPath = this.video.getTempFilePath('.mp4');
-          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize, position);
+          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize, position, addWatermark);
           // Clean up the non-captioned file
           await this.video.cleanupTempFile(finalPath);
           finalPath = captionedPath;
+        } else if (addWatermark) {
+          // Add watermark even without captions for FREE tier
+          this.logger.log(`Adding watermark to clip ${moment.id} (no captions)`);
+          const watermarkedPath = this.video.getTempFilePath('.mp4');
+          await this.ffmpeg.addWatermark(finalPath, watermarkedPath);
+          await this.video.cleanupTempFile(finalPath);
+          finalPath = watermarkedPath;
         }
 
         // Upload the final clip to MinIO
@@ -720,6 +744,7 @@ export class ProjectsService {
     secondaryColor: string = '#FFD700',
     fontSize: number = 48,
     position: 'top' | 'center' | 'bottom' = 'bottom',
+    addWatermark: boolean = false,
   ): Promise<void> {
     try {
       if (words.length === 0) {
@@ -734,7 +759,7 @@ export class ProjectsService {
 
       if (useFrameByFrame) {
         this.logger.log(`Using frame-by-frame rendering for ${captionStyle} style with custom colors/size/position`);
-        await this.renderAnimatedCaptionsGeneric(inputPath, outputPath, words, videoMetadata, captionStyle, primaryColor, secondaryColor, fontSize, position);
+        await this.renderAnimatedCaptionsGeneric(inputPath, outputPath, words, videoMetadata, captionStyle, primaryColor, secondaryColor, fontSize, position, addWatermark);
       } else {
         // Use ASS subtitle burning for karaoke and static styles
         this.logger.log(`Using ASS subtitle burning for ${captionStyle} style with custom colors/size/position`);
@@ -748,6 +773,14 @@ export class ProjectsService {
         await fs.writeFile(captionPath, captionContent, 'utf-8');
         await this.ffmpeg.burnCaptions(inputPath, outputPath, captionPath);
         await this.video.cleanupTempFile(captionPath);
+        
+        // Add watermark if needed (for non-animated styles)
+        if (addWatermark) {
+          const watermarkedPath = this.video.getTempFilePath('.mp4');
+          await this.ffmpeg.addWatermark(outputPath, watermarkedPath);
+          await fs.copyFile(watermarkedPath, outputPath);
+          await this.video.cleanupTempFile(watermarkedPath);
+        }
       }
     } catch (error) {
       this.logger.error(`Failed to burn captions: ${error.message}`);
@@ -769,6 +802,7 @@ export class ProjectsService {
     secondaryColor?: string,
     fontSize?: number,
     position?: 'top' | 'center' | 'bottom',
+    addWatermark?: boolean,
   ): Promise<void> {
     try {
       // Fetch the project's transcript
@@ -811,6 +845,7 @@ export class ProjectsService {
         secondaryColor,
         fontSize,
         position,
+        addWatermark,
       );
     } catch (error) {
       this.logger.error(`Failed to burn captions for moment: ${error.message}`);
@@ -831,6 +866,7 @@ export class ProjectsService {
     secondaryColor?: string,
     fontSize?: number,
     position?: 'top' | 'center' | 'bottom',
+    addWatermark?: boolean,
   ): Promise<void> {
     const { CaptionAnimatorService } = await import('../captions/caption-animator.service');
     const { getCaptionStylePreset } = await import('../captions/caption-styles');
@@ -857,7 +893,7 @@ export class ProjectsService {
     const MAX_SINGLE_PASS_DURATION = 15; // 15 seconds max for single-pass rendering
     if (actualDuration > MAX_SINGLE_PASS_DURATION) {
       this.logger.log(`⚡ Video exceeds ${MAX_SINGLE_PASS_DURATION}s, using chunked rendering`);
-      return this.renderChunkedCaptionsGeneric(inputPath, outputPath, words, videoMetadata, captionStyle, primaryColor, secondaryColor, fontSize, position);
+      return this.renderChunkedCaptionsGeneric(inputPath, outputPath, words, videoMetadata, captionStyle, primaryColor, secondaryColor, fontSize, position, addWatermark);
     }
     
     // Generate caption frames with correct video dimensions
@@ -876,9 +912,9 @@ export class ProjectsService {
       { index: 0, total: 1, startTime: 0 },
     );
     
-    // Overlay frames onto video
+    // Overlay frames onto video (with watermark if needed)
     const framePattern = `${frameDir}/caption_%06d.png`;
-    await this.ffmpeg.overlayCaptionFrames(inputPath, outputPath, framePattern, 30);
+    await this.ffmpeg.overlayCaptionFrames(inputPath, outputPath, framePattern, 30, addWatermark);
     
     // Cleanup
     await animator.cleanupFrames(frameDir);
@@ -897,6 +933,7 @@ export class ProjectsService {
     secondaryColor?: string,
     fontSize?: number,
     position?: 'top' | 'center' | 'bottom',
+    addWatermark?: boolean,
   ): Promise<void> {
     const { ChunkManagerService } = await import('../captions/chunk-manager.service');
     const { VideoMergerService } = await import('../captions/video-merger.service');
@@ -960,10 +997,11 @@ export class ProjectsService {
         { index: chunk.index, total: chunks.length, startTime: chunk.startTime },
       );
       
-      // Overlay captions on chunk
+      // Overlay captions on chunk (watermark only on last chunk to avoid duplication)
       const chunkOutputPath = this.video.getTempFilePath(`_chunk_${chunk.index}_output.mp4`);
       const framePattern = `${frameDir}/caption_%06d.png`;
-      await this.ffmpeg.overlayCaptionFrames(chunkInputPath, chunkOutputPath, framePattern, 30);
+      const isLastChunk = chunk.index === chunks.length - 1;
+      await this.ffmpeg.overlayCaptionFrames(chunkInputPath, chunkOutputPath, framePattern, 30, addWatermark && isLastChunk);
       
       chunkVideoPaths.push(chunkOutputPath);
       

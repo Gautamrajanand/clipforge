@@ -536,22 +536,43 @@ export class FFmpegService {
     outputPath: string,
     framePattern: string,
     fps: number = 30,
+    addWatermark: boolean = false,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       this.logger.log(`Overlaying caption frames from pattern: ${framePattern}`);
 
+      const filters: any[] = [
+        {
+          filter: 'overlay',
+          options: {
+            x: 0,
+            y: 0,
+          },
+        },
+      ];
+
+      // Add watermark if requested (FREE tier)
+      if (addWatermark) {
+        this.logger.log('🏷️  Adding watermark for FREE tier');
+        filters.push({
+          filter: 'drawtext',
+          options: {
+            text: 'Made with ClipForge',
+            fontsize: 20,
+            fontcolor: 'white@0.7',
+            x: '(w-text_w-20)',
+            y: '20',
+            box: 1,
+            boxcolor: 'black@0.5',
+            boxborderw: 5,
+          },
+        });
+      }
+
       ffmpeg(inputPath)
         .input(framePattern)
         .inputOptions([`-framerate ${fps}`])
-        .complexFilter([
-          {
-            filter: 'overlay',
-            options: {
-              x: 0,
-              y: 0,
-            },
-          },
-        ])
+        .complexFilter(filters)
         .outputOptions([
           '-c:v libx264',
           '-preset ultrafast', // Ultra-fast preset for minimal memory
@@ -576,6 +597,62 @@ export class FFmpegService {
         })
         .on('end', () => {
           this.logger.log(`✅ Caption frames overlaid successfully: ${outputPath}`);
+          resolve();
+        })
+        .on('error', (err, stdout, stderr) => {
+          this.logger.error(`FFmpeg error: ${err.message}`);
+          this.logger.error(`FFmpeg stderr: ${stderr}`);
+          reject(err);
+        })
+        .run();
+    });
+  }
+
+  /**
+   * Add watermark to video (for FREE tier)
+   * @param inputPath - Path to input video
+   * @param outputPath - Path to output video
+   * @returns Promise<void>
+   */
+  async addWatermark(inputPath: string, outputPath: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.logger.log('🏷️  Adding watermark to video');
+
+      ffmpeg(inputPath)
+        .videoFilters([
+          {
+            filter: 'drawtext',
+            options: {
+              text: 'Made with ClipForge',
+              fontsize: 20,
+              fontcolor: 'white@0.7',
+              x: '(w-text_w-20)',
+              y: '20',
+              box: 1,
+              boxcolor: 'black@0.5',
+              boxborderw: 5,
+            },
+          },
+        ])
+        .outputOptions([
+          '-c:v libx264',
+          '-preset medium',
+          '-crf 23',
+          '-pix_fmt yuv420p',
+          '-movflags +faststart',
+          '-c:a copy',
+        ])
+        .output(outputPath)
+        .on('start', (commandLine) => {
+          this.logger.debug(`FFmpeg command: ${commandLine}`);
+        })
+        .on('progress', (progress) => {
+          if (progress.percent) {
+            this.logger.debug(`Adding watermark: ${progress.percent.toFixed(1)}%`);
+          }
+        })
+        .on('end', () => {
+          this.logger.log(`✅ Watermark added successfully: ${outputPath}`);
           resolve();
         })
         .on('error', (err, stdout, stderr) => {
