@@ -51,6 +51,13 @@ Phase 1.9: Caption Customization Parity (✅ COMPLETE - Nov 15, 2025)
 ├── AI Clips modal matches AI Subtitles
 └── Full parameter flow to rendering
 
+Phase 1.10: Unified Caption Pipeline (✅ COMPLETE - Nov 15, 2025)
+├── Generic caption rendering methods
+├── AI Subtitles uses AI Clips pipeline
+├── Export preview workflow for AI Subtitles
+├── Improved caption preview UX
+└── No duplicate rendering code
+
 Phase 2: Content Generation (⏳ Q1 2026 - 3 months)
 ├── Blog posts
 ├── Social media posts
@@ -291,6 +298,85 @@ Phase 7: Advanced Features (⏳ Q2 2027+)
 ✅ Opus Clip-style UI consistency  
 ✅ Submagic-style caption integration  
 ✅ User-friendly modal symmetry
+
+---
+
+## ✅ **PHASE 1.10: UNIFIED CAPTION PIPELINE (COMPLETE)**
+
+**Status:** 100% Complete  
+**Duration:** 1 day  
+**Completion Date:** November 15, 2025 (Evening)
+
+### **Delivered:**
+1. ✅ **Generic Caption Rendering Methods**
+   - `burnCaptionsToVideo()` - Works for any video (clips or full videos)
+   - `renderAnimatedCaptionsGeneric()` - Animated rendering without moment dependency
+   - `renderChunkedCaptionsGeneric()` - Chunked rendering for long videos
+   - `burnCaptionsForMoment()` - Now a wrapper around generic method
+
+2. ✅ **AI Subtitles Pipeline Unification**
+   - Removed duplicate rendering logic from `transcription.service.ts`
+   - Removed hardcoded scale factors (was 0.7-0.85x)
+   - Now uses same override logic as AI Clips
+   - Applies custom primaryColor, secondaryColor, fontSize, position
+   - Full parity with AI Clips caption rendering
+
+3. ✅ **Export Preview Workflow**
+   - Changed "Download with Captions" to "Export with Captions"
+   - Export generates video and stores for preview
+   - "Exported Clips" section shows below (matches AI Clips)
+   - Caption settings displayed (style badge, size, color swatch)
+   - Users preview THEN download (better UX)
+
+4. ✅ **Improved Caption Preview**
+   - Purple notice for advanced animated styles
+   - Explains preview is simplified
+   - Hides caption overlay for advanced styles (no confusion)
+   - Shows real-time captions only for basic styles
+
+### **Technical Implementation:**
+
+**Backend (projects.service.ts):**
+```typescript
+// Generic method works for any video
+async burnCaptionsToVideo(
+  inputPath, outputPath, words, videoMetadata,
+  captionStyle, primaryColor, secondaryColor, fontSize, position
+)
+
+// Animated rendering without moment dependency
+private async renderAnimatedCaptionsGeneric(...)
+
+// Chunked rendering for long videos
+private async renderChunkedCaptionsGeneric(...)
+```
+
+**Backend (transcription.service.ts):**
+- Reads custom parameters from `clipSettings`
+- Applies override logic: `stylePreset = { ...preset, ...customValues }`
+- Logging: `🎨 [AI Subtitles] Overriding caption style`
+
+**Frontend (page.tsx):**
+- Export button creates blob URL for preview
+- Adds to `exportedClips` state
+- Shows in dedicated section with download button
+
+**Frontend (CaptionedVideoPlayer.tsx):**
+- Detects advanced animated styles
+- Shows purple notice banner
+- Conditionally renders caption overlay
+
+### **Code Deduplication:**
+✅ Eliminated ~200 lines of duplicate rendering code  
+✅ Single source of truth for caption rendering  
+✅ Easier maintenance and bug fixes  
+✅ Consistent behavior across all features
+
+### **UX Improvements:**
+✅ Export preview workflow matches AI Clips exactly  
+✅ No confusing simplified captions in preview  
+✅ Clear expectations set with purple notice  
+✅ Users see REAL rendered video before downloading
 
 ---
 

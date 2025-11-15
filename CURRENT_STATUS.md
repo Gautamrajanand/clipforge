@@ -1,16 +1,27 @@
 # ClipForge - Current Status & Progress
-**Last Updated:** November 15, 2025
+**Last Updated:** November 15, 2025 (9:30 PM IST)
 
 ## ✅ **SYSTEM STATUS: STABLE & PRODUCTION READY**
 
-**All core features working correctly. Caption customization parity achieved across all workflows.**
+**All core features working correctly. Unified caption rendering pipeline achieved across AI Clips and AI Subtitles.**
 
-### **Latest Updates (Nov 15, 2025):**
-- ✅ **Caption Customization Parity** - AI Clips modal now matches AI Subtitles
-  - Color customization (primary & secondary)
-  - Font size customization (24-96px)
-  - Position customization (top/center/bottom)
-  - Full end-to-end parameter flow
+### **Latest Updates (Nov 15, 2025 - Evening):**
+- ✅ **Unified Caption Rendering Pipeline** - AI Clips and AI Subtitles now use identical rendering
+  - Generic `burnCaptionsToVideo()` method works for any video
+  - AI Subtitles uses same pipeline as AI Clips (no more duplicate code)
+  - Same 14 caption styles, same customization options
+  - Same chunked rendering for long videos (>15s)
+  
+- ✅ **AI Subtitles Export Preview Workflow** - Matches AI Clips exactly
+  - "Export with Captions" button generates video for preview
+  - Exported video shows in dedicated section below
+  - Full caption settings displayed (style, size, color)
+  - Users preview THEN download (better UX)
+  
+- ✅ **Improved Caption Preview** - No confusing simplified captions
+  - Purple notice explains advanced styles can't be previewed in real-time
+  - Clean source video preview (no overlay for advanced styles)
+  - Real-time captions only for basic styles that work in browser
 
 ---
 
