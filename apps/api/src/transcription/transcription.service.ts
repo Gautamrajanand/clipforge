@@ -373,14 +373,17 @@ export class TranscriptionService {
    * Generate video with burned-in captions for subtitle projects
    * Downloads source, generates SRT, burns captions, uploads result
    */
-  async generateCaptionedVideo(projectId: string): Promise<string> {
+  async generateCaptionedVideo(projectId: string, orgId?: string): Promise<string> {
     try {
       this.logger.log(`🎬 Generating captioned video for project ${projectId}`);
       
-      // Get project with transcript
+      // Get project with transcript and organization
       const project = await this.prisma.project.findUnique({
         where: { id: projectId },
-        include: { transcript: true },
+        include: { 
+          transcript: true,
+          org: true,
+        },
       });
       
       if (!project || !project.sourceUrl) {
@@ -389,6 +392,17 @@ export class TranscriptionService {
       
       if (!project.transcript) {
         throw new Error('No transcript available for captions');
+      }
+
+      // Check organization tier for watermark
+      const actualOrgId = orgId || project.orgId;
+      const organization = await this.prisma.organization.findUnique({
+        where: { id: actualOrgId },
+        select: { tier: true },
+      });
+      const addWatermark = organization?.tier === 'FREE';
+      if (addWatermark) {
+        this.logger.log('🏷️  FREE tier detected - watermark will be added to AI Subtitles export');
       }
       
       // Download source video
@@ -514,7 +528,7 @@ export class TranscriptionService {
           );
 
           const framePattern = `${frameDir}/caption_%06d.png`;
-          await this.ffmpeg.overlayCaptionFrames(sourcePath, outputPath, framePattern, fps);
+          await this.ffmpeg.overlayCaptionFrames(sourcePath, outputPath, framePattern, fps, addWatermark);
 
           await animator.cleanupFrames(frameDir);
         } else {
@@ -568,10 +582,10 @@ export class TranscriptionService {
               { index: chunk.index, total: chunks.length, startTime: chunk.startTime },
             );
 
-            // Overlay captions on chunk
+            // Overlay captions on chunk (watermark on ALL chunks for FREE tier)
             const chunkOutputPath = this.video.getTempFilePath(`_chunk_${chunk.index}_output.mp4`);
             const framePattern = `${frameDir}/caption_%06d.png`;
-            await this.ffmpeg.overlayCaptionFrames(chunkInputPath, chunkOutputPath, framePattern, fps);
+            await this.ffmpeg.overlayCaptionFrames(chunkInputPath, chunkOutputPath, framePattern, fps, addWatermark);
 
             // Cleanup chunk frames and input
             await animator.cleanupFrames(frameDir);
@@ -617,6 +631,15 @@ export class TranscriptionService {
 
         // Cleanup ASS file
         await require('fs/promises').unlink(assPath).catch(() => {});
+
+        // Add watermark if needed (for non-animated styles)
+        if (addWatermark) {
+          this.logger.log('🏷️  Adding watermark to ASS-captioned video');
+          const watermarkedPath = this.video.getTempFilePath('.mp4');
+          await this.ffmpeg.addWatermark(outputPath, watermarkedPath);
+          await require('fs/promises').unlink(outputPath);
+          outputPath = watermarkedPath;
+        }
       }
 
       this.logger.log(`✅ Captions burned, uploading result...`);

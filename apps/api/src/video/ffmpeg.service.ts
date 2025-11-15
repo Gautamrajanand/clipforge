@@ -541,38 +541,22 @@ export class FFmpegService {
     return new Promise((resolve, reject) => {
       this.logger.log(`Overlaying caption frames from pattern: ${framePattern}`);
 
-      const filters: any[] = [
-        {
-          filter: 'overlay',
-          options: {
-            x: 0,
-            y: 0,
-          },
-        },
-      ];
-
-      // Add watermark if requested (FREE tier)
+      // Build filter chain properly
+      let filterComplex: string;
       if (addWatermark) {
         this.logger.log('🏷️  Adding watermark for FREE tier');
-        filters.push({
-          filter: 'drawtext',
-          options: {
-            text: 'Made with ClipForge',
-            fontsize: 20,
-            fontcolor: 'white@0.7',
-            x: '(w-text_w-20)',
-            y: '20',
-            box: 1,
-            boxcolor: 'black@0.5',
-            boxborderw: 5,
-          },
-        });
+        // Chain: overlay captions, then add watermark
+        // Made more visible: white text (full opacity), black box (80% opacity), larger border
+        filterComplex = "[0:v][1:v]overlay=0:0[captioned];[captioned]drawtext=text='Made with ClipForge':fontsize=24:fontcolor=white:x=(w-text_w-20):y=20:box=1:boxcolor=black@0.8:boxborderw=8";
+      } else {
+        // Just overlay captions
+        filterComplex = "[0:v][1:v]overlay=0:0";
       }
 
       ffmpeg(inputPath)
         .input(framePattern)
         .inputOptions([`-framerate ${fps}`])
-        .complexFilter(filters)
+        .complexFilter(filterComplex)
         .outputOptions([
           '-c:v libx264',
           '-preset ultrafast', // Ultra-fast preset for minimal memory
@@ -624,13 +608,13 @@ export class FFmpegService {
             filter: 'drawtext',
             options: {
               text: 'Made with ClipForge',
-              fontsize: 20,
-              fontcolor: 'white@0.7',
+              fontsize: 24,
+              fontcolor: 'white',
               x: '(w-text_w-20)',
               y: '20',
               box: 1,
-              boxcolor: 'black@0.5',
-              boxborderw: 5,
+              boxcolor: 'black@0.8',
+              boxborderw: 8,
             },
           },
         ])

@@ -997,11 +997,13 @@ export class ProjectsService {
         { index: chunk.index, total: chunks.length, startTime: chunk.startTime },
       );
       
-      // Overlay captions on chunk (watermark only on last chunk to avoid duplication)
+      // Overlay captions on chunk (watermark on ALL chunks for FREE tier)
       const chunkOutputPath = this.video.getTempFilePath(`_chunk_${chunk.index}_output.mp4`);
       const framePattern = `${frameDir}/caption_%06d.png`;
-      const isLastChunk = chunk.index === chunks.length - 1;
-      await this.ffmpeg.overlayCaptionFrames(chunkInputPath, chunkOutputPath, framePattern, 30, addWatermark && isLastChunk);
+      if (addWatermark && chunk.index === 0) {
+        this.logger.log(`🏷️  Adding watermark to all chunks for FREE tier`);
+      }
+      await this.ffmpeg.overlayCaptionFrames(chunkInputPath, chunkOutputPath, framePattern, 30, addWatermark);
       
       chunkVideoPaths.push(chunkOutputPath);
       
@@ -1333,7 +1335,7 @@ export class ProjectsService {
 
     // Generate captioned video on-the-fly
     this.logger.log(`Generating captioned video for download: ${projectId}`);
-    const captionedKey = await this.transcription.generateCaptionedVideo(projectId);
+    const captionedKey = await this.transcription.generateCaptionedVideo(projectId, orgId);
 
     // Stream the captioned video
     const metadata = await this.storage.getFileMetadata(captionedKey);
