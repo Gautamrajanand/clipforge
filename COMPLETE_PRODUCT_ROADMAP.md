@@ -58,6 +58,15 @@ Phase 1.10: Unified Caption Pipeline (✅ COMPLETE - Nov 15, 2025)
 ├── Improved caption preview UX
 └── No duplicate rendering code
 
+Phase 1.11: Watermark & Tier System (✅ COMPLETE - Nov 15, 2025)
+├── Organization tier management (FREE/PRO/BUSINESS/ENTERPRISE)
+├── "Made with ClipForge" watermark for FREE tier
+├── Watermark on AI Clips exports (all chunks)
+├── Watermark on AI Subtitles exports (all chunks)
+├── Watermark on AI Reframe exports (full video)
+├── FFmpeg drawtext filter integration
+└── Automatic watermark removal for PRO+ tiers
+
 Phase 2: Content Generation (⏳ Q1 2026 - 3 months)
 ├── Blog posts
 ├── Social media posts

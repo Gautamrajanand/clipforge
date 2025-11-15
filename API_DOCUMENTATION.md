@@ -1,7 +1,21 @@
 # ClipForge API Documentation
 **Last Updated:** November 15, 2025  
-**Version:** 1.2.0  
+**Version:** 1.3.0  
 **Base URL:** `http://localhost:3000`
+
+---
+
+## Organization Tiers
+
+ClipForge supports multiple organization tiers:
+- **FREE**: Basic features with watermark on exports
+- **PRO**: All features, no watermark
+- **BUSINESS**: Pro features + team collaboration
+- **ENTERPRISE**: Custom solutions
+
+**Watermark Behavior:**
+- FREE tier: "Made with ClipForge" watermark appears on all exported videos (AI Clips, AI Subtitles, AI Reframe)
+- PRO+ tiers: No watermark on exports
 
 ---
 

@@ -1,11 +1,11 @@
 # ClipForge Architecture
-**Last Updated:** November 14, 2025 (AI Clips/Subtitles/Reframe UI Parity)
+**Last Updated:** November 15, 2025 (Watermark & Tier System)
 
 ---
 
 ## System Overview
 
-ClipForge is a self-hosted, AI-powered video repurposing platform that transforms long-form videos into platform-optimized clips using multi-factor analysis and machine learning.
+ClipForge is a self-hosted, AI-powered video repurposing platform that transforms long-form videos into platform-optimized clips using multi-factor analysis and machine learning. Features organization tier management with automatic watermarking for FREE tier users.
 
 ---
 
@@ -125,18 +125,25 @@ ClipForge is a self-hosted, AI-powered video repurposing platform that transform
 - 🆕 **Caption burning with FFmpeg**
 - 🆕 **SRT subtitle generation**
 - 🆕 **Reframe video processing**
+- 🆕 **Watermark application for FREE tier**
 
 #### Video Module
 - FFmpeg service for video processing
 - Aspect ratio conversion (9:16, 16:9, 1:1, 4:5)
 - 🆕 **Caption burning into video**
+- 🆕 **Watermark overlay (drawtext filter)**
 - Video metadata extraction
 - Segment extraction
 
+#### Organization Module
+- 🆕 **Tier management (FREE/PRO/BUSINESS/ENTERPRISE)**
+- 🆕 **Automatic watermark for FREE tier**
+- Organization settings and preferences
+
 #### AI Features
-- 🆕 **AI Subtitles:** Live caption overlay + burned captions
-- 🆕 **AI Reframe:** Aspect ratio conversion with smart crop
-- **AI Clips:** Viral moment detection and export
+- 🆕 **AI Subtitles:** Live caption overlay + burned captions + watermark
+- 🆕 **AI Reframe:** Aspect ratio conversion with smart crop + watermark
+- **AI Clips:** Viral moment detection and export + watermark
 
 **Key Files:**
 - `apps/api/src/clips/clips.service.ts` - Clip orchestration

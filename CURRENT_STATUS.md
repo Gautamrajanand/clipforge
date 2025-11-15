@@ -1,11 +1,20 @@
 # ClipForge - Current Status & Progress
-**Last Updated:** November 15, 2025 (9:30 PM IST)
+**Last Updated:** November 15, 2025 (11:40 PM IST)
 
 ## ✅ **SYSTEM STATUS: STABLE & PRODUCTION READY**
 
-**All core features working correctly. Unified caption rendering pipeline achieved across AI Clips and AI Subtitles.**
+**All core features working correctly. Watermark & tier system fully implemented across all video export types.**
 
-### **Latest Updates (Nov 15, 2025 - Evening):**
+### **Latest Updates (Nov 15, 2025 - Night):**
+- ✅ **Watermark & Tier System** - FREE tier watermarking complete
+  - Organization tier field added (FREE/PRO/BUSINESS/ENTERPRISE)
+  - "Made with ClipForge" watermark for FREE tier users
+  - Watermark visible throughout entire video (all chunks)
+  - Applied to AI Clips, AI Subtitles, and AI Reframe exports
+  - FFmpeg drawtext filter with white text, dark background box
+  - Top-right corner placement (20px from edges)
+  - Automatic removal for PRO+ tier users
+  
 - ✅ **Unified Caption Rendering Pipeline** - AI Clips and AI Subtitles now use identical rendering
   - Generic `burnCaptionsToVideo()` method works for any video
   - AI Subtitles uses same pipeline as AI Clips (no more duplicate code)
