@@ -1369,11 +1369,25 @@ export class ProjectsService {
       throw new NotFoundException('No video file found for this project');
     }
 
-    // Generate captioned video on-the-fly
-    this.logger.log(`Generating captioned video for download: ${projectId}`);
-    const captionedKey = await this.transcription.generateCaptionedVideo(projectId, orgId);
+    // Check if captioned video exists (must be pre-generated)
+    const captionedKey = `projects/${projectId}/captioned.mp4`;
+    
+    try {
+      const exists = await this.storage.fileExists(captionedKey);
+      if (!exists) {
+        throw new NotFoundException(
+          'Captioned video not ready yet. Please wait for subtitle generation to complete.'
+        );
+      }
+    } catch (error) {
+      throw new NotFoundException(
+        'Captioned video not ready yet. Please wait for subtitle generation to complete.'
+      );
+    }
 
-    // Stream the captioned video
+    this.logger.log(`Streaming captioned video for download: ${projectId}`);
+
+    // Stream the pre-generated captioned video
     const metadata = await this.storage.getFileMetadata(captionedKey);
     const stream = this.storage.getFileStream(captionedKey);
 
@@ -1400,16 +1414,42 @@ export class ProjectsService {
       throw new BadRequestException('Project has no video to generate subtitles for');
     }
 
-    // Queue transcription job
-    const job = await this.queues.addTranscriptionJob(projectId);
+    // Update project with caption settings
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        clipSettings: {
+          ...((project.clipSettings as any) || {}),
+          subtitlesMode: true,
+          captionStyle: dto.captionStyle,
+          primaryColor: dto.primaryColor,
+          secondaryColor: dto.secondaryColor,
+          fontSize: dto.fontSize,
+          position: dto.position,
+        },
+      },
+    });
 
-    this.logger.log(`✅ Subtitles job queued: ${job.jobId}`);
+    // Check if transcript exists
+    const transcript = await this.prisma.transcript.findUnique({
+      where: { projectId },
+    });
+
+    if (!transcript) {
+      // Queue transcription first, then subtitle export will be triggered automatically
+      const job = await this.queues.addTranscriptionJob(projectId);
+      this.logger.log(`✅ Transcription job queued: ${job.jobId}`);
+    } else {
+      // Transcript exists, queue subtitle export directly
+      const job = await this.queues.addSubtitleExportJob(projectId, orgId);
+      this.logger.log(`✅ Subtitle export job queued: ${job.jobId}`);
+    }
+
     this.logger.log(`   Caption Style: ${dto.captionStyle}`);
 
     return {
       success: true,
       message: 'Subtitle generation started',
-      jobId: job.jobId,
       settings: {
         captionStyle: dto.captionStyle,
         primaryColor: dto.primaryColor,

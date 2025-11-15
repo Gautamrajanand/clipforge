@@ -4,6 +4,7 @@ import { Job, Queue } from 'bullmq';
 import { TranscriptionService } from '../../transcription/transcription.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ClipDetectionJobData } from './clip-detection.processor';
+import { SubtitleExportJobData } from './subtitle-export.processor';
 
 export interface TranscriptionJobData {
   projectId: string;
@@ -19,6 +20,7 @@ export class TranscriptionProcessor extends WorkerHost {
     private transcription: TranscriptionService,
     private prisma: PrismaService,
     @InjectQueue('clip-detection') private clipDetectionQueue: Queue<ClipDetectionJobData>,
+    @InjectQueue('subtitle-export') private subtitleExportQueue: Queue<SubtitleExportJobData>,
   ) {
     super();
   }
@@ -52,11 +54,29 @@ export class TranscriptionProcessor extends WorkerHost {
       if (clipSettings.subtitlesMode || clipSettings.reframeMode) {
         this.logger.log(`⏭️  Skipping clip detection for project ${projectId} (${clipSettings.subtitlesMode ? 'Subtitles' : 'Reframe'} mode)`);
         
-        // Update project status to READY since we're done
-        await this.prisma.project.update({
-          where: { id: projectId },
-          data: { status: 'READY' },
-        });
+        // If subtitles mode, queue subtitle export job
+        if (clipSettings.subtitlesMode) {
+          this.logger.log(`📝 Queuing subtitle export job for project ${projectId}`);
+          await this.subtitleExportQueue.add(
+            'export-subtitles',
+            { projectId, orgId: project.orgId },
+            {
+              jobId: `subtitle-export-${projectId}`,
+              priority: 2,
+              attempts: 2,
+              backoff: {
+                type: 'exponential',
+                delay: 5000,
+              },
+            },
+          );
+        } else {
+          // Reframe mode - just mark as READY
+          await this.prisma.project.update({
+            where: { id: projectId },
+            data: { status: 'READY' },
+          });
+        }
       } else {
         // Normal flow: queue clip detection
         this.logger.log(`🎬 Queuing clip detection job for project ${projectId}`);

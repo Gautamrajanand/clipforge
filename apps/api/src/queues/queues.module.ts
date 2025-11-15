@@ -11,6 +11,7 @@ import { ClipsModule } from '../clips/clips.module';
 import { VideoImportProcessor } from './processors/video-import.processor';
 import { TranscriptionProcessor } from './processors/transcription.processor';
 import { ClipDetectionProcessor } from './processors/clip-detection.processor';
+import { SubtitleExportProcessor } from './processors/subtitle-export.processor';
 
 // Service
 import { QueuesService } from './queues.service';
@@ -69,6 +70,7 @@ import { QueuesController } from './queues.controller';
       { name: 'transcription' },
       { name: 'clip-detection' },
       { name: 'video-export' },
+      { name: 'subtitle-export' },
     ),
   ],
   providers: [
@@ -76,6 +78,7 @@ import { QueuesController } from './queues.controller';
     VideoImportProcessor,
     TranscriptionProcessor,
     ClipDetectionProcessor,
+    SubtitleExportProcessor,
   ],
   controllers: [QueuesController],
   exports: [BullModule, QueuesService],
