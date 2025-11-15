@@ -20,6 +20,9 @@ export interface ExportOptions {
   cropPosition: 'center' | 'top' | 'bottom';
   burnCaptions?: boolean;
   captionStyle?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  fontSize?: number;
 }
 
 export default function ExportModal({ isOpen, onClose, selectedClips, onExport }: ExportModalProps) {
@@ -28,6 +31,9 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
   const [cropPosition, setCropPosition] = useState<'center' | 'top' | 'bottom'>('center');
   const [burnCaptions, setBurnCaptions] = useState(false);
   const [captionStyle, setCaptionStyle] = useState('minimal');
+  const [primaryColor, setPrimaryColor] = useState('#FFFFFF');
+  const [secondaryColor, setSecondaryColor] = useState('#FFD700');
+  const [fontSize, setFontSize] = useState(48);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState(0);
@@ -59,6 +65,9 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
         cropPosition,
         burnCaptions,
         captionStyle,
+        primaryColor,
+        secondaryColor,
+        fontSize,
       });
       setExportProgress(100);
       clearInterval(progressInterval);
@@ -149,10 +158,73 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
                 </label>
               </div>
               {burnCaptions && (
-                <CaptionStyleSelector
-                  selectedStyle={captionStyle}
-                  onStyleChange={setCaptionStyle}
-                />
+                <div className="space-y-4">
+                  <CaptionStyleSelector
+                    selectedStyle={captionStyle}
+                    onStyleChange={setCaptionStyle}
+                  />
+                  
+                  {/* Color Customization */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Primary Color
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={primaryColor}
+                          onChange={(e) => setPrimaryColor(e.target.value)}
+                          className="w-12 h-10 rounded-lg cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={primaryColor}
+                          onChange={(e) => setPrimaryColor(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Highlight Color
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={secondaryColor}
+                          onChange={(e) => setSecondaryColor(e.target.value)}
+                          className="w-12 h-10 rounded-lg cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={secondaryColor}
+                          onChange={(e) => setSecondaryColor(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Font Size */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Font Size: {fontSize}px
+                    </label>
+                    <input
+                      type="range"
+                      min="24"
+                      max="96"
+                      value={fontSize}
+                      onChange={(e) => setFontSize(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>Small (24px)</span>
+                      <span>Large (96px)</span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>

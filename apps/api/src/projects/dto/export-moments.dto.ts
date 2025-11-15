@@ -1,4 +1,4 @@
-import { IsArray, IsString, IsOptional, IsEnum, IsBoolean, IsObject } from 'class-validator';
+import { IsArray, IsString, IsOptional, IsEnum, IsBoolean, IsObject, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ExportMomentsDto {
@@ -55,4 +55,31 @@ export class ExportMomentsDto {
   @IsOptional()
   @IsString()
   captionStyle?: string;
+
+  @ApiProperty({
+    description: 'Primary caption color (hex)',
+    default: '#FFFFFF',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  primaryColor?: string;
+
+  @ApiProperty({
+    description: 'Secondary/highlight caption color (hex)',
+    default: '#FFD700',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  secondaryColor?: string;
+
+  @ApiProperty({
+    description: 'Caption font size in pixels',
+    default: 48,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  fontSize?: number;
 }

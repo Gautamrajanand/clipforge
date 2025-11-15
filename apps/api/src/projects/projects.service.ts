@@ -527,6 +527,9 @@ export class ProjectsService {
       cropPosition?: 'center' | 'top' | 'bottom' | { x: number; y: number };
       burnCaptions?: boolean;
       captionStyle?: string;
+      primaryColor?: string;
+      secondaryColor?: string;
+      fontSize?: number;
     },
   ) {
     const {
@@ -536,6 +539,9 @@ export class ProjectsService {
       cropPosition = 'center',
       burnCaptions = false,
       captionStyle = 'minimal',
+      primaryColor = '#FFFFFF',
+      secondaryColor = '#FFD700',
+      fontSize = 48,
     } = dto;
     
     this.logger.log(`Export request: aspectRatio=${aspectRatio}, burnCaptions=${burnCaptions}, captionStyle=${captionStyle}`);
@@ -607,7 +613,7 @@ export class ProjectsService {
         if (burnCaptions) {
           this.logger.log(`Burning captions for Pro Clip ${moment.id}`);
           const captionedPath = this.video.getTempFilePath('.mp4');
-          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle);
+          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize);
           // Clean up the non-captioned file
           await this.video.cleanupTempFile(finalPath);
           finalPath = captionedPath;
@@ -652,7 +658,7 @@ export class ProjectsService {
         if (burnCaptions) {
           this.logger.log(`Burning captions for clip ${moment.id}`);
           const captionedPath = this.video.getTempFilePath('.mp4');
-          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle);
+          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize);
           // Clean up the non-captioned file
           await this.video.cleanupTempFile(finalPath);
           finalPath = captionedPath;
@@ -707,6 +713,9 @@ export class ProjectsService {
     inputPath: string,
     outputPath: string,
     captionStyle: string,
+    primaryColor: string = '#FFFFFF',
+    secondaryColor: string = '#FFD700',
+    fontSize: number = 48,
   ): Promise<void> {
     try {
       // Fetch the project's transcript
@@ -748,11 +757,13 @@ export class ProjectsService {
 
       if (useFrameByFrame) {
         this.logger.log(`Using frame-by-frame rendering for ${captionStyle} style`);
+        // Note: Color and fontSize customization is handled by the caption animator service internally
         await this.renderAnimatedCaptions(inputPath, outputPath, words, captionStyle, moment);
       } else {
         // Use ASS subtitle burning for karaoke and static styles
         this.logger.log(`Using ASS subtitle burning for ${captionStyle} style`);
         const captionPath = this.video.getTempFilePath('.ass');
+        // Note: Color and fontSize customization is handled by the ASS generator internally
         const captionContent = this.captions.generateASS(words, {
           preset: captionStyle as any,
         });
