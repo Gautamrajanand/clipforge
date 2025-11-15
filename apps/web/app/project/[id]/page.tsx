@@ -348,47 +348,57 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 Share
               </button>
               
-              {/* Show Download button for subtitles/reframe, Export button for clips */}
+              {/* Show Export button for subtitles/reframe, Export button for clips */}
               {projectMode === 'subtitles' ? (
                 <button
                   onClick={async () => {
-                    // Download video with burned-in captions
+                    // Generate video with burned-in captions (like AI Clips export)
                     try {
-                      console.log('🎬 Starting AI Subtitles download...');
+                      setIsExporting(true);
+                      console.log('🎬 Starting AI Subtitles export...');
                       const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/download-captioned`, {
                         headers: { 'Authorization': `Bearer ${token}` },
                       });
                       
                       if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('Download failed:', response.status, errorText);
-                        throw new Error(`Download failed: ${response.status}`);
+                        console.error('Export failed:', response.status, errorText);
+                        throw new Error(`Export failed: ${response.status}`);
                       }
                       
-                      console.log('📥 Downloading blob...');
+                      console.log('📥 Receiving exported video...');
                       const blob = await response.blob();
                       console.log('✅ Blob received:', blob.size, 'bytes');
                       
+                      // Create blob URL for preview
                       const url = URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.download = `${project.title}-subtitles.mp4`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      URL.revokeObjectURL(url);
                       
-                      console.log('✅ Download complete');
+                      // Add to exported clips (matching AI Clips workflow)
+                      const exportedVideo = {
+                        id: 'subtitles-export',
+                        title: `${project.title} - With Captions`,
+                        captionStyle: project.clipSettings?.captionStyle || 'bounce',
+                        primaryColor: project.clipSettings?.primaryColor || '#FFFFFF',
+                        fontSize: project.clipSettings?.fontSize || 48,
+                        position: project.clipSettings?.captionPosition || 'bottom',
+                      };
+                      
+                      setExportedClips([exportedVideo]);
+                      setExportVideoUrls({ 'subtitles-export': url });
+                      
+                      console.log('✅ Export complete - ready for preview');
                     } catch (error) {
-                      console.error('❌ Download failed:', error);
-                      alert('Failed to download video with captions. Please try again.');
+                      console.error('❌ Export failed:', error);
+                      alert('Failed to export video with captions. Please try again.');
+                    } finally {
+                      setIsExporting(false);
                     }
                   }}
-                  disabled={!videoUrl || !project?.transcript}
+                  disabled={!videoUrl || !project?.transcript || isExporting}
                   className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <Download className="w-4 h-4" />
-                  Download with Captions
+                  <Sparkles className="w-4 h-4" />
+                  {isExporting ? 'Exporting...' : 'Export with Captions'}
                 </button>
               ) : projectMode === 'reframe' ? (
                 <button
@@ -565,9 +575,10 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Exported Clips</h2>
               <div className="grid grid-cols-2 gap-6">
                 {exportedClips.map((exportItem) => {
-                  // Find the corresponding moment to get its title
+                  // Find the corresponding moment to get its title (for AI Clips)
+                  // Or use the provided title (for AI Subtitles)
                   const moment = clips.find(c => c.id === exportItem.momentId);
-                  const clipTitle = moment?.title || `Clip ${exportItem.momentId?.slice(-6)}`;
+                  const clipTitle = exportItem.title || moment?.title || `Clip ${exportItem.momentId?.slice(-6)}`;
                   
                   return (
                   <div key={exportItem.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
@@ -582,11 +593,25 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       </video>
                     </div>
                     <div className="p-4">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex flex-col gap-2 mb-3">
                         <span className="text-sm font-semibold text-gray-800">
                           {clipTitle}
                         </span>
-                        <span className="text-xs text-gray-500">{exportItem.format}</span>
+                        {exportItem.captionStyle && (
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                              {exportItem.captionStyle}
+                            </span>
+                            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                              {exportItem.fontSize}px
+                            </span>
+                            <span 
+                              className="w-4 h-4 rounded border border-gray-300"
+                              style={{ backgroundColor: exportItem.primaryColor }}
+                              title={`Color: ${exportItem.primaryColor}`}
+                            />
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() => handleDownloadExport(exportItem.id)}

@@ -465,7 +465,8 @@ export class TranscriptionService {
       let outputPath = this.video.getTempFilePath('.mp4');
 
       if (useAnimatedPipeline) {
-        this.logger.log(`🎞️ Using animated caption pipeline for style: ${captionStyle}`);
+        this.logger.log(`🎞️ Using animated caption pipeline for style: ${captionStyle} with custom params`);
+        this.logger.log(`🎨 Caption params: color=${primaryColor}, size=${fontSize}, position=${position}`);
 
         const fs = await import('fs/promises');
         const { CaptionAnimatorService } = await import('../captions/caption-animator.service');
@@ -477,19 +478,20 @@ export class TranscriptionService {
         const chunkManager = new ChunkManagerService();
         const videoMerger = new VideoMergerService();
 
-        // Use the same preset as AI Clips for animated styles, but apply a small
-        // subtitles-only downscale for center-heavy viral styles so they don't
-        // dominate full-frame landscape videos. This does NOT affect Clips exports.
-        const basePreset = getCaptionStylePreset(captionStyle);
-
-        const centerHeavyStyles = ['mrbeast', 'highlight', 'fill', 'rainbow', 'shadow3d', 'tricolor', 'bounce'];
-        const isCenterHeavy = centerHeavyStyles.includes(captionStyle);
-        const subtitlesScale = isCenterHeavy ? 0.7 : 0.85; // slightly smaller than Clips
-
-        const stylePreset = {
-          ...basePreset,
-          fontSize: Math.round(basePreset.fontSize * subtitlesScale),
-        };
+        // Use the same preset as AI Clips and apply custom colors, size, and position
+        let stylePreset = getCaptionStylePreset(captionStyle);
+        
+        // Override preset with custom values (same logic as AI Clips)
+        if (primaryColor || secondaryColor || fontSize || position) {
+          this.logger.log(`🎨 [AI Subtitles] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}`);
+          stylePreset = {
+            ...stylePreset,
+            ...(primaryColor && { textColor: primaryColor }),
+            ...(fontSize && { fontSize }),
+            ...(position && { position }),
+          };
+          this.logger.log(`🎨 [AI Subtitles] Final stylePreset: textColor=${stylePreset.textColor}, fontSize=${stylePreset.fontSize}, position=${stylePreset.position}`);
+        }
 
         const fps = 30;
 

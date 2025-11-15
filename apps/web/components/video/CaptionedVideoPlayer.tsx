@@ -67,6 +67,8 @@ export default function CaptionedVideoPlayer({
       case 'shadow3d':
       case 'tricolor':
       case 'bounce':
+      case 'modern':
+      case 'elegant':
         return 'bold_impact';
       default:
         return style;
@@ -74,6 +76,9 @@ export default function CaptionedVideoPlayer({
   };
 
   const effectiveCaptionStyle = normalizeCaptionStyle(captionStyle);
+  
+  // Check if the selected style is an advanced animated style
+  const isAdvancedAnimatedStyle = ['bounce', 'rainbow', 'fill', 'shadow3d', 'tricolor', 'modern', 'elegant'].includes(captionStyle);
 
   // Debug logging
   useEffect(() => {
@@ -216,25 +221,45 @@ export default function CaptionedVideoPlayer({
   };
 
   return (
-    <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-      <video
-        ref={videoRef}
-        controls
-        className="w-full h-full"
-        src={videoUrl}
-        preload="metadata"
-      >
-        Your browser does not support the video tag.
-      </video>
-      
-      {/* Caption Overlay */}
-      {currentCaption && (
-        <div className={getCaptionClasses()}>
-          <span style={getTextStyle()}>
-            {currentCaption}
-          </span>
+    <div className="space-y-3">
+      {/* Notice for advanced animated styles */}
+      {isAdvancedAnimatedStyle && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-start gap-3">
+          <div className="flex-shrink-0 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center mt-0.5">
+            <span className="text-white text-xs font-bold">!</span>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-purple-900 font-medium">
+              Preview shows simplified captions
+            </p>
+            <p className="text-xs text-purple-700 mt-1">
+              The <strong>{captionStyle}</strong> style uses advanced animations that can't be previewed in real-time. 
+              Your exported video will have the full animated effect with the exact colors and size you selected.
+            </p>
+          </div>
         </div>
       )}
+      
+      <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
+        <video
+          ref={videoRef}
+          controls
+          className="w-full h-full"
+          src={videoUrl}
+          preload="metadata"
+        >
+          Your browser does not support the video tag.
+        </video>
+        
+        {/* Caption Overlay - Only show for non-advanced styles */}
+        {currentCaption && !isAdvancedAnimatedStyle && (
+          <div className={getCaptionClasses()}>
+            <span style={getTextStyle()}>
+              {currentCaption}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
