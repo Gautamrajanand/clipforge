@@ -74,6 +74,13 @@ services:
       ASSEMBLYAI_API_KEY: 16e3cbc95572499088bcb6086efd08be
       FF_ASPECT_RATIO: "true"
       FF_CAPTION_STYLES: "false"
+      # Email Configuration (Optional - configure for email notifications)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-ClipForge <noreply@clipforge.ai>}
+      APP_URL: ${APP_URL:-http://localhost:3001}
     ports:
       - "3000:3000"
     depends_on:

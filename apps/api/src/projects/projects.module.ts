@@ -10,9 +10,10 @@ import { VideoService } from '../video/video.service';
 import { FFmpegService } from '../video/ffmpeg.service';
 import { CaptionsModule } from '../captions/captions.module';
 import { QueuesModule } from '../queues/queues.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [PrismaModule, JobsModule, StorageModule, AIModule, TranscriptionModule, CaptionsModule, QueuesModule],
+  imports: [PrismaModule, JobsModule, StorageModule, AIModule, TranscriptionModule, CaptionsModule, QueuesModule, EmailModule],
   providers: [ProjectsService, VideoService, FFmpegService],
   controllers: [ProjectsController],
   exports: [ProjectsService],

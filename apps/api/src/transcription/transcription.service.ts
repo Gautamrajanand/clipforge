@@ -5,6 +5,7 @@ import { StorageService } from '../storage/storage.service';
 import { FFmpegService } from '../video/ffmpeg.service';
 import { VideoService } from '../video/video.service';
 import { CaptionsService } from '../captions/captions.service';
+import { EmailService } from '../email/email.service';
 import * as path from 'path';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class TranscriptionService {
     private ffmpeg: FFmpegService,
     private video: VideoService,
     private captions: CaptionsService,
+    private email: EmailService,
   ) {
     // Initialize AssemblyAI if API key is provided
     const apiKey = process.env.ASSEMBLYAI_API_KEY;
@@ -374,6 +376,38 @@ export class TranscriptionService {
       
       this.logger.log(`✅ Reframe processing complete for project ${projectId}`);
       
+      // Send email notification
+      try {
+        const projectWithUser = await this.prisma.project.findUnique({
+          where: { id: projectId },
+          include: {
+            org: {
+              include: {
+                members: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (projectWithUser?.org?.members?.[0]?.user) {
+          const user = projectWithUser.org.members[0].user;
+          await this.email.sendReframeReadyEmail(
+            user.email,
+            user.name || 'there',
+            projectWithUser.title,
+            projectId,
+            aspectRatio,
+          );
+        }
+      } catch (emailError) {
+        this.logger.error('Failed to send reframe ready email:', emailError);
+        // Don't fail the whole operation if email fails
+      }
+      
       // Clean up temp files
       await require('fs/promises').unlink(sourcePath).catch(() => {});
       await require('fs/promises').unlink(finalOutputPath).catch(() => {});
@@ -672,6 +706,37 @@ export class TranscriptionService {
       await this.storage.uploadFile(captionedKey, captionedBuffer, 'video/mp4');
       
       this.logger.log(`✅ Uploaded captioned video: ${captionedKey}`);
+      
+      // Send email notification
+      try {
+        const projectWithUser = await this.prisma.project.findUnique({
+          where: { id: projectId },
+          include: {
+            org: {
+              include: {
+                members: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (projectWithUser?.org?.members?.[0]?.user) {
+          const user = projectWithUser.org.members[0].user;
+          await this.email.sendSubtitlesReadyEmail(
+            user.email,
+            user.name || 'there',
+            projectWithUser.title,
+            projectId,
+          );
+        }
+      } catch (emailError) {
+        this.logger.error('Failed to send subtitles ready email:', emailError);
+        // Don't fail the whole operation if email fails
+      }
       
       // Clean up temp files
       await require('fs/promises').unlink(sourcePath).catch(() => {});
