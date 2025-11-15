@@ -329,6 +329,7 @@ export class ProjectsService {
 
       // Send email notification
       try {
+        // @ts-ignore - Prisma types not updated yet
         const projectWithUser: any = await this.prisma.project.findUnique({
           where: { id: projectId },
           include: {
@@ -592,6 +593,7 @@ export class ProjectsService {
     }
 
     // Check organization tier for watermark
+    // @ts-ignore - Prisma types not updated yet
     const organization: any = await this.prisma.organization.findUnique({
       where: { id: orgId },
       select: { tier: true },

@@ -299,11 +299,12 @@ export class TranscriptionService {
       }
 
       // Check organization tier for watermark
-      const organization = await this.prisma.organization.findUnique({
+      // @ts-ignore - Prisma types not updated yet
+      const organization: any = await this.prisma.organization.findUnique({
         where: { id: project.orgId },
         select: { tier: true },
       });
-      const addWatermark = (organization as any).tier === 'FREE';
+      const addWatermark = organization?.tier === 'FREE';
       if (addWatermark) {
         this.logger.log('🏷️  FREE tier detected - watermark will be added to AI Reframe export');
       }
@@ -378,6 +379,7 @@ export class TranscriptionService {
       
       // Send email notification
       try {
+        // @ts-ignore - Prisma types not updated yet
         const projectWithUser: any = await this.prisma.project.findUnique({
           where: { id: projectId },
           include: {
@@ -452,6 +454,7 @@ export class TranscriptionService {
 
       // Check organization tier for watermark
       const actualOrgId = orgId || project.orgId;
+      // @ts-ignore - Prisma types not updated yet
       const organization: any = await this.prisma.organization.findUnique({
         where: { id: actualOrgId },
         select: { tier: true },
@@ -709,6 +712,7 @@ export class TranscriptionService {
       
       // Send email notification
       try {
+        // @ts-ignore - Prisma types not updated yet
         const projectWithUser: any = await this.prisma.project.findUnique({
           where: { id: projectId },
           include: {
