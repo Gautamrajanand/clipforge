@@ -194,6 +194,10 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           cropPosition: options.cropPosition,
           burnCaptions: options.burnCaptions,
           captionStyle: options.captionStyle,
+          primaryColor: options.primaryColor,
+          secondaryColor: options.secondaryColor,
+          fontSize: options.fontSize,
+          position: options.position,
         }),
       });
 

@@ -23,6 +23,7 @@ export interface ExportOptions {
   primaryColor?: string;
   secondaryColor?: string;
   fontSize?: number;
+  position?: 'top' | 'center' | 'bottom';
 }
 
 export default function ExportModal({ isOpen, onClose, selectedClips, onExport }: ExportModalProps) {
@@ -34,6 +35,7 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
   const [primaryColor, setPrimaryColor] = useState('#FFFFFF');
   const [secondaryColor, setSecondaryColor] = useState('#FFD700');
   const [fontSize, setFontSize] = useState(48);
+  const [position, setPosition] = useState<'top' | 'center' | 'bottom'>('bottom');
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState(0);
@@ -59,6 +61,7 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
     }, total * 100); // Update every 10% of estimated time
     
     try {
+      console.log('🎨 Exporting with colors:', { primaryColor, secondaryColor, fontSize, position });
       await onExport({
         aspectRatio,
         cropMode,
@@ -68,6 +71,7 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
         primaryColor,
         secondaryColor,
         fontSize,
+        position,
       });
       setExportProgress(100);
       clearInterval(progressInterval);
@@ -222,6 +226,48 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
                       <span>Small (24px)</span>
                       <span>Large (96px)</span>
+                    </div>
+                  </div>
+
+                  {/* Caption Position */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Caption Position
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPosition('top')}
+                        className={`px-4 py-2 rounded-lg border transition-colors ${
+                          position === 'top'
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        Top
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPosition('center')}
+                        className={`px-4 py-2 rounded-lg border transition-colors ${
+                          position === 'center'
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        Center
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPosition('bottom')}
+                        className={`px-4 py-2 rounded-lg border transition-colors ${
+                          position === 'bottom'
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        Bottom
+                      </button>
                     </div>
                   </div>
                 </div>

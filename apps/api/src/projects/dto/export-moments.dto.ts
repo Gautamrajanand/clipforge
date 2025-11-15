@@ -82,4 +82,14 @@ export class ExportMomentsDto {
   @IsOptional()
   @IsNumber()
   fontSize?: number;
+
+  @ApiProperty({
+    description: 'Caption position on screen',
+    enum: ['top', 'center', 'bottom'],
+    default: 'bottom',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  position?: 'top' | 'center' | 'bottom';
 }

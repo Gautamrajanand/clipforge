@@ -530,6 +530,7 @@ export class ProjectsService {
       primaryColor?: string;
       secondaryColor?: string;
       fontSize?: number;
+      position?: 'top' | 'center' | 'bottom';
     },
   ) {
     const {
@@ -542,6 +543,7 @@ export class ProjectsService {
       primaryColor = '#FFFFFF',
       secondaryColor = '#FFD700',
       fontSize = 48,
+      position = 'bottom',
     } = dto;
     
     this.logger.log(`Export request: aspectRatio=${aspectRatio}, burnCaptions=${burnCaptions}, captionStyle=${captionStyle}`);
@@ -613,7 +615,7 @@ export class ProjectsService {
         if (burnCaptions) {
           this.logger.log(`Burning captions for Pro Clip ${moment.id}`);
           const captionedPath = this.video.getTempFilePath('.mp4');
-          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize);
+          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize, position);
           // Clean up the non-captioned file
           await this.video.cleanupTempFile(finalPath);
           finalPath = captionedPath;
@@ -658,7 +660,7 @@ export class ProjectsService {
         if (burnCaptions) {
           this.logger.log(`Burning captions for clip ${moment.id}`);
           const captionedPath = this.video.getTempFilePath('.mp4');
-          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize);
+          await this.burnCaptionsForMoment(moment, finalPath, captionedPath, captionStyle, primaryColor, secondaryColor, fontSize, position);
           // Clean up the non-captioned file
           await this.video.cleanupTempFile(finalPath);
           finalPath = captionedPath;
@@ -716,6 +718,7 @@ export class ProjectsService {
     primaryColor: string = '#FFFFFF',
     secondaryColor: string = '#FFD700',
     fontSize: number = 48,
+    position: 'top' | 'center' | 'bottom' = 'bottom',
   ): Promise<void> {
     try {
       // Fetch the project's transcript
@@ -756,16 +759,17 @@ export class ProjectsService {
       const useFrameByFrame = animatedStyles.includes(captionStyle);
 
       if (useFrameByFrame) {
-        this.logger.log(`Using frame-by-frame rendering for ${captionStyle} style`);
-        // Note: Color and fontSize customization is handled by the caption animator service internally
-        await this.renderAnimatedCaptions(inputPath, outputPath, words, captionStyle, moment);
+        this.logger.log(`Using frame-by-frame rendering for ${captionStyle} style with custom colors/size/position`);
+        await this.renderAnimatedCaptions(inputPath, outputPath, words, captionStyle, moment, primaryColor, secondaryColor, fontSize, position);
       } else {
         // Use ASS subtitle burning for karaoke and static styles
-        this.logger.log(`Using ASS subtitle burning for ${captionStyle} style`);
+        this.logger.log(`Using ASS subtitle burning for ${captionStyle} style with custom colors/size/position`);
         const captionPath = this.video.getTempFilePath('.ass');
-        // Note: Color and fontSize customization is handled by the ASS generator internally
         const captionContent = this.captions.generateASS(words, {
           preset: captionStyle as any,
+          textColor: primaryColor,
+          fontSize: fontSize,
+          position: position,
         });
         await fs.writeFile(captionPath, captionContent, 'utf-8');
         await this.ffmpeg.burnCaptions(inputPath, outputPath, captionPath);
@@ -787,6 +791,10 @@ export class ProjectsService {
     words: any[],
     captionStyle: string,
     moment: any,
+    primaryColor?: string,
+    secondaryColor?: string,
+    fontSize?: number,
+    position?: 'top' | 'center' | 'bottom',
   ): Promise<void> {
     const { ChunkManagerService } = await import('../captions/chunk-manager.service');
     const { VideoMergerService } = await import('../captions/video-merger.service');
@@ -796,7 +804,19 @@ export class ProjectsService {
     const chunkManager = new ChunkManagerService();
     const videoMerger = new VideoMergerService();
     const animator = new CaptionAnimatorService();
-    const stylePreset = getCaptionStylePreset(captionStyle);
+    let stylePreset = getCaptionStylePreset(captionStyle);
+    
+    // Override preset colors, fontSize, and position with custom values if provided
+    if (primaryColor || secondaryColor || fontSize || position) {
+      this.logger.log(`🎨 [Chunked] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}`);
+      stylePreset = {
+        ...stylePreset,
+        ...(primaryColor && { textColor: primaryColor }),
+        ...(fontSize && { fontSize }),
+        ...(position && { position }),
+      };
+      this.logger.log(`🎨 [Chunked] Final stylePreset: textColor=${stylePreset.textColor}, fontSize=${stylePreset.fontSize}, position=${stylePreset.position}`);
+    }
     
     // Get video metadata
     const metadata = await this.ffmpeg.getVideoMetadata(inputPath);
@@ -895,12 +915,28 @@ export class ProjectsService {
     words: any[],
     captionStyle: string,
     moment: any,
+    primaryColor?: string,
+    secondaryColor?: string,
+    fontSize?: number,
+    position?: 'top' | 'center' | 'bottom',
   ): Promise<void> {
     const { CaptionAnimatorService } = await import('../captions/caption-animator.service');
     const { getCaptionStylePreset } = await import('../captions/caption-styles');
     
     const animator = new CaptionAnimatorService();
-    const stylePreset = getCaptionStylePreset(captionStyle);
+    let stylePreset = getCaptionStylePreset(captionStyle);
+    
+    // Override preset colors, fontSize, and position with custom values if provided
+    if (primaryColor || secondaryColor || fontSize || position) {
+      this.logger.log(`🎨 [Animated] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}`);
+      stylePreset = {
+        ...stylePreset,
+        ...(primaryColor && { textColor: primaryColor }),
+        ...(fontSize && { fontSize }),
+        ...(position && { position }),
+      };
+      this.logger.log(`🎨 [Animated] Final stylePreset: textColor=${stylePreset.textColor}, fontSize=${stylePreset.fontSize}, position=${stylePreset.position}`);
+    }
     
     // Get video metadata and actual duration from the file
     const metadata = await this.ffmpeg.getVideoMetadata(inputPath);
@@ -912,7 +948,7 @@ export class ProjectsService {
     const MAX_SINGLE_PASS_DURATION = 15; // 15 seconds max for single-pass rendering
     if (actualDuration > MAX_SINGLE_PASS_DURATION) {
       this.logger.log(`⚡ Clip exceeds ${MAX_SINGLE_PASS_DURATION}s, using chunked rendering`);
-      return this.renderChunkedCaptions(inputPath, outputPath, words, captionStyle, moment);
+      return this.renderChunkedCaptions(inputPath, outputPath, words, captionStyle, moment, primaryColor, secondaryColor, fontSize, position);
     }
     
     // Generate caption frames with correct video dimensions

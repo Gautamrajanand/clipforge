@@ -896,7 +896,7 @@ export class CaptionAnimatorService {
     width: number,
     height: number,
   ): void {
-    const baseY = height * 0.58;
+    const baseY = this.getYPosition(style, height);
     const fontSize = style.fontSize;
     const wordSpacing = 30;
     
@@ -960,6 +960,21 @@ export class CaptionAnimatorService {
         fs.unlinkSync(path.join(frameDir, file));
       }
       fs.rmdirSync(frameDir);
+    }
+  }
+
+  /**
+   * Calculate Y position based on style.position
+   */
+  private getYPosition(style: CaptionStylePreset, height: number): number {
+    switch (style.position) {
+      case 'top':
+        return height * 0.15; // 15% from top
+      case 'center':
+        return height * 0.5; // 50% - center
+      case 'bottom':
+      default:
+        return height * 0.85; // 85% from top (near bottom)
     }
   }
 }
