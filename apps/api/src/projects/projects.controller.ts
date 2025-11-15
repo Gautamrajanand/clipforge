@@ -46,14 +46,17 @@ export class ProjectsController {
   @ApiOperation({ summary: 'List projects' })
   async findAll(
     @Request() req: any,
-    @Query('skip') skip = 0,
-    @Query('take') take = 20,
+    @Query('skip') skip: string | number = 0,
+    @Query('take') take: string | number = 20,
   ) {
     const orgId = req.user.memberships[0]?.org?.id;
     if (!orgId) {
       throw new Error('No organization found');
     }
-    return this.projectsService.findAll(orgId, skip, take);
+    // Convert query params to integers
+    const skipInt = typeof skip === 'string' ? parseInt(skip, 10) : skip;
+    const takeInt = typeof take === 'string' ? parseInt(take, 10) : take;
+    return this.projectsService.findAll(orgId, skipInt, takeInt);
   }
 
   @Get(':id')
