@@ -2,7 +2,7 @@
 
 **Mission:** One Input, Many Outputs  
 **Vision:** The all-in-one content transformation platform  
-**Last Updated:** November 14, 2025
+**Last Updated:** November 15, 2025
 
 ---
 
@@ -43,6 +43,13 @@ Phase 1.8: UI Parity & Consistency (✅ COMPLETE - Nov 14, 2025)
 ├── Modal tab order consistency
 ├── Export clips download fix
 └── Unified caption rendering pipeline
+
+Phase 1.9: Caption Customization Parity (✅ COMPLETE - Nov 15, 2025)
+├── Color customization (primary & secondary)
+├── Font size customization (24-96px)
+├── Position customization (top/center/bottom)
+├── AI Clips modal matches AI Subtitles
+└── Full parameter flow to rendering
 
 Phase 2: Content Generation (⏳ Q1 2026 - 3 months)
 ├── Blog posts
@@ -220,6 +227,63 @@ Phase 7: Advanced Features (⏳ Q2 2027+)
 ### **Technical Implementation:**
 - **Shared Components:** `AspectRatioSelector`, `CropModeSelector`, `CropPositionSelector`, `CaptionStyleSelector`
 - **Unified Pipeline:** `generateCaptionedVideo()` uses same animated caption rendering as AI Clips
+
+---
+
+## ✅ **PHASE 1.9: CAPTION CUSTOMIZATION PARITY (COMPLETE)**
+
+**Status:** 100% Complete  
+**Duration:** 1 day  
+**Completion Date:** November 15, 2025
+
+### **Delivered:**
+1. ✅ **Color Customization**
+   - Primary color picker (text color)
+   - Secondary/highlight color picker
+   - Hex input fields with live preview
+   - Default: White (#FFFFFF) primary, Gold (#FFD700) secondary
+
+2. ✅ **Font Size Customization**
+   - Slider control (24px - 96px range)
+   - Live size display
+   - Responsive to video resolution
+   - Default: 48px
+
+3. ✅ **Position Customization**
+   - Three position options: Top, Center, Bottom
+   - Button-based selector matching AI Subtitles
+   - Dynamic Y-axis calculation (15%, 50%, 85%)
+   - Default: Bottom
+
+4. ✅ **Full Parameter Flow**
+   - Frontend: ExportModal → page.tsx → API
+   - Backend: DTO → Service → Rendering
+   - ASS subtitles: Custom textColor, fontSize, position
+   - Animated captions: Override preset with custom values
+   - Chunked rendering: Full parameter support
+
+### **Technical Implementation:**
+- **Frontend Components:**
+  - Color pickers with hex inputs in `ExportModal.tsx`
+  - Font size slider with min/max labels
+  - Position button grid (Top/Center/Bottom)
+  
+- **Backend Services:**
+  - `ExportMomentsDto`: Added primaryColor, secondaryColor, fontSize, position
+  - `burnCaptionsForMoment()`: Passes all parameters to rendering
+  - `renderAnimatedCaptions()`: Overrides preset with custom values
+  - `renderChunkedCaptions()`: Full parameter support
+  - `getYPosition()` helper: Dynamic positioning logic
+
+- **Caption Rendering:**
+  - ASS generator accepts custom textColor, fontSize, position
+  - Animated styles (Bounce, etc.) use `getYPosition()` helper
+  - Position mapping: top=15%, center=50%, bottom=85%
+
+### **UI Parity Achieved:**
+✅ AI Clips modal now matches AI Subtitles exactly  
+✅ All caption customization options available  
+✅ Consistent user experience across workflows
 - **Style Normalization:** Legacy IDs mapped to new canonical IDs
 - **Files Modified:** `SubtitlesModal.tsx`, `ReframeModal.tsx`, `transcription.service.ts`, `CaptionedVideoPlayer.tsx`, `page.tsx`
 

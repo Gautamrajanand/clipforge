@@ -1,6 +1,6 @@
 # ClipForge API Documentation
-**Last Updated:** November 11, 2025  
-**Version:** 1.1.0  
+**Last Updated:** November 15, 2025  
+**Version:** 1.2.0  
 **Base URL:** `http://localhost:3000`
 
 ---
@@ -751,9 +751,69 @@ curl -X POST http://localhost:3000/v1/projects/proj_123/clips/pro \
 
 ---
 
+## Export Moments (AI Clips)
+
+### Export Clips with Custom Captions
+```http
+POST /v1/projects/:id/export
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "momentIds": ["moment_123", "moment_456"],
+  "aspectRatio": "9:16",
+  "cropMode": "smart",
+  "cropPosition": "center",
+  "burnCaptions": true,
+  "captionStyle": "bounce",
+  "primaryColor": "#FF0000",
+  "secondaryColor": "#FFD700",
+  "fontSize": 72,
+  "position": "top"
+}
+```
+
+**Parameters:**
+- `momentIds` (required): Array of moment IDs to export
+- `aspectRatio` (optional): "original", "9:16", "16:9", "1:1", "4:5"
+- `cropMode` (optional): "crop", "pad", "smart"
+- `cropPosition` (optional): "center", "top", "bottom"
+- `burnCaptions` (optional): Boolean, default false
+- `captionStyle` (optional): "minimal", "bounce", "bold", "modern", etc. (14 styles)
+- `primaryColor` (optional): Hex color for text, default "#FFFFFF"
+- `secondaryColor` (optional): Hex color for highlights, default "#FFD700"
+- `fontSize` (optional): Number 24-96, default 48
+- `position` (optional): "top", "center", "bottom", default "bottom"
+
+**Response:**
+```json
+{
+  "exports": [
+    {
+      "id": "export_123",
+      "momentId": "moment_123",
+      "status": "COMPLETED",
+      "artifacts": {
+        "mp4_url": "projects/proj_123/exports/moment_123.mp4"
+      }
+    }
+  ]
+}
+```
+
+**Caption Customization Features (v1.2.0):**
+- ✅ Full color control (primary & secondary)
+- ✅ Font size range (24-96px)
+- ✅ Position control (top 15%, center 50%, bottom 85%)
+- ✅ Works with all 14 caption styles
+- ✅ Supports both ASS and animated rendering
+- ✅ Chunked rendering compatible (>15s clips)
+
+---
+
 ## Status
 
 **API Status:** ✅ Production-Ready  
 **FREE Tier:** ✅ Fully Functional  
 **PRO Tier:** ✅ Core Complete, Ready for Testing  
-**Documentation:** ✅ Up to Date
+**Documentation:** ✅ Up to Date (v1.2.0)

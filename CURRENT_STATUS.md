@@ -3,7 +3,14 @@
 
 ## ✅ **SYSTEM STATUS: STABLE & PRODUCTION READY**
 
-**All core features working correctly. System rolled back from 120-minute video attempt.**
+**All core features working correctly. Caption customization parity achieved across all workflows.**
+
+### **Latest Updates (Nov 15, 2025):**
+- ✅ **Caption Customization Parity** - AI Clips modal now matches AI Subtitles
+  - Color customization (primary & secondary)
+  - Font size customization (24-96px)
+  - Position customization (top/center/bottom)
+  - Full end-to-end parameter flow
 
 ---
 
