@@ -5,7 +5,7 @@ import { StorageService } from '../storage/storage.service';
 import { FFmpegService } from '../video/ffmpeg.service';
 import { VideoService } from '../video/video.service';
 import { CaptionsService } from '../captions/captions.service';
-import { EmailService } from '../email/email.service';
+// import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
 import * as path from 'path';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class TranscriptionService {
     private ffmpeg: FFmpegService,
     private video: VideoService,
     private captions: CaptionsService,
-    private email: EmailService,
+    // private email: EmailService, // TEMPORARILY DISABLED
   ) {
     // Initialize AssemblyAI if API key is provided
     const apiKey = process.env.ASSEMBLYAI_API_KEY;
@@ -377,8 +377,8 @@ export class TranscriptionService {
       
       this.logger.log(`✅ Reframe processing complete for project ${projectId}`);
       
-      // Send email notification
-      try {
+      // Send email notification - TEMPORARILY DISABLED
+      /* try {
         const projectWithUser: any = await this.prisma.project.findUnique({
           where: { id: projectId },
           include: {
@@ -408,7 +408,7 @@ export class TranscriptionService {
       } catch (emailError) {
         this.logger.error('Failed to send reframe ready email:', emailError);
         // Don't fail the whole operation if email fails
-      }
+      } */
       
       // Clean up temp files
       await require('fs/promises').unlink(sourcePath).catch(() => {});
@@ -710,8 +710,8 @@ export class TranscriptionService {
       
       this.logger.log(`✅ Uploaded captioned video: ${captionedKey}`);
       
-      // Send email notification
-      try {
+      // Send email notification - TEMPORARILY DISABLED
+      /* try {
         const projectWithUser: any = await this.prisma.project.findUnique({
           where: { id: projectId },
           include: {
@@ -740,7 +740,7 @@ export class TranscriptionService {
       } catch (emailError) {
         this.logger.error('Failed to send subtitles ready email:', emailError);
         // Don't fail the whole operation if email fails
-      }
+      } */
       
       // Clean up temp files
       await require('fs/promises').unlink(sourcePath).catch(() => {});

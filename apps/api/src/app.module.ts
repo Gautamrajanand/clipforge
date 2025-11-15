@@ -17,7 +17,7 @@ import { ProxyModule } from './proxy/proxy.module';
 import { CaptionsModule } from './captions/captions.module';
 import { QueuesModule } from './queues/queues.module';
 import { HealthModule } from './health/health.module';
-import { EmailModule } from './email/email.module';
+// import { EmailModule } from './email/email.module'; // TEMPORARILY DISABLED
 
 @Module({
   imports: [
@@ -28,7 +28,7 @@ import { EmailModule } from './email/email.module';
     PrismaModule,
     HealthModule, // Health checks for monitoring
     QueuesModule, // Job queue system for scalability
-    EmailModule, // Email notifications
+    // EmailModule, // Email notifications // TEMPORARILY DISABLED
     AuthModule,
     ProjectsModule,
     IngestionModule,

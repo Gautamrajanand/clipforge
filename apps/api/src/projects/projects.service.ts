@@ -8,7 +8,7 @@ import { AIService } from '../ai/ai.service';
 import { TranscriptionService } from '../transcription/transcription.service';
 import { CaptionsService } from '../captions/captions.service';
 import { QueuesService } from '../queues/queues.service';
-import { EmailService } from '../email/email.service';
+// import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ReframeDto } from './dto/reframe.dto';
 import { SubtitlesDto } from './dto/subtitles.dto';
@@ -28,7 +28,7 @@ export class ProjectsService {
     private transcription: TranscriptionService,
     private captions: CaptionsService,
     private queues: QueuesService,
-    private email: EmailService,
+    // private email: EmailService, // TEMPORARILY DISABLED
   ) {}
 
   // Helper to convert BigInt to number for JSON serialization
@@ -327,8 +327,8 @@ export class ProjectsService {
         data: { status: 'READY' },
       });
 
-      // Send email notification
-      try {
+      // Send email notification - TEMPORARILY DISABLED
+      /* try {
         const projectWithUser: any = await this.prisma.project.findUnique({
           where: { id: projectId },
           include: {
@@ -358,7 +358,7 @@ export class ProjectsService {
       } catch (emailError) {
         this.logger.error('Failed to send clips ready email:', emailError);
         // Don't fail the whole operation if email fails
-      }
+      } */
     } catch (error) {
       console.error('Error creating moments:', error);
     }
