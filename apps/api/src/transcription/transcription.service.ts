@@ -435,6 +435,18 @@ export class TranscriptionService {
     try {
       this.logger.log(`🎬 Generating captioned video for project ${projectId}`);
       
+      // Check if captioned video already exists (CACHE)
+      const captionedKey = `projects/${projectId}/captioned.mp4`;
+      try {
+        const exists = await this.storage.fileExists(captionedKey);
+        if (exists) {
+          this.logger.log(`✅ Captioned video already exists, returning cached version: ${captionedKey}`);
+          return captionedKey;
+        }
+      } catch (error) {
+        this.logger.log(`ℹ️  No cached captioned video found, will generate new one`);
+      }
+      
       // Get project with transcript and organization
       const project = await this.prisma.project.findUnique({
         where: { id: projectId },
