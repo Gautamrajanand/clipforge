@@ -334,7 +334,7 @@ export class ProjectsService {
           include: {
             org: {
               include: {
-                // @ts-expect-error - Prisma types not updated yet
+                // @ts-ignore - Prisma types not updated yet
                 members: {
                   include: {
                     user: true,
@@ -595,7 +595,7 @@ export class ProjectsService {
     // Check organization tier for watermark
     const organization: any = await this.prisma.organization.findUnique({
       where: { id: orgId },
-      // @ts-expect-error - Prisma types not updated yet
+      // @ts-ignore - Prisma types not updated yet
       select: { tier: true },
     });
     const addWatermark = organization?.tier === 'FREE';
