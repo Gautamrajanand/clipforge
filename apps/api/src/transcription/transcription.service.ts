@@ -286,13 +286,24 @@ export class TranscriptionService {
     try {
       this.logger.log(`📐 Starting reframe processing for project ${projectId}`);
       
-      // Get project
+      // Get project with organization
       const project = await this.prisma.project.findUnique({
         where: { id: projectId },
+        include: { org: true },
       });
       
       if (!project || !project.sourceUrl) {
         throw new Error('Project or source video not found');
+      }
+
+      // Check organization tier for watermark
+      const organization = await this.prisma.organization.findUnique({
+        where: { id: project.orgId },
+        select: { tier: true },
+      });
+      const addWatermark = organization?.tier === 'FREE';
+      if (addWatermark) {
+        this.logger.log('🏷️  FREE tier detected - watermark will be added to AI Reframe export');
       }
       
       // Download source video from storage
@@ -324,10 +335,21 @@ export class TranscriptionService {
         'center',
       );
       
+      // Add watermark if FREE tier
+      let finalOutputPath = outputPath;
+      if (addWatermark) {
+        this.logger.log('🏷️  Adding watermark to reframed video');
+        const watermarkedPath = this.video.getTempFilePath('.mp4');
+        await this.ffmpeg.addWatermark(outputPath, watermarkedPath);
+        finalOutputPath = watermarkedPath;
+        // Clean up non-watermarked file
+        await require('fs/promises').unlink(outputPath).catch(() => {});
+      }
+      
       this.logger.log(`✅ Reframe complete, uploading result...`);
       
       // Upload reframed video
-      const reframedBuffer = await require('fs/promises').readFile(outputPath);
+      const reframedBuffer = await require('fs/promises').readFile(finalOutputPath);
       const reframedKey = `projects/${projectId}/reframed.mp4`;
       await this.storage.uploadFile(reframedKey, reframedBuffer, 'video/mp4');
       
@@ -354,7 +376,7 @@ export class TranscriptionService {
       
       // Clean up temp files
       await require('fs/promises').unlink(sourcePath).catch(() => {});
-      await require('fs/promises').unlink(outputPath).catch(() => {});
+      await require('fs/promises').unlink(finalOutputPath).catch(() => {});
       
     } catch (error) {
       this.logger.error(`❌ Reframe processing failed for project ${projectId}:`, error);
