@@ -717,7 +717,6 @@ export class TranscriptionService {
       
       // Upload captioned video
       const captionedBuffer = await require('fs/promises').readFile(outputPath);
-      const captionedKey = `projects/${projectId}/captioned.mp4`;
       await this.storage.uploadFile(captionedKey, captionedBuffer, 'video/mp4');
       
       this.logger.log(`✅ Uploaded captioned video: ${captionedKey}`);
