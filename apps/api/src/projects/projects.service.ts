@@ -1008,10 +1008,17 @@ export class ProjectsService {
       throw new Error('Chunk validation failed');
     }
     
+    // Filter out empty chunks
+    const validChunks = chunks.filter(chunk => chunk.words.length > 0);
+    if (validChunks.length === 0) {
+      throw new Error('No valid chunks with words found');
+    }
+    this.logger.log(`📊 Processing ${validChunks.length} valid chunks (${chunks.length - validChunks.length} empty chunks skipped)`);
+    
     const chunkVideoPaths: string[] = [];
     
     // Process each chunk
-    for (const chunk of chunks) {
+    for (const chunk of validChunks) {
       this.logger.log(`🎨 Processing chunk ${chunk.index + 1}/${chunks.length}: ${chunk.startTime.toFixed(1)}s - ${chunk.endTime.toFixed(1)}s`);
       
       // Extract chunk from original video

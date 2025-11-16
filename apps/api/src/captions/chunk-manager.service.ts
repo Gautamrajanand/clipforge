@@ -193,10 +193,10 @@ export class ChunkManagerService {
       }
     }
 
-    // Check for empty chunks
+    // Check for empty chunks (warning only, not an error)
     for (const chunk of chunks) {
       if (chunk.words.length === 0) {
-        errors.push(`Chunk ${chunk.index} has no words`);
+        this.logger.warn(`⚠️  Chunk ${chunk.index} has no words (will be skipped)`);
       }
     }
 
