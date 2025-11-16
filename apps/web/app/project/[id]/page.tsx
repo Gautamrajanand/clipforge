@@ -428,7 +428,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isExporting ? 'Downloading...' : project?.status !== 'READY' ? 'Processing...' : 'Download with Captions'}
+                  {isExporting ? 'Exporting...' : project?.status !== 'READY' ? 'Processing...' : 'Export'}
                 </button>
               ) : projectMode === 'reframe' ? (
                 <button
