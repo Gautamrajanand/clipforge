@@ -543,6 +543,9 @@ export class ProjectsService {
       'Content-Type': metadata.ContentType || 'video/mp4',
       'Content-Length': metadata.ContentLength,
       'Accept-Ranges': 'bytes',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
     });
 
     return new Promise((resolve, reject) => {
