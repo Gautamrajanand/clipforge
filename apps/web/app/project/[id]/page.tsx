@@ -415,10 +415,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       a.download = `${project.title}-with-captions.mp4`;
                       document.body.appendChild(a);
                       a.click();
-                      document.body.removeChild(a);
-                      URL.revokeObjectURL(url);
                       
-                      console.log('✅ Download complete');
+                      // Clean up after a delay to ensure download starts
+                      setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                      }, 100);
+                      
+                      console.log('✅ Download triggered');
                     } catch (error) {
                       console.error('❌ Download failed:', error);
                       alert('Failed to download video with captions. Please try again.');
