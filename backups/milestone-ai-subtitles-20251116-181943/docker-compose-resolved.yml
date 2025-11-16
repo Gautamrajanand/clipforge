@@ -1,0 +1,239 @@
+name: windsurf-project
+services:
+  api:
+    build:
+      context: /Users/gautamrajanand/CascadeProjects/windsurf-project
+      dockerfile: Dockerfile.api
+    command:
+      - npm
+      - run
+      - start:dev
+    container_name: clipforge-api
+    depends_on:
+      minio:
+        condition: service_healthy
+        required: true
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: "3000"
+      APP_URL: http://localhost:3001
+      ASSEMBLYAI_API_KEY: 16e3cbc95572499088bcb6086efd08be
+      DATABASE_URL: postgresql://clipforge:clipforge@postgres:5432/clipforge_dev
+      FF_ASPECT_RATIO: "true"
+      FF_CAPTION_STYLES: "false"
+      JWT_SECRET: dev-secret-key-change-in-prod
+      NODE_ENV: development
+      OPENAI_API_KEY: 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
+      REDIS_URL: redis://redis:6379
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_BUCKET: clipforge
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_SECRET_ACCESS_KEY: minioadmin
+      SMTP_FROM: ClipForge <noreply@clipforge.ai>
+      SMTP_HOST: ""
+      SMTP_PASS: ""
+      SMTP_PORT: "587"
+      SMTP_USER: ""
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3000"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /Users/gautamrajanand/CascadeProjects/windsurf-project/apps/api
+        target: /app
+        bind:
+          create_host_path: true
+      - type: volume
+        target: /app/node_modules
+        volume: {}
+  minio:
+    command:
+      - server
+      - /data
+      - --console-address
+      - :9001
+    container_name: clipforge-minio
+    environment:
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: minioadmin
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:9000/minio/health/live
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: minio/minio:latest
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 9000
+        published: "9000"
+        protocol: tcp
+      - mode: ingress
+        target: 9001
+        published: "9001"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: minio_data
+        target: /data
+        volume: {}
+  ml-workers:
+    build:
+      context: /Users/gautamrajanand/CascadeProjects/windsurf-project
+      dockerfile: Dockerfile.workers
+    command:
+      - python
+      - -m
+      - uvicorn
+      - main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+    container_name: clipforge-ml-workers
+    depends_on:
+      minio:
+        condition: service_healthy
+        required: true
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      ASR_PROVIDER: whisper
+      DATABASE_URL: postgresql://clipforge:clipforge@postgres:5432/clipforge_dev
+      ML_WORKER_HOST: 0.0.0.0
+      ML_WORKER_PORT: "8000"
+      OPENAI_API_KEY: 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
+      REDIS_URL: redis://redis:6379
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_BUCKET: clipforge
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_SECRET_ACCESS_KEY: minioadmin
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "8000"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /Users/gautamrajanand/CascadeProjects/windsurf-project/workers
+        target: /app
+        bind:
+          create_host_path: true
+      - type: volume
+        target: /app/.venv
+        volume: {}
+  postgres:
+    container_name: clipforge-postgres
+    environment:
+      POSTGRES_DB: clipforge_dev
+      POSTGRES_PASSWORD: clipforge
+      POSTGRES_USER: clipforge
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U clipforge
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: postgres:15-alpine
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "5432"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  redis:
+    container_name: clipforge-redis
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: redis:7-alpine
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 6379
+        published: "6379"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: redis_data
+        target: /data
+        volume: {}
+  web:
+    build:
+      context: /Users/gautamrajanand/CascadeProjects/windsurf-project/apps/web
+      dockerfile: Dockerfile
+    command:
+      - npm
+      - run
+      - dev
+    container_name: clipforge-web
+    depends_on:
+      api:
+        condition: service_started
+        required: true
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3001"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /Users/gautamrajanand/CascadeProjects/windsurf-project/apps/web
+        target: /app
+        bind:
+          create_host_path: true
+      - type: volume
+        target: /app/node_modules
+        volume: {}
+networks:
+  default:
+    name: clipforge-network
+volumes:
+  minio_data:
+    name: windsurf-project_minio_data
+  postgres_data:
+    name: windsurf-project_postgres_data
+  redis_data:
+    name: windsurf-project_redis_data

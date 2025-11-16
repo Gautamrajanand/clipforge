@@ -1,6 +1,6 @@
 # 🗺️ ClipForge Product Roadmap
-**Last Updated:** November 9, 2025  
-**Version:** 2.1
+**Last Updated:** November 16, 2025  
+**Version:** 2.2
 
 ---
 
@@ -240,11 +240,19 @@ Every feature must:
 
 ---
 
-## ✅ PHASE 1.5: Video Enhancement (COMPLETED - Nov 9, 2025)
+## ✅ PHASE 1.5: Video Enhancement (COMPLETED - Nov 16, 2025)
 
 ### Goal: **Professional Video Output with Aspect Ratios & Captions**
 
 ### Status: **Production-Ready** 🚀
+
+### Recent Updates (Nov 16, 2025):
+- ✅ **AI Subtitles** - Fully working for both Upload and Import from URL
+- ✅ **Job Queue Architecture** - Upload method now uses reliable job queue
+- ✅ **Export Flow** - Matches AI Clips (preview then download)
+- ✅ **Preview Captions** - Overlay captions in preview (not burned-in)
+- ✅ **Export Captions** - Burned-in captions in exported video
+- ✅ **All Features Verified** - AI Clips, AI Subtitles, AI Reframe all working
 
 ### Priority 1: Aspect Ratio Support 📐 ✅
 **Timeline:** Completed Nov 9, 2025  

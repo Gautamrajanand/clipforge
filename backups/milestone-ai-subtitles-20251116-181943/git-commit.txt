@@ -1,0 +1,24 @@
+dd37a2fec61512690b55d636f28beeffcf105918
+ClipForge Team
+dev@clipforge.dev
+Sun Nov 16 17:55:03 2025 +0530
+fix: Restore original AI Clips behavior - CRITICAL
+REVERTED BREAKING CHANGE:
+- Restored triggerDetection() call in transcribeProject()
+- This is how AI Clips and AI Reframe were working before
+- The removal of this call broke AI Clips detection
+
+WHAT WAS BROKEN:
+- AI Clips detection was not being triggered after transcription
+- Projects stuck in INGESTING status
+- Modal showing 100% but not completing
+
+WHAT'S FIXED:
+- AI Clips detection now triggers automatically after transcription
+- AI Reframe works as before
+- AI Subtitles still works (uses job queue from TranscriptionProcessor)
+
+IMPORTANT:
+- AI Clips/Reframe use direct triggerDetection() call (original behavior)
+- AI Subtitles use job queue via TranscriptionProcessor (new behavior)
+- Both flows work correctly now
