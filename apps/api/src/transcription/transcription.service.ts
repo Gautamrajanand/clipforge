@@ -125,8 +125,17 @@ export class TranscriptionService {
       console.log(`✅ Transcription completed for project: ${project.title}`);
       console.log(`   Words: ${words.length}, Duration: ${transcript.audio_duration}s`);
 
-      // Note: Clip detection / subtitle export is triggered by TranscriptionProcessor
-      // This method is only called directly by the processor, not by uploadVideo anymore
+      // Auto-trigger clip detection after transcription
+      const savedTranscript = await this.prisma.transcript.findUnique({
+        where: { projectId },
+      });
+      
+      if (savedTranscript) {
+        console.log(`🎬 Auto-triggering clip detection for project: ${projectId}`);
+        this.triggerDetection(projectId, savedTranscript.id).catch((error) => {
+          console.error('Failed to trigger detection:', error);
+        });
+      }
 
     } catch (error) {
       console.error('Error transcribing project:', error);
