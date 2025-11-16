@@ -352,53 +352,73 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               {projectMode === 'subtitles' ? (
                 <button
                   onClick={async () => {
-                    // Generate video with burned-in captions (like AI Clips export)
+                    // Download pre-generated captioned video
                     try {
                       setIsExporting(true);
-                      console.log('🎬 Starting AI Subtitles export...');
+                      console.log('🎬 Downloading captioned video...');
+                      
+                      // Check if captioned video is ready
+                      const checkResponse = await fetch(`http://localhost:3000/v1/projects/${params.id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` },
+                      });
+                      
+                      if (!checkResponse.ok) {
+                        throw new Error('Failed to check project status');
+                      }
+                      
+                      const projectData = await checkResponse.json();
+                      
+                      // If still processing, show message
+                      if (projectData.status !== 'READY') {
+                        alert('Subtitles are still processing. Please wait a few more minutes and try again.');
+                        setIsExporting(false);
+                        return;
+                      }
+                      
+                      // Download the pre-generated captioned video
                       const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/download-captioned`, {
                         headers: { 'Authorization': `Bearer ${token}` },
                       });
                       
                       if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('Export failed:', response.status, errorText);
-                        throw new Error(`Export failed: ${response.status}`);
+                        console.error('Download failed:', response.status, errorText);
+                        
+                        if (response.status === 404) {
+                          alert('Captioned video is still being generated. Please wait a few more minutes.');
+                        } else {
+                          throw new Error(`Download failed: ${response.status}`);
+                        }
+                        return;
                       }
                       
-                      console.log('📥 Receiving exported video...');
+                      console.log('📥 Receiving captioned video...');
                       const blob = await response.blob();
                       console.log('✅ Blob received:', blob.size, 'bytes');
                       
-                      // Create blob URL for preview
+                      // Trigger download
                       const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${project.title}-with-captions.mp4`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
                       
-                      // Add to exported clips (matching AI Clips workflow)
-                      const exportedVideo = {
-                        id: 'subtitles-export',
-                        title: `${project.title} - With Captions`,
-                        captionStyle: project.clipSettings?.captionStyle || 'bounce',
-                        primaryColor: project.clipSettings?.primaryColor || '#FFFFFF',
-                        fontSize: project.clipSettings?.fontSize || 48,
-                        position: project.clipSettings?.captionPosition || 'bottom',
-                      };
-                      
-                      setExportedClips([exportedVideo]);
-                      setExportVideoUrls({ 'subtitles-export': url });
-                      
-                      console.log('✅ Export complete - ready for preview');
+                      console.log('✅ Download complete');
                     } catch (error) {
-                      console.error('❌ Export failed:', error);
-                      alert('Failed to export video with captions. Please try again.');
+                      console.error('❌ Download failed:', error);
+                      alert('Failed to download video with captions. Please try again.');
                     } finally {
                       setIsExporting(false);
                     }
                   }}
-                  disabled={!videoUrl || !project?.transcript || isExporting}
+                  disabled={!videoUrl || !project?.transcript || isExporting || project?.status !== 'READY'}
                   className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isExporting ? 'Exporting...' : 'Export with Captions'}
+                  {isExporting ? 'Downloading...' : project?.status !== 'READY' ? 'Processing...' : 'Download with Captions'}
                 </button>
               ) : projectMode === 'reframe' ? (
                 <button
