@@ -364,68 +364,59 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               {projectMode === 'subtitles' ? (
                 <button
                   onClick={async () => {
-                    // Download pre-generated captioned video
+                    // Export captioned video (like AI Clips flow)
                     try {
                       setIsExporting(true);
-                      console.log('🎬 Downloading captioned video...');
+                      console.log('🎬 Exporting captioned video...');
                       
                       // Check if captioned video is ready
-                      const checkResponse = await fetch(`http://localhost:3000/v1/projects/${params.id}`, {
-                        headers: { 'Authorization': `Bearer ${token}` },
-                      });
-                      
-                      if (!checkResponse.ok) {
-                        throw new Error('Failed to check project status');
-                      }
-                      
-                      const projectData = await checkResponse.json();
-                      
-                      // If still processing, show message
-                      if (projectData.status !== 'READY') {
+                      if (project?.status !== 'READY') {
                         alert('Subtitles are still processing. Please wait a few more minutes and try again.');
                         setIsExporting(false);
                         return;
                       }
                       
-                      // Download the pre-generated captioned video
+                      // Create a fake export record for the captioned video (matching AI Clips structure)
+                      const exportItem = {
+                        id: `subtitle-export-${project.id}`,
+                        projectId: project.id,
+                        title: project.title,
+                        captionStyle: project.clipSettings?.captionStyle,
+                        primaryColor: project.clipSettings?.primaryColor,
+                        secondaryColor: project.clipSettings?.secondaryColor,
+                        fontSize: project.clipSettings?.fontSize,
+                        position: project.clipSettings?.position,
+                      };
+                      
+                      // Add to exported clips
+                      setExportedClips([exportItem]);
+                      
+                      // Load the captioned video as a blob
                       const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/download-captioned`, {
                         headers: { 'Authorization': `Bearer ${token}` },
                       });
                       
                       if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('Download failed:', response.status, errorText);
-                        
                         if (response.status === 404) {
                           alert('Captioned video is still being generated. Please wait a few more minutes.');
                         } else {
-                          throw new Error(`Download failed: ${response.status}`);
+                          throw new Error(`Failed to load captioned video: ${response.status}`);
                         }
+                        setExportedClips([]);
                         return;
                       }
                       
-                      console.log('📥 Receiving captioned video...');
                       const blob = await response.blob();
-                      console.log('✅ Blob received:', blob.size, 'bytes');
-                      
-                      // Trigger download
                       const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `${project.title}-with-captions.mp4`;
-                      document.body.appendChild(a);
-                      a.click();
                       
-                      // Clean up after a delay to ensure download starts
-                      setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                      }, 100);
+                      // Store the blob URL for preview
+                      setExportVideoUrls({ [exportItem.id]: url });
                       
-                      console.log('✅ Download triggered');
+                      console.log('✅ Captioned video ready for preview');
                     } catch (error) {
-                      console.error('❌ Download failed:', error);
-                      alert('Failed to download video with captions. Please try again.');
+                      console.error('❌ Export failed:', error);
+                      alert('Failed to export video with captions. Please try again.');
+                      setExportedClips([]);
                     } finally {
                       setIsExporting(false);
                     }
