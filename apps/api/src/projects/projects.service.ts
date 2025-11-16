@@ -410,15 +410,9 @@ export class ProjectsService {
       },
     });
 
-    // Trigger transcription asynchronously (don't wait for it)
-    if (this.transcription.isAvailable()) {
-      console.log(`🎙️  Triggering transcription for project: ${projectId}`);
-      this.transcription.transcribeProject(projectId).catch((error) => {
-        console.error('Transcription failed:', error);
-      });
-    } else {
-      console.warn('⚠️  Transcription not available - skipping');
-    }
+    // ✅ SCALE-FIRST: Use job queue instead of fire-and-forget async
+    const job = await this.queues.addTranscriptionJob(projectId);
+    this.logger.log(`✅ Transcription job queued: ${job.jobId}`);
 
     return {
       message: 'Video uploaded successfully',
