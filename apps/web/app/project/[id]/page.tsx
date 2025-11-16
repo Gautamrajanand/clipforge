@@ -145,7 +145,9 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         return prev;
       });
 
-      const resp = await fetch(`http://localhost:3000/v1/projects/${params.id}/video`, {
+      // Add cache-busting parameter to force fresh fetch
+      const cacheBuster = Date.now();
+      const resp = await fetch(`http://localhost:3000/v1/projects/${params.id}/video?t=${cacheBuster}`, {
         headers: { 'Authorization': `Bearer ${authToken}` },
       });
       if (!resp.ok) {
