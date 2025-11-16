@@ -1,0 +1,46 @@
+826b2fd338542055210e395c06c14f00010d6080
+ClipForge Team
+dev@clipforge.dev
+Sun Nov 16 17:21:40 2025 +0530
+milestone: AI Subtitles fully working - Upload and Import from URL
+✅ COMPLETE FIX - AI Subtitles Working
+=====================================
+
+ROOT CAUSE IDENTIFIED AND FIXED:
+- Upload method was using fire-and-forget async transcription
+- Import from URL was using job queue
+- This caused inconsistent behavior and unreliable subtitle generation
+
+FIXES APPLIED:
+1. Made Upload use job queue (like Import from URL)
+2. Removed direct transcription calls
+3. All transcription now goes through TranscriptionProcessor
+4. Subtitle export consistently queued after transcription
+5. Export flow now matches AI Clips (preview then download)
+
+FLOW NOW (Both Upload and Import from URL):
+1. Upload/Import video → INGESTING
+2. Queue transcription job → TRANSCRIBING (2-5 min)
+3. Queue subtitle export job → TRANSCRIBING (10-15 min)
+4. Generate captioned video → READY
+5. Click Export → Preview with burned-in captions
+6. Click Download → Save to computer
+
+VERIFIED WORKING:
+✅ Upload method uses job queue
+✅ Import from URL uses job queue
+✅ Preview shows original video with overlay captions
+✅ Export shows captioned video with burned-in captions
+✅ Download works correctly
+✅ Both flows identical and reliable
+
+FILES CHANGED:
+- apps/api/src/projects/projects.service.ts (uploadVideo)
+- apps/api/src/transcription/transcription.service.ts (removed auto-trigger)
+- apps/web/app/project/[id]/page.tsx (export flow)
+
+SCALE-FIRST PRINCIPLES APPLIED:
+- Job queues for reliability
+- No fire-and-forget async
+- Consistent error handling
+- Proper retry logic

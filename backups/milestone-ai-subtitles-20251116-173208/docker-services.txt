@@ -1,0 +1,7 @@
+NAME                   IMAGE                         COMMAND                  SERVICE      CREATED        STATUS                  PORTS
+clipforge-api          windsurf-project-api          "docker-entrypoint.s…"   api          14 hours ago   Up 41 minutes           0.0.0.0:3000->3000/tcp
+clipforge-minio        minio/minio:latest            "/usr/bin/docker-ent…"   minio        8 days ago     Up 25 hours (healthy)   0.0.0.0:9000-9001->9000-9001/tcp
+clipforge-ml-workers   windsurf-project-ml-workers   "python -m uvicorn m…"   ml-workers   4 days ago     Up 25 hours             0.0.0.0:8000->8000/tcp
+clipforge-postgres     postgres:15-alpine            "docker-entrypoint.s…"   postgres     8 days ago     Up 25 hours (healthy)   0.0.0.0:5432->5432/tcp
+clipforge-redis        redis:7-alpine                "docker-entrypoint.s…"   redis        8 days ago     Up 25 hours (healthy)   0.0.0.0:6379->6379/tcp
+clipforge-web          windsurf-project-web          "docker-entrypoint.s…"   web          20 hours ago   Up 16 minutes           0.0.0.0:3001->3000/tcp
