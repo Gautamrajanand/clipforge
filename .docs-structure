@@ -1,0 +1,34 @@
+# ClipForge Documentation Structure
+
+## PRIMARY DOCS (10 - Always Refer & Iterate)
+1. MISSION_CORE_PRINCIPLES.md ✅
+2. INDUSTRY_PARITY_BENCHMARK.md ✅
+3. PRODUCT_ROADMAP.md ✅
+4. ARCHITECTURE.md ✅
+5. API_DOCUMENTATION.md ✅
+6. SCALABILITY_PLAN.md ✅
+7. PLG_STRATEGY.md ✅
+8. QA_MATRIX.md ✅
+9. DEPLOYMENT.md ✅
+10. CURRENT_STATUS.md ✅
+
+## SUPPORTING DOCS (Reference Only)
+- AI_REFRAME_SUBTITLES_PLAN.md
+- ASYNC_SUBTITLE_EXPORT.md
+- AI_SUBTITLES_ISSUES.md
+- BUG_FIXES_NOV16.md
+- SESSION_NOTES_*.md
+- ROLLBACK_INSTRUCTIONS.md
+- All other *.md files
+
+## ARCHIVED (Keep for reference)
+- *.old.md files
+- COMPLETE_PRODUCT_ROADMAP.md (merged into PRODUCT_ROADMAP.md)
+- CURRENT_STATUS_AND_FIXES.md (merged into CURRENT_STATUS.md)
+- LIVE_PRODUCT_STATUS.md (merged into CURRENT_STATUS.md)
+- SCALABILITY_AUDIT.md (merged into SCALABILITY_PLAN.md)
+- PHASE_1_DEPLOYMENT_GUIDE.md (merged into DEPLOYMENT.md)
+- API_VERIFICATION.md (merged into API_DOCUMENTATION.md)
+
+## RULE: Never create new PRIMARY docs without approval
+## RULE: Always update PRIMARY docs, create SUPPORTING docs for tactical details
