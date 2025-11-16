@@ -55,15 +55,17 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     getToken();
   }, []);
 
-  const fetchProjectData = async (authToken: string) => {
+  const fetchProjectData = async (authToken: string, silent = false) => {
     try {
       const response = await fetch(`http://localhost:3000/v1/projects/${params.id}`, {
         headers: { 'Authorization': `Bearer ${authToken}` },
       });
       if (response.ok) {
         const data = await response.json();
-        console.log('📊 Project data:', data);
-        console.log('🎬 Clip settings:', data.clipSettings);
+        if (!silent) {
+          console.log('📊 Project data:', data);
+          console.log('🎬 Clip settings:', data.clipSettings);
+        }
         
         setProject(data);
         setClips(data.moments || []);
@@ -83,6 +85,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         // Skip Smart Clips generation for subtitles/reframe modes
         if (isSubtitlesMode || isReframeMode) {
           console.log('⏭️  Skipping Smart Clips generation (subtitles/reframe mode)');
+          
+          // Poll for status updates if still processing
+          if (data.status === 'TRANSCRIBING' || data.status === 'IMPORTING' || data.status === 'INGESTING') {
+            console.log(`🔄 Project status: ${data.status} - will poll for updates`);
+            // Start polling
+            setTimeout(() => fetchProjectData(authToken, true), 5000);
+          }
+          
           return;
         }
         
