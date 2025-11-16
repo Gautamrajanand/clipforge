@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { AssemblyAI } from 'assemblyai';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -19,6 +21,7 @@ export class TranscriptionService {
     private ffmpeg: FFmpegService,
     private video: VideoService,
     private captions: CaptionsService,
+    @InjectQueue('subtitle-export') private subtitleExportQueue: Queue,
     // private email: EmailService, // TEMPORARILY DISABLED
   ) {
     // Initialize AssemblyAI if API key is provided
@@ -166,11 +169,21 @@ export class TranscriptionService {
       if (clipSettings.subtitlesMode) {
         console.log(`⏭️  Skipping clip detection for project ${projectId} (Subtitles mode)`);
         
-        // Update project status to READY since we're done
-        await this.prisma.project.update({
-          where: { id: projectId },
-          data: { status: 'READY' },
-        });
+        // Queue subtitle export job
+        console.log(`📝 Queuing subtitle export job for project ${projectId}`);
+        await this.subtitleExportQueue.add(
+          'export-subtitles',
+          { projectId, orgId: project.orgId },
+          {
+            jobId: `subtitle-export-${projectId}`,
+            priority: 2,
+            attempts: 2,
+            backoff: {
+              type: 'exponential',
+              delay: 5000,
+            },
+          },
+        );
         return;
       }
       

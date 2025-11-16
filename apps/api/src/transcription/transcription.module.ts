@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { TranscriptionService } from './transcription.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { StorageModule } from '../storage/storage.module';
@@ -12,6 +13,7 @@ import { CaptionsModule } from '../captions/captions.module';
     StorageModule,
     VideoModule,
     CaptionsModule,
+    BullModule.registerQueue({ name: 'subtitle-export' }),
     // EmailModule, // TEMPORARILY DISABLED
   ],
   providers: [TranscriptionService],
