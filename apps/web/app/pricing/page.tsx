@@ -71,19 +71,19 @@ export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="border-b border-gray-800 p-4">
+      <header className="bg-white border-b border-gray-200 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-lg">ClipForge</span>
+            <span className="font-bold text-lg text-gray-900">ClipForge</span>
           </Link>
           <Link
             href="/dashboard"
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-600 hover:text-gray-900 transition-colors"
           >
             Back to Dashboard
           </Link>
@@ -94,21 +94,21 @@ export default function PricingPage() {
       <main className="max-w-7xl mx-auto px-6 py-16">
         {/* Title */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Upgrade your plan
           </h1>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="text-xl text-gray-600 mb-8">
             Choose the perfect plan for your content creation needs
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-3 bg-gray-800 rounded-full p-1">
+          <div className="inline-flex items-center gap-3 bg-white rounded-full p-1 border border-gray-200 shadow-sm">
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-full font-medium transition-colors ${
                 billingCycle === 'monthly'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Monthly
@@ -117,12 +117,12 @@ export default function PricingPage() {
               onClick={() => setBillingCycle('yearly')}
               className={`px-6 py-2 rounded-full font-medium transition-colors ${
                 billingCycle === 'yearly'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Yearly
-              <span className="ml-2 text-xs text-primary-400">(up to 50% off)</span>
+              <span className="ml-2 text-xs text-primary-600">(up to 50% off)</span>
             </button>
           </div>
         </div>
@@ -130,24 +130,24 @@ export default function PricingPage() {
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Starter */}
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 hover:border-gray-600 transition-all">
+          <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:border-gray-300 transition-all shadow-sm">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold mb-2">{PRICING_TIERS.starter.name}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{PRICING_TIERS.starter.name}</h3>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl font-bold">
+                <span className="text-4xl font-bold text-gray-900">
                   ${billingCycle === 'yearly' ? PRICING_TIERS.starter.priceYearly : PRICING_TIERS.starter.price}
                 </span>
-                <span className="text-gray-400">USD</span>
+                <span className="text-gray-600">USD</span>
                 <span className="text-gray-500">/mo</span>
               </div>
               {billingCycle === 'yearly' && (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-600">
                   ${PRICING_TIERS.starter.priceYearly * 12} billed annually
                 </p>
               )}
             </div>
 
-            <button className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors mb-6">
+            <button className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors mb-6">
               Get Starter
             </button>
 
@@ -159,14 +159,14 @@ export default function PricingPage() {
                   ) : (
                     <X className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
                   )}
-                  <span className="text-sm text-gray-300">{feature.text}</span>
+                  <span className="text-sm text-gray-700">{feature.text}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Pro - Most Popular */}
-          <div className="bg-gray-800 rounded-2xl p-8 border-2 border-primary-500 hover:border-primary-400 transition-all relative">
+          <div className="bg-white rounded-2xl p-8 border-2 border-primary-500 hover:border-primary-400 transition-all relative shadow-lg">
             {/* Popular Badge */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <span className="px-4 py-1 bg-primary-500 text-white text-sm font-semibold rounded-full">
@@ -175,16 +175,16 @@ export default function PricingPage() {
             </div>
 
             <div className="mb-6">
-              <h3 className="text-2xl font-bold mb-2">{PRICING_TIERS.pro.name}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{PRICING_TIERS.pro.name}</h3>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl font-bold">
+                <span className="text-4xl font-bold text-gray-900">
                   ${billingCycle === 'yearly' ? '9.5' : PRICING_TIERS.pro.price}
                 </span>
-                <span className="text-gray-400">USD</span>
+                <span className="text-gray-600">USD</span>
                 <span className="text-gray-500">/mo</span>
               </div>
               {billingCycle === 'yearly' && (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-600">
                   ${PRICING_TIERS.pro.priceYearly} billed annually
                 </p>
               )}
@@ -203,25 +203,25 @@ export default function PricingPage() {
                   ) : (
                     <X className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
                   )}
-                  <span className="text-sm text-gray-300">{feature.text}</span>
+                  <span className="text-sm text-gray-700">{feature.text}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Business */}
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 hover:border-gray-600 transition-all">
+          <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:border-gray-300 transition-all shadow-sm">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold mb-2">{PRICING_TIERS.business.name}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{PRICING_TIERS.business.name}</h3>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl font-bold">Let's talk</span>
+                <span className="text-4xl font-bold text-gray-900">Let's talk</span>
               </div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600">
                 Fit for business, dressed in a tux
               </p>
             </div>
 
-            <button className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors mb-6">
+            <button className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors mb-6">
               Contact us
             </button>
 
@@ -233,7 +233,7 @@ export default function PricingPage() {
                   ) : (
                     <X className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
                   )}
-                  <span className="text-sm text-gray-300">{feature.text}</span>
+                  <span className="text-sm text-gray-700">{feature.text}</span>
                 </div>
               ))}
             </div>
@@ -241,12 +241,12 @@ export default function PricingPage() {
         </div>
 
         {/* Free Plan Info */}
-        <div className="mt-16 max-w-3xl mx-auto bg-gray-800 rounded-xl p-8 border border-gray-700">
-          <h3 className="text-xl font-bold mb-4">Currently on Free Plan</h3>
+        <div className="mt-16 max-w-3xl mx-auto bg-white rounded-xl p-8 border border-gray-200 shadow-sm">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Currently on Free Plan</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-semibold mb-3 text-gray-300">What you get:</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <h4 className="font-semibold text-gray-900 mb-3">What you get:</h4>
+              <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-primary-500 flex-shrink-0 mt-0.5" />
                   60 processing credits per month
@@ -266,8 +266,8 @@ export default function PricingPage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-3 text-gray-300">Limitations:</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <h4 className="font-semibold text-gray-900 mb-3">Limitations:</h4>
+              <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
                   Has watermark
@@ -291,9 +291,9 @@ export default function PricingPage() {
 
         {/* FAQ or Additional Info */}
         <div className="mt-12 text-center">
-          <p className="text-gray-400">
+          <p className="text-gray-600">
             Questions about pricing?{' '}
-            <Link href="/help" className="text-primary-500 hover:text-primary-400">
+            <Link href="/help" className="text-primary-600 hover:text-primary-700 font-medium">
               Contact our support team
             </Link>
           </p>
