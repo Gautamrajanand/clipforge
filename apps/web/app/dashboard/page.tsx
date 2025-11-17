@@ -607,7 +607,7 @@ export default function Dashboard() {
                           onClick={() => setCurrentPage(page)}
                           className={`w-10 h-10 rounded-lg transition-colors ${
                             currentPage === page
-                              ? 'bg-gray-900 text-white'
+                              ? 'bg-primary-500 text-white'
                               : 'text-gray-700 hover:bg-gray-100'
                           }`}
                         >
@@ -647,7 +647,7 @@ export default function Dashboard() {
               </p>
               <button
                 onClick={handleOpenUploadModal}
-                className="bg-gray-900 hover:bg-gray-800 text-white font-medium px-6 py-3 rounded-lg inline-flex items-center gap-2 transition-colors"
+                className="bg-primary-500 hover:bg-primary-600 text-white font-medium px-6 py-3 rounded-lg inline-flex items-center gap-2 transition-colors"
               >
                 + Create Project
               </button>
