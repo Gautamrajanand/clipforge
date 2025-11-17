@@ -1,5 +1,10 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/brand-template/page": "app/brand-template/page.js",
   "/project/[id]/page": "app/project/[id]/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/asset-library/page": "app/asset-library/page.js",
+  "/social/page": "app/social/page.js",
+  "/analytics/page": "app/analytics/page.js",
+  "/calendar/page": "app/calendar/page.js"
 }
