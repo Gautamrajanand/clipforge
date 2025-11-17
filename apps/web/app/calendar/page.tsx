@@ -95,18 +95,18 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <header className="border-b border-gray-800 p-4">
+      <header className="border-b border-gray-200 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+              <Sparkles className="w-5 h-5 text-gray-900" />
             </div>
             <span className="font-bold text-lg">ClipForge</span>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-gray-400 text-sm">GMT+05</span>
+            <span className="text-gray-600 text-sm">GMT+05</span>
           </div>
         </div>
       </header>
@@ -123,7 +123,7 @@ export default function CalendarPage() {
             >
               Schedule post
             </button>
-            <button className="px-4 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+            <button className="px-4 py-2 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2">
               <Upload className="w-4 h-4" />
               Upload local video
             </button>
@@ -135,7 +135,7 @@ export default function CalendarPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={previousMonth}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-white rounded-lg transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -144,7 +144,7 @@ export default function CalendarPage() {
             </h2>
             <button
               onClick={nextMonth}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-white rounded-lg transition-colors"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -152,13 +152,13 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar Grid */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {/* Day Headers */}
-          <div className="grid grid-cols-7 border-b border-gray-700">
+          <div className="grid grid-cols-7 border-b border-gray-200">
             {dayNames.map((day) => (
               <div
                 key={day}
-                className="p-4 text-center text-sm font-semibold text-gray-400 border-r border-gray-700 last:border-r-0"
+                className="p-4 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0"
               >
                 {day}
               </div>
@@ -174,8 +174,8 @@ export default function CalendarPage() {
               return (
                 <div
                   key={index}
-                  className={`min-h-[100px] p-3 border-r border-b border-gray-700 last:border-r-0 ${
-                    !day.isCurrentMonth ? 'bg-gray-900/50' : ''
+                  className={`min-h-[100px] p-3 border-r border-b border-gray-200 last:border-r-0 ${
+                    !day.isCurrentMonth ? 'bg-gray-50/50' : ''
                   } ${isToday ? 'bg-primary-500/10' : ''}`}
                 >
                   <div
@@ -184,7 +184,7 @@ export default function CalendarPage() {
                         ? 'text-gray-600'
                         : isToday
                         ? 'text-primary-400'
-                        : 'text-gray-300'
+                        : 'text-gray-700'
                     }`}
                   >
                     {day.date}

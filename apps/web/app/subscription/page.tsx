@@ -41,19 +41,19 @@ export default function SubscriptionPage() {
   const features = planFeatures[user?.planType || 'FREE'];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <header className="border-b border-gray-800 p-4">
+      <header className="border-b border-gray-200 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+              <Sparkles className="w-5 h-5 text-gray-900" />
             </div>
             <span className="font-bold text-lg">ClipForge</span>
           </Link>
           <Link
             href="/dashboard"
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-600 hover:text-gray-900 transition-colors"
           >
             Back to Dashboard
           </Link>
@@ -65,7 +65,7 @@ export default function SubscriptionPage() {
         <h1 className="text-3xl font-bold mb-8">Subscription</h1>
 
         {/* Current Plan Card */}
-        <div className="bg-gray-800 rounded-xl p-8 border border-gray-700 mb-8">
+        <div className="bg-white rounded-xl p-8 border border-gray-200 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold mb-1">
@@ -78,7 +78,7 @@ export default function SubscriptionPage() {
             {user?.planType === 'FREE' && (
               <Link
                 href="/pricing"
-                className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors"
+                className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-gray-900 font-semibold rounded-lg transition-colors"
               >
                 Upgrade
               </Link>
@@ -87,26 +87,26 @@ export default function SubscriptionPage() {
 
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div>
-              <div className="text-sm text-gray-400 mb-1">Email account</div>
-              <div className="text-white font-medium">{user?.email || 'user@example.com'}</div>
+              <div className="text-sm text-gray-600 mb-1">Email account</div>
+              <div className="text-gray-900 font-medium">{user?.email || 'user@example.com'}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-400 mb-1">Current balance</div>
+              <div className="text-sm text-gray-600 mb-1">Current balance</div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-500" />
-                <span className="text-white font-bold">{user?.creditBalance || 0}</span>
+                <span className="text-gray-900 font-bold">{user?.creditBalance || 0}</span>
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-400 mb-1">Next cycle credits</div>
+              <div className="text-sm text-gray-600 mb-1">Next cycle credits</div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-500" />
-                <span className="text-white font-bold">{user?.creditsPerMonth || 60}</span>
+                <span className="text-gray-900 font-bold">{user?.creditsPerMonth || 60}</span>
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-400 mb-1">Resets on</div>
-              <div className="text-white font-medium">
+              <div className="text-sm text-gray-600 mb-1">Resets on</div>
+              <div className="text-gray-900 font-medium">
                 {new Date(user?.nextCreditReset || Date.now()).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -116,20 +116,20 @@ export default function SubscriptionPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 pt-6 border-t border-gray-700">
+          <div className="grid md:grid-cols-3 gap-4 pt-6 border-t border-gray-200">
             <div>
-              <div className="text-sm text-gray-400 mb-1">Packs</div>
-              <div className="text-white font-medium">1</div>
+              <div className="text-sm text-gray-600 mb-1">Packs</div>
+              <div className="text-gray-900 font-medium">1</div>
             </div>
             <div>
-              <div className="text-sm text-gray-400 mb-1">Seats</div>
-              <div className="text-white font-medium">
+              <div className="text-sm text-gray-600 mb-1">Seats</div>
+              <div className="text-gray-900 font-medium">
                 {user?.planType === 'FREE' ? '1/1' : user?.planType === 'PRO' ? '1/2' : '1/1'}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-400 mb-1">Brand Templates</div>
-              <div className="text-white font-medium">
+              <div className="text-sm text-gray-600 mb-1">Brand Templates</div>
+              <div className="text-gray-900 font-medium">
                 {user?.planType === 'FREE' ? '1/1' : user?.planType === 'PRO' ? '1/2' : '1/1'}
               </div>
             </div>
@@ -137,7 +137,7 @@ export default function SubscriptionPage() {
         </div>
 
         {/* Features Section */}
-        <div className="bg-gray-800 rounded-xl p-8 border border-gray-700 mb-8">
+        <div className="bg-white rounded-xl p-8 border border-gray-200 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold">Features</h3>
             <Link
@@ -157,7 +157,7 @@ export default function SubscriptionPage() {
                 ) : (
                   <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 )}
-                <span className={`text-sm ${feature.included ? 'text-gray-300' : 'text-gray-500'}`}>
+                <span className={`text-sm ${feature.included ? 'text-gray-700' : 'text-gray-500'}`}>
                   {feature.text}
                 </span>
               </div>
@@ -166,23 +166,23 @@ export default function SubscriptionPage() {
         </div>
 
         {/* Billing & Payment Section */}
-        <div className="bg-gray-800 rounded-xl p-8 border border-gray-700">
+        <div className="bg-white rounded-xl p-8 border border-gray-200">
           <h3 className="text-xl font-bold mb-6">Billing & Payment</h3>
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Next payment</span>
-              <span className="text-white font-medium">
+              <span className="text-gray-600">Next payment</span>
+              <span className="text-gray-900 font-medium">
                 {user?.planType === 'FREE' ? '$0 / mo' : user?.planType === 'STARTER' ? '$9 / mo' : '$9.5 / mo'}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Renewal period</span>
-              <span className="text-white font-medium">Monthly</span>
+              <span className="text-gray-600">Renewal period</span>
+              <span className="text-gray-900 font-medium">Monthly</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Renew date</span>
-              <span className="text-white font-medium">
+              <span className="text-gray-600">Renew date</span>
+              <span className="text-gray-900 font-medium">
                 {new Date(user?.nextCreditReset || Date.now()).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -193,7 +193,7 @@ export default function SubscriptionPage() {
           </div>
 
           {user?.planType !== 'FREE' && (
-            <div className="mt-6 pt-6 border-t border-gray-700">
+            <div className="mt-6 pt-6 border-t border-gray-200">
               <button className="text-red-500 hover:text-red-400 text-sm font-medium">
                 Cancel subscription
               </button>
@@ -205,12 +205,12 @@ export default function SubscriptionPage() {
         {user?.planType === 'FREE' && (
           <div className="mt-8 bg-gradient-to-r from-primary-500/20 to-purple-500/20 rounded-xl p-8 border border-primary-500/30">
             <h3 className="text-2xl font-bold mb-2">Ready to unlock more?</h3>
-            <p className="text-gray-300 mb-6">
+            <p className="text-gray-700 mb-6">
               Upgrade to Pro and get 300 credits per month, no watermarks, team collaboration, and much more.
             </p>
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-gray-900 font-semibold rounded-lg transition-colors"
             >
               View Plans
               <ExternalLink className="w-4 h-4" />
