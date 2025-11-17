@@ -167,7 +167,7 @@ export default function Sidebar() {
           <span className="text-sm text-gray-500">/ {user?.creditsPerMonth || 60}</span>
         </div>
         <div className="text-xs text-gray-500 mb-3">
-          Resets {new Date(user?.nextCreditReset || Date.now()).toLocaleDateString()}
+          Resets {user?.nextCreditReset ? new Date(user.nextCreditReset).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'N/A'}
         </div>
         <Link
           href="/pricing"
