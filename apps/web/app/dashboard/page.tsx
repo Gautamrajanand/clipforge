@@ -82,10 +82,16 @@ export default function Dashboard() {
       });
       if (response.ok) {
         const data = await response.json();
-        setProjects(data.data || data || []);
+        console.log('📦 Projects fetched:', data);
+        console.log('📊 Projects count:', Array.isArray(data) ? data.length : (data.data?.length || 0));
+        const projectsArray = Array.isArray(data) ? data : (data.data || []);
+        setProjects(projectsArray);
+        console.log('✅ Projects set to state:', projectsArray.length);
+      } else {
+        console.error('❌ Failed to fetch projects:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Failed to fetch projects:', error);
+      console.error('❌ Failed to fetch projects:', error);
     }
   };
 
