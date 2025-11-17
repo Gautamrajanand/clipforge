@@ -36,6 +36,7 @@ export default function Dashboard() {
   useEffect(() => {
     const getToken = async () => {
       try {
+        console.log('🔐 Attempting login...');
         const loginResponse = await fetch('http://localhost:3000/v1/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -47,10 +48,12 @@ export default function Dashboard() {
 
         if (loginResponse.ok) {
           const data = await loginResponse.json();
+          console.log('✅ Login successful!');
           setToken(data.access_token);
           setIsAuthReady(true);
           fetchProjects(data.access_token);
         } else {
+          console.log('⚠️ Login failed, trying registration...');
           const registerResponse = await fetch('http://localhost:3000/v1/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -63,13 +66,16 @@ export default function Dashboard() {
           
           if (registerResponse.ok) {
             const data = await registerResponse.json();
+            console.log('✅ Registration successful!');
             setToken(data.access_token);
             setIsAuthReady(true);
             fetchProjects(data.access_token);
+          } else {
+            console.error('❌ Both login and registration failed');
           }
         }
       } catch (error) {
-        console.error('Auth error:', error);
+        console.error('❌ Auth error:', error);
       }
     };
     getToken();
