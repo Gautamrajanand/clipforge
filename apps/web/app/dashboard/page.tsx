@@ -450,7 +450,7 @@ export default function Dashboard() {
       <Sidebar />
       <TopBar />
       
-      <main className="ml-48 pt-16">
+      <main className="ml-64 pt-16">
         <div className="p-8">
           {/* Let's start with section */}
           <section className="mb-12">
