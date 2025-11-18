@@ -17,6 +17,10 @@ fi
 
 echo "✅ Port 3000 is free"
 
+# Export ML_WORKER_URL explicitly
+export ML_WORKER_URL=http://localhost:8000
+echo "✅ ML_WORKER_URL set to: $ML_WORKER_URL"
+
 # Start API
 echo "🚀 Starting API..."
 cd apps/api && npm run start:dev
