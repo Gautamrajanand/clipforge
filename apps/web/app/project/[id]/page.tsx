@@ -76,11 +76,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         
         console.log('🎯 Project mode:', { isSubtitlesMode, isReframeMode });
         
-        // Load video (API will automatically serve reframed video if available)
-        if (data?.sourceUrl) {
-          await loadVideoBlob(authToken);
-        }
-        
         // Skip Smart Clips generation for subtitles/reframe modes
         if (isSubtitlesMode || isReframeMode) {
           console.log('⏭️  Skipping Smart Clips generation (subtitles/reframe mode)');
@@ -99,11 +94,23 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               console.log('📐 Reframe project but no reframed asset yet - polling...');
               setTimeout(() => fetchProjectData(authToken, true), 2000);
             } else {
-              console.log('✅ Reframed asset found - video should be reframed version');
+              console.log('✅ Reframed asset found - loading reframed video');
+              // Load the reframed video
+              if (data?.sourceUrl) {
+                await loadVideoBlob(authToken);
+              }
             }
+          } else if (data?.sourceUrl) {
+            // For subtitles mode or other cases, load video normally
+            await loadVideoBlob(authToken);
           }
           
           return;
+        }
+        
+        // Load video for normal AI Clips mode
+        if (data?.sourceUrl) {
+          await loadVideoBlob(authToken);
         }
         
         // Auto-generate Smart Clips if none exist and transcript is available
