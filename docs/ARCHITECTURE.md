@@ -1,7 +1,7 @@
 # ClipForge Architecture Documentation
 
-**Last Updated:** November 19, 2025  
-**Version:** 2.0 (Docker-First Architecture)
+**Last Updated:** November 19, 2025 (Evening)  
+**Version:** 2.1 (Docker-First Architecture + UI Overhaul)
 
 ---
 
@@ -618,12 +618,20 @@ api:
 
 ## Changelog
 
-### Version 2.0 (Nov 19, 2025)
+### Version 2.1 (Nov 19, 2025 - Evening)
+- **UI Overhaul**: Light theme, Opus Clip-inspired design
+- **New Pages**: Pricing, Subscription, Calendar, Analytics, and more
+- **Sidebar Redesign**: w-64 with Pro badges
+- **Layout Fixes**: Proper spacing across all pages
+- **UI Consistency**: All pages aligned with new design system
+
+### Version 2.0 (Nov 19, 2025 - Morning)
 - **Docker-First Architecture**: All services containerized
 - **Environment Validation**: Startup checks for required variables
 - **Feature Flags**: Proper configuration management
 - **Health Checks**: Comprehensive monitoring
 - **Documentation**: Complete architecture documentation
+- **Stability Fixes**: ML_WORKER_URL, FF_ASPECT_RATIO configured
 
 ### Version 1.0 (Nov 16, 2025)
 - Initial stable release
