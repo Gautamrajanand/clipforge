@@ -7,7 +7,7 @@ export default function TopBar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
-    <div className="h-16 bg-white border-b border-gray-200 fixed top-0 right-0 left-48 z-10 flex items-center justify-between px-8">
+    <div className="h-16 bg-white border-b border-gray-200 fixed top-0 right-0 left-64 z-10 flex items-center justify-between px-8">
       {/* Workspace Selector */}
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">

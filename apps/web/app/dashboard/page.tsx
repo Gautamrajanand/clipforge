@@ -36,6 +36,7 @@ export default function Dashboard() {
   useEffect(() => {
     const getToken = async () => {
       try {
+        console.log('🔐 Attempting login...');
         const loginResponse = await fetch('http://localhost:3000/v1/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -47,10 +48,12 @@ export default function Dashboard() {
 
         if (loginResponse.ok) {
           const data = await loginResponse.json();
+          console.log('✅ Login successful!');
           setToken(data.access_token);
           setIsAuthReady(true);
           fetchProjects(data.access_token);
         } else {
+          console.log('⚠️ Login failed, trying registration...');
           const registerResponse = await fetch('http://localhost:3000/v1/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -63,13 +66,16 @@ export default function Dashboard() {
           
           if (registerResponse.ok) {
             const data = await registerResponse.json();
+            console.log('✅ Registration successful!');
             setToken(data.access_token);
             setIsAuthReady(true);
             fetchProjects(data.access_token);
+          } else {
+            console.error('❌ Both login and registration failed');
           }
         }
       } catch (error) {
-        console.error('Auth error:', error);
+        console.error('❌ Auth error:', error);
       }
     };
     getToken();
@@ -82,10 +88,16 @@ export default function Dashboard() {
       });
       if (response.ok) {
         const data = await response.json();
-        setProjects(data.data || data || []);
+        console.log('📦 Projects fetched:', data);
+        console.log('📊 Projects count:', Array.isArray(data) ? data.length : (data.data?.length || 0));
+        const projectsArray = Array.isArray(data) ? data : (data.data || []);
+        setProjects(projectsArray);
+        console.log('✅ Projects set to state:', projectsArray.length);
+      } else {
+        console.error('❌ Failed to fetch projects:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Failed to fetch projects:', error);
+      console.error('❌ Failed to fetch projects:', error);
     }
   };
 
@@ -450,7 +462,7 @@ export default function Dashboard() {
       <Sidebar />
       <TopBar />
       
-      <main className="ml-48 pt-16">
+      <main className="ml-64 pt-16">
         <div className="p-8">
           {/* Let's start with section */}
           <section className="mb-12">
@@ -607,7 +619,7 @@ export default function Dashboard() {
                           onClick={() => setCurrentPage(page)}
                           className={`w-10 h-10 rounded-lg transition-colors ${
                             currentPage === page
-                              ? 'bg-gray-900 text-white'
+                              ? 'bg-primary-500 text-white'
                               : 'text-gray-700 hover:bg-gray-100'
                           }`}
                         >
@@ -647,7 +659,7 @@ export default function Dashboard() {
               </p>
               <button
                 onClick={handleOpenUploadModal}
-                className="bg-gray-900 hover:bg-gray-800 text-white font-medium px-6 py-3 rounded-lg inline-flex items-center gap-2 transition-colors"
+                className="bg-primary-500 hover:bg-primary-600 text-white font-medium px-6 py-3 rounded-lg inline-flex items-center gap-2 transition-colors"
               >
                 + Create Project
               </button>
