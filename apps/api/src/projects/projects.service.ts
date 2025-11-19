@@ -525,6 +525,12 @@ export class ProjectsService {
     const isReframeMode = (project.clipSettings as any)?.reframeMode;
     const reframedAsset = project.assets?.find((a: any) => a.url?.includes('reframed.mp4'));
     
+    // Debug logging
+    this.logger.log(`🎬 streamVideo debug: projectId=${projectId}, isReframeMode=${isReframeMode}, assets count=${project.assets?.length || 0}`);
+    if (project.assets) {
+      project.assets.forEach((a: any) => this.logger.log(`  Asset: ${a.kind} - ${a.url}`));
+    }
+    
     // Use reframed video if available, otherwise use source
     const videoUrl = (isReframeMode && reframedAsset) ? reframedAsset.url : project.sourceUrl;
     
