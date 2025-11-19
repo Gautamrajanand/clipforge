@@ -358,7 +358,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       <Sidebar />
       <TopBar />
       
-      <main className="ml-48 pt-16">
+      <main className="ml-64 pt-16">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center justify-between">
