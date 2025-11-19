@@ -87,10 +87,21 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           console.log('⏭️  Skipping Smart Clips generation (subtitles/reframe mode)');
           
           // Poll for status updates if still processing
-          if (data.status === 'TRANSCRIBING' || data.status === 'IMPORTING' || data.status === 'INGESTING') {
+          if (data.status === 'TRANSCRIBING' || data.status === 'IMPORTING' || data.status === 'INGESTING' || data.status === 'DETECTING') {
             console.log(`🔄 Project status: ${data.status} - will poll for updates`);
             // Start polling
             setTimeout(() => fetchProjectData(authToken, true), 5000);
+          } else if (isReframeMode && data.status === 'READY') {
+            // For reframe projects, check if reframed asset exists
+            // If not, poll until it's ready (reframe processing happens async after transcription)
+            const hasReframedAsset = data.assets?.some((a: any) => a.url?.includes('reframed.mp4'));
+            
+            if (!hasReframedAsset) {
+              console.log('📐 Reframe project but no reframed asset yet - polling...');
+              setTimeout(() => fetchProjectData(authToken, true), 2000);
+            } else {
+              console.log('✅ Reframed asset found - video should be reframed version');
+            }
           }
           
           return;
