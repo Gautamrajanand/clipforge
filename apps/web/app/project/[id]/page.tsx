@@ -157,13 +157,18 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const loadVideoBlob = async (authToken: string) => {
     try {
+      // Clear old video URL and revoke blob
       setVideoUrl(prev => {
-        if (prev) URL.revokeObjectURL(prev);
-        return prev;
+        if (prev) {
+          URL.revokeObjectURL(prev);
+          console.log('🗑️  Revoked old video blob URL');
+        }
+        return null; // Clear the URL immediately
       });
 
       // Add cache-busting parameter to force fresh fetch
       const cacheBuster = Date.now();
+      console.log(`📥 Fetching video with cache buster: ${cacheBuster}`);
       const resp = await fetch(`http://localhost:3000/v1/projects/${params.id}/video?t=${cacheBuster}`, {
         headers: { 'Authorization': `Bearer ${authToken}` },
       });
@@ -172,6 +177,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         return;
       }
       const blob = await resp.blob();
+      console.log(`✅ Received video blob: ${blob.size} bytes, type: ${blob.type}`);
       const url = URL.createObjectURL(blob);
       setVideoUrl(url);
     } catch (e) {
