@@ -7,7 +7,6 @@ import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import ClipsGrid from '@/components/clips/ClipsGrid';
 import VideoPlayer from '@/components/video/VideoPlayer';
-import CaptionedVideoPlayer from '@/components/video/CaptionedVideoPlayer';
 import ClipSettings from '@/components/clips/ClipSettings';
 import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
 
@@ -504,31 +503,23 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   projectMode,
                   hasTranscript: !!transcript,
                   transcriptData: transcript,
-                  shouldShowCaptions: projectMode === 'subtitles' && !!transcript
+                  shouldShowCaptions: false // Never show captions in source video preview
                 });
                 
-                if (projectMode === 'subtitles' && transcript) {
-                  return (
-                    <CaptionedVideoPlayer
-                      videoUrl={videoUrl}
-                      transcript={transcript}
-                      settings={project?.clipSettings}
-                    />
-                  );
-                } else {
-                  return (
-                    <div className="aspect-video bg-black rounded-xl overflow-hidden">
-                      <video
-                        controls
-                        className="w-full h-full"
-                        src={videoUrl}
-                        preload="metadata"
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                    </div>
-                  );
-                }
+                // Always show plain video player for source video
+                // Captions are only shown in export preview
+                return (
+                  <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                    <video
+                      controls
+                      className="w-full h-full"
+                      src={videoUrl}
+                      preload="metadata"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                );
               })()}
             </div>
           )}
