@@ -38,22 +38,42 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Credit system (Opus Clip parity)
+  credits           Int      @default(60) // Free: 60, Starter: 150, Pro: 300
+  creditsResetDate  DateTime @default(now()) // Monthly reset date
+  creditsUsedThisMonth Int   @default(0) // Track usage for analytics
+  
+  // Stripe subscription
+  stripeCustomerId       String?  @unique
+  stripeSubscriptionId   String?  @unique
+  stripePriceId          String? // Current plan price ID
+  stripeCurrentPeriodEnd DateTime?
+  
+  // Trial system
+  trialStartDate  DateTime?
+  trialEndDate    DateTime?
+  trialUsed       Boolean  @default(false)
+
   memberships Membership[]
   projects    Project[]
   brandKits   BrandKit[]
   apiKeys     ApiKey[]
   webhooks    Webhook[]
   usageLedger UsageLedger[]
+  creditTransactions CreditTransaction[]
 
   @@index([name])
   @@index([tier])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
 }
 
 enum Tier {
-  FREE
-  PRO
-  BUSINESS
-  ENTERPRISE
+  FREE      // 60 credits/month
+  STARTER   // 150 credits/month ($29/mo)
+  PRO       // 300 credits/month ($79/mo)
+  BUSINESS  // Custom
+  ENTERPRISE // Custom + API access
 }
 
 model Membership {
@@ -87,6 +107,10 @@ model Project {
   clipSettings Json?    // Store clip generation preferences
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  
+  // Credit system & expiration
+  creditsUsed  Int?     // Credits deducted for this project
+  expiresAt    DateTime? // Free tier: 2 days, Paid: never
 
   org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   assets      Asset[]
@@ -96,6 +120,7 @@ model Project {
 
   @@index([orgId])
   @@index([status])
+  @@index([expiresAt])
 }
 
 enum ProjectStatus {
@@ -336,4 +361,37 @@ enum JobStatus {
   RUNNING
   COMPLETED
   FAILED
+}
+
+// ============ Credit System (Opus Clip Parity) ============
+
+model CreditTransaction {
+  id               String   @id @default(cuid())
+  orgId            String
+  amount           Int      // Negative for deduction, positive for addition
+  balanceBefore    Int      // Credits before transaction
+  balanceAfter     Int      // Credits after transaction
+  type             CreditTransactionType
+  projectId        String?  // If related to a project
+  videoDuration    Float?   // Video duration in minutes (for deduction)
+  description      String?  // Human-readable description
+  metadata         Json?    // Additional context
+  createdAt        DateTime @default(now())
+
+  org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum CreditTransactionType {
+  DEDUCTION_CLIPS     // AI Clips processing
+  DEDUCTION_REFRAME   // AI Reframe processing
+  DEDUCTION_CAPTIONS  // AI Captions processing
+  ADDITION_PURCHASE   // Credits purchased
+  ADDITION_RENEWAL    // Monthly renewal
+  ADDITION_TRIAL      // Trial credits
+  ADDITION_REFUND     // Refund for failed processing
+  ADDITION_MANUAL     // Admin manual addition
 }
