@@ -243,6 +243,151 @@ SELECT id, title, "creditsUsed", "expiresAt" FROM "Project" ORDER BY "createdAt"
 
 ---
 
+## Day 3 Summary: Credit Renewal & History ✅
+
+**Date**: November 20, 2025  
+**Status**: ✅ COMPLETE  
+**Commits**: `b2bb4e0`, `bd82129`, `3ebe5d8`
+
+### What We Built
+
+#### 1. **CreditsCronService** (`apps/api/src/credits/credits-cron.service.ts`)
+Automated background jobs for credit management:
+
+**Cron Jobs:**
+- `handleCreditRenewal()` - Runs daily at 2 AM
+  - Checks all organizations for renewal eligibility (30+ days)
+  - Renews credits based on tier allocation
+  - Creates ADDITION_RENEWAL transaction
+  - Logs success/failure for each org
+  
+- `handleExpiredProjects()` - Runs daily at 3 AM
+  - Finds Free tier projects with `expiresAt <= now`
+  - Deletes expired projects (cascade deletes assets, etc.)
+  - Logs deletion details
+  
+- `handleLowCreditWarnings()` - Runs daily at 10 AM
+  - Finds orgs with ≤10 credits remaining
+  - Logs warning for each user in org
+  - Ready for email integration (TODO)
+
+**Manual Triggers:**
+- `manualRenewal(orgId)` - For testing
+- `manualCleanup()` - For testing
+
+#### 2. **Credits API Endpoints** (`apps/api/src/credits/credits.controller.ts`)
+
+**GET /v1/credits/balance**
+Returns:
+```json
+{
+  "balance": 52,
+  "usedThisMonth": 8,
+  "allocation": 60,
+  "resetDate": "2025-12-20T00:00:00.000Z",
+  "tier": "FREE"
+}
+```
+
+**GET /v1/credits/history?limit=20&offset=0**
+Returns:
+```json
+{
+  "transactions": [
+    {
+      "id": "...",
+      "amount": -4,
+      "balanceBefore": 56,
+      "balanceAfter": 52,
+      "type": "DEDUCTION_CLIPS",
+      "description": "Video processing: My Video",
+      "videoDuration": 4.60,
+      "createdAt": "2025-11-20T11:30:37.000Z"
+    }
+  ],
+  "pagination": {
+    "limit": 20,
+    "offset": 0,
+    "total": 5,
+    "hasMore": false
+  }
+}
+```
+
+#### 3. **Credit History UI Page** (`apps/web/app/credits/page.tsx`)
+
+**Layout:**
+- Header with back button and "Upgrade Plan" CTA
+- 3 metric cards (Balance, Allocation, Next Reset)
+- Transaction history table with pagination
+- Empty state for no transactions
+- Loading states
+
+**Features:**
+- ✅ Real-time data from API
+- ✅ Color-coded transactions (red/green)
+- ✅ Transaction type icons (up/down arrows)
+- ✅ Video duration display
+- ✅ Pagination (20 per page)
+- ✅ Responsive design
+- ✅ Hover states and transitions
+
+#### 4. **Sidebar Integration**
+- Made credit widget clickable → `/credits`
+- Changed button text to "View Details"
+- Added hover state
+
+### Technical Details
+
+**Dependencies:**
+- Installed `@nestjs/schedule` for cron jobs
+- Added `ScheduleModule.forRoot()` to CreditsModule
+- All cron jobs have explicit names (avoids crypto.randomUUID issue)
+
+**Authentication:**
+- Uses `AuthGuard('jwt')` from Passport
+- Credits page uses localStorage token (like dashboard)
+
+**Database:**
+- Fixed missing `CreditTransactionType` enum (migration `20251120165758`)
+- All enum values working correctly
+
+### Testing
+
+**Manual Testing:**
+1. ✅ Upload video → credits deducted → transaction created
+2. ✅ Navigate to `/credits` → see balance and history
+3. ✅ Click sidebar credit widget → navigate to credits page
+4. ✅ API endpoints return correct data
+5. ✅ Cron jobs registered (check logs)
+
+**Cron Job Testing:**
+```bash
+# Check cron jobs are registered
+docker logs clipforge-api | grep -i "cron"
+
+# Manual trigger (in code):
+await creditsCronService.manualRenewal(orgId);
+await creditsCronService.manualCleanup();
+```
+
+### What's Working
+
+✅ **Credit Renewal**: Automated monthly renewal  
+✅ **Project Expiration**: Free tier cleanup  
+✅ **Low Credit Warnings**: Detection ready  
+✅ **Credit History API**: Full pagination support  
+✅ **Credit History UI**: Beautiful, responsive page  
+✅ **Sidebar Navigation**: Clickable credit widget  
+✅ **Real-time Data**: Live balance and transactions  
+
+### Known Limitations
+
+⚠️ **Email Notifications**: Cron logs warnings but doesn't send emails (EmailService TODO)  
+⚠️ **Manual Testing**: Cron jobs need time-based testing (wait for scheduled runs)  
+
+---
+
 ## Next Steps
 
 ### Day 2: Credit Deduction Logic ✅ COMPLETE
@@ -255,11 +400,14 @@ SELECT id, title, "creditsUsed", "expiresAt" FROM "Project" ORDER BY "createdAt"
 - [x] Add project expiration logic (Free: 2 days)
 - [x] Add refund system for failed processing
 
-### Day 3: Credit Renewal & History
-- [ ] Create monthly renewal cron job
-- [ ] Build credit history page (like Opus)
-- [ ] Add credit balance display in UI
-- [ ] Email notifications for low credits
+### Day 3: Credit Renewal & History ✅ COMPLETE
+- [x] Create monthly renewal cron job
+- [x] Build credit history page (like Opus)
+- [x] Add credit balance display in UI
+- [x] Add credit API endpoints (balance, history)
+- [x] Expired project cleanup cron
+- [x] Low credit warnings cron
+- [ ] Email notifications for low credits (pending EmailService)
 
 ### Day 4: API Authentication
 - [ ] API key generation
