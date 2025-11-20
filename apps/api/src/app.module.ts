@@ -18,6 +18,7 @@ import { CaptionsModule } from './captions/captions.module';
 import { QueuesModule } from './queues/queues.module';
 import { HealthModule } from './health/health.module';
 import { CreditsModule } from './credits/credits.module';
+import { ApiKeysModule } from './api-keys/api-keys.module';
 // import { EmailModule } from './email/email.module'; // TEMPORARILY DISABLED
 
 @Module({
@@ -30,6 +31,7 @@ import { CreditsModule } from './credits/credits.module';
     HealthModule, // Health checks for monitoring
     QueuesModule, // Job queue system for scalability
     CreditsModule, // Credit system for billing (Opus Clip parity)
+    ApiKeysModule, // API key management for external API access
     // EmailModule, // Email notifications // TEMPORARILY DISABLED
     AuthModule,
     ProjectsModule,
