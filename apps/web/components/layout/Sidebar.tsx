@@ -157,7 +157,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Credit Balance Widget */}
-      <div className="p-4 m-4 bg-gray-50 rounded-lg border border-gray-200">
+      <Link href="/credits" className="block p-4 m-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">Credits</span>
           <Zap className="w-4 h-4 text-yellow-500" />
@@ -169,13 +169,10 @@ export default function Sidebar() {
         <div className="text-xs text-gray-500 mb-3">
           Resets {user?.nextCreditReset ? new Date(user.nextCreditReset).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'N/A'}
         </div>
-        <Link
-          href="/pricing"
-          className="block w-full text-center px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-        >
-          Add more credits
-        </Link>
-      </div>
+        <div className="w-full text-center px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+          View Details
+        </div>
+      </Link>
     </div>
   );
 }
