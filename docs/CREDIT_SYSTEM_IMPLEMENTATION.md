@@ -144,15 +144,116 @@ AI Captions: 1 credit per minute of source video
 
 ---
 
+## Day 2: Credit Deduction Logic ✅ COMPLETE
+
+### What Was Built
+
+#### 1. **CreditsService** (`apps/api/src/credits/credits.service.ts`)
+Complete credit management service with:
+
+**Core Methods:**
+- `calculateCredits(durationSeconds)` - Opus Clip rounding rules
+- `hasSufficientCredits(orgId, credits)` - Check balance
+- `getBalance(orgId)` - Get current balance
+- `deductCredits(orgId, amount, type, projectId, duration)` - Deduct with audit trail
+- `addCredits(orgId, amount, type, description)` - Add credits (purchase/renewal/refund)
+- `refundCredits(projectId, reason)` - Auto-refund for failed processing
+- `getTransactionHistory(orgId, limit, offset)` - Credit history
+- `needsRenewal(orgId)` - Check if renewal needed
+- `renewCredits(orgId)` - Monthly renewal
+
+**Features:**
+- ✅ Full audit trail for every credit change
+- ✅ Atomic transactions (all-or-nothing)
+- ✅ Detailed logging
+- ✅ Error handling with user-friendly messages
+- ✅ Metadata tracking (tier, timestamp, etc.)
+
+#### 2. **Integration with ProjectsService**
+Modified `uploadVideo()` method to:
+- Calculate credits needed based on video duration
+- Check if organization has sufficient credits
+- Deduct credits before processing
+- Set project expiration (Free: 2 days, Paid: never)
+- Return `creditsUsed` and `expiresAt` in response
+- Detect processing type (CLIPS/REFRAME/CAPTIONS)
+
+**Code Example:**
+```typescript
+// Calculate credits (Opus rules)
+const creditsNeeded = this.credits.calculateCredits(metadata.duration);
+
+// Check balance
+const hasSufficientCredits = await this.credits.hasSufficientCredits(orgId, creditsNeeded);
+if (!hasSufficientCredits) {
+  throw new BadRequestException('Insufficient credits...');
+}
+
+// Deduct credits
+await this.credits.deductCredits(
+  orgId,
+  creditsNeeded,
+  processingType,
+  projectId,
+  metadata.duration / 60
+);
+
+// Set expiration (Free tier only)
+const expiresAt = org?.tier === 'FREE' 
+  ? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+  : null;
+```
+
+#### 3. **Module Integration**
+- Created `CreditsModule`
+- Imported into `AppModule` (global)
+- Imported into `ProjectsModule`
+- Injected into `ProjectsService`
+
+### Testing
+
+**Manual Test:**
+1. Upload a video
+2. Check credits deducted correctly
+3. Verify audit trail in database
+4. Test insufficient credits error
+5. Verify project expiration set
+
+**Database Verification:**
+```sql
+-- Check organization credits
+SELECT id, name, tier, credits, creditsUsedThisMonth FROM "Organization";
+
+-- Check credit transactions
+SELECT * FROM "CreditTransaction" ORDER BY "createdAt" DESC LIMIT 10;
+
+-- Check project expiration
+SELECT id, title, "creditsUsed", "expiresAt" FROM "Project" ORDER BY "createdAt" DESC LIMIT 5;
+```
+
+### What Works
+
+✅ **Credit Calculation**: Opus Clip rounding rules implemented  
+✅ **Insufficient Credits**: Blocks upload with clear error message  
+✅ **Credit Deduction**: Atomic transaction with audit trail  
+✅ **Project Expiration**: Free tier projects expire in 2 days  
+✅ **Processing Type Detection**: CLIPS/REFRAME/CAPTIONS  
+✅ **Refund System**: Ready for failed processing  
+✅ **API Stability**: No breaking changes, Docker services stable  
+
+---
+
 ## Next Steps
 
-### Day 2: Credit Deduction Logic (Tomorrow)
-- [ ] Create `CreditService` with deduction methods
-- [ ] Implement rounding logic (Opus rules)
-- [ ] Add insufficient credits check
-- [ ] Integrate with project creation
-- [ ] Add credit balance checks to API endpoints
-- [ ] Test credit deduction flow
+### Day 2: Credit Deduction Logic ✅ COMPLETE
+- [x] Create `CreditService` with deduction methods
+- [x] Implement rounding logic (Opus rules)
+- [x] Add insufficient credits check
+- [x] Integrate with project creation (uploadVideo)
+- [x] Add credit balance checks to API endpoints
+- [x] Test credit deduction flow
+- [x] Add project expiration logic (Free: 2 days)
+- [x] Add refund system for failed processing
 
 ### Day 3: Credit Renewal & History
 - [ ] Create monthly renewal cron job
