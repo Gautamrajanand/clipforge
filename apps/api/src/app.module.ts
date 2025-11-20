@@ -17,6 +17,7 @@ import { ProxyModule } from './proxy/proxy.module';
 import { CaptionsModule } from './captions/captions.module';
 import { QueuesModule } from './queues/queues.module';
 import { HealthModule } from './health/health.module';
+import { CreditsModule } from './credits/credits.module';
 // import { EmailModule } from './email/email.module'; // TEMPORARILY DISABLED
 
 @Module({
@@ -28,6 +29,7 @@ import { HealthModule } from './health/health.module';
     PrismaModule,
     HealthModule, // Health checks for monitoring
     QueuesModule, // Job queue system for scalability
+    CreditsModule, // Credit system for billing (Opus Clip parity)
     // EmailModule, // Email notifications // TEMPORARILY DISABLED
     AuthModule,
     ProjectsModule,

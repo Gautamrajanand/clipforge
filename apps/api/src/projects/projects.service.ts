@@ -8,6 +8,7 @@ import { AIService } from '../ai/ai.service';
 import { TranscriptionService } from '../transcription/transcription.service';
 import { CaptionsService } from '../captions/captions.service';
 import { QueuesService } from '../queues/queues.service';
+import { CreditsService } from '../credits/credits.service';
 // import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ReframeDto } from './dto/reframe.dto';
@@ -28,6 +29,7 @@ export class ProjectsService {
     private transcription: TranscriptionService,
     private captions: CaptionsService,
     private queues: QueuesService,
+    private credits: CreditsService,
     // private email: EmailService, // TEMPORARILY DISABLED
   ) {}
 
@@ -389,12 +391,56 @@ export class ProjectsService {
     const metadata = await this.video.getVideoMetadata(tempPath);
     await this.video.cleanupTempFile(tempPath);
 
-    // Update project with video info
+    // 💳 CREDIT SYSTEM: Calculate and deduct credits (Opus Clip parity)
+    const creditsNeeded = this.credits.calculateCredits(metadata.duration);
+    this.logger.log(`💳 Video duration: ${metadata.duration}s (${(metadata.duration / 60).toFixed(2)} min) → ${creditsNeeded} credits`);
+
+    // Check if organization has sufficient credits
+    const hasSufficientCredits = await this.credits.hasSufficientCredits(orgId, creditsNeeded);
+    if (!hasSufficientCredits) {
+      const currentBalance = await this.credits.getBalance(orgId);
+      throw new BadRequestException(
+        `Insufficient credits. You need ${creditsNeeded} credits but only have ${currentBalance}. Please upgrade your plan or wait for your monthly renewal.`
+      );
+    }
+
+    // Determine processing type from clipSettings
+    const clipSettings = project.clipSettings as any;
+    let processingType: 'CLIPS' | 'REFRAME' | 'CAPTIONS' = 'CLIPS'; // Default
+    if (clipSettings?.reframeMode) {
+      processingType = 'REFRAME';
+    } else if (clipSettings?.subtitlesMode) {
+      processingType = 'CAPTIONS';
+    }
+
+    // Deduct credits
+    await this.credits.deductCredits(
+      orgId,
+      creditsNeeded,
+      processingType,
+      projectId,
+      metadata.duration / 60, // Convert to minutes
+      `${processingType} processing: ${(metadata.duration / 60).toFixed(2)} minutes`
+    );
+
+    // Get organization tier for project expiration
+    const org = await this.prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { tier: true },
+    });
+
+    // Calculate project expiration (Free tier: 2 days, Paid: never)
+    const expiresAt = org?.tier === 'FREE' 
+      ? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // 2 days from now
+      : null; // Never expire for paid tiers
+
+    // Update project with video info and expiration
     await this.prisma.project.update({
       where: { id: projectId },
       data: {
         sourceUrl: result.key,
         status: 'INGESTING',
+        expiresAt,
       },
     });
 
@@ -417,6 +463,8 @@ export class ProjectsService {
     return {
       message: 'Video uploaded successfully',
       key: result.key,
+      creditsUsed: creditsNeeded,
+      expiresAt: expiresAt?.toISOString(),
       metadata: {
         ...metadata,
         size: file.size, // Return as number, not BigInt
