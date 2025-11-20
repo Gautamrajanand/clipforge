@@ -15,7 +15,8 @@ import {
   HelpCircle,
   Sparkles,
   Plus,
-  Zap
+  Zap,
+  Key
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
@@ -40,6 +41,7 @@ const postItems: NavItem[] = [
 ];
 
 const bottomItems: NavItem[] = [
+  { name: 'API Keys', href: '/api-keys', icon: Key },
   { name: 'Subscription', href: '/subscription', icon: CreditCard },
   { name: 'Learning center', href: '/learning', icon: GraduationCap },
   { name: 'Help center', href: '/help', icon: HelpCircle },
