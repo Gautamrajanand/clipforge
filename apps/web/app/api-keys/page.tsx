@@ -37,15 +37,24 @@ export default function ApiKeysPage() {
   const [keyName, setKeyName] = useState('');
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    setToken(storedToken);
+    // TODO: Replace with real auth when implemented
+    console.log('API Keys page - Using mock data (no real auth yet)');
+    setLoading(false);
+    
+    // Set mock API keys
+    setKeys([
+      {
+        id: '1',
+        name: 'Production API Key',
+        rateLimit: 10,
+        quotaMinutes: 60,
+        quotaExports: 10,
+        lastUsedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: null,
+      },
+    ]);
   }, []);
-
-  useEffect(() => {
-    if (token) {
-      fetchKeys();
-    }
-  }, [token]);
 
   const fetchKeys = async () => {
     if (!token) return;

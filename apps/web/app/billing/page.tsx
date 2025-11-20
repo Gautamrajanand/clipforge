@@ -75,15 +75,26 @@ export default function BillingPage() {
   const [processingPlan, setProcessingPlan] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    setToken(storedToken);
+    // TODO: Replace with real auth when implemented
+    console.log('Billing page - Using mock data (no real auth yet)');
+    
+    // Set mock pricing data
+    setPricing({
+      STARTER: {
+        stripe: { monthly: { amount: 19, currency: 'USD' }, yearly: { amount: 190, currency: 'USD' } },
+        razorpay: { monthly: { amount: 1499, currency: 'INR' }, yearly: { amount: 14990, currency: 'INR' } },
+      },
+      PRO: {
+        stripe: { monthly: { amount: 49, currency: 'USD' }, yearly: { amount: 490, currency: 'USD' } },
+        razorpay: { monthly: { amount: 3999, currency: 'INR' }, yearly: { amount: 39990, currency: 'INR' } },
+      },
+      BUSINESS: {
+        stripe: { monthly: { amount: 99, currency: 'USD' }, yearly: { amount: 990, currency: 'USD' } },
+        razorpay: { monthly: { amount: 7999, currency: 'INR' }, yearly: { amount: 79990, currency: 'INR' } },
+      },
+    });
+    setLoading(false);
   }, []);
-
-  useEffect(() => {
-    if (token) {
-      fetchPricing();
-    }
-  }, [token]);
 
   const fetchPricing = async () => {
     try {

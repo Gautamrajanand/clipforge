@@ -46,16 +46,43 @@ export default function CreditsPage() {
   });
 
   useEffect(() => {
-    // Get token from localStorage
-    const storedToken = localStorage.getItem('token');
-    setToken(storedToken);
+    // TODO: Replace with real auth when implemented
+    // For now, use mock data like dashboard does
+    console.log('Credits page - Using mock data (no real auth yet)');
+    setLoading(false);
+    
+    // Set mock balance data
+    setBalance({
+      balance: 42,
+      usedThisMonth: 18,
+      allocation: 60,
+      resetDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+      tier: 'FREE',
+    });
+    
+    // Set mock transactions
+    setTransactions([
+      {
+        id: '1',
+        amount: -5,
+        balanceBefore: 47,
+        balanceAfter: 42,
+        type: 'VIDEO_UPLOAD',
+        description: 'Video upload: 58 Years Apart - A Glimpse...',
+        videoDuration: 300,
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '2',
+        amount: 60,
+        balanceBefore: 0,
+        balanceAfter: 60,
+        type: 'MONTHLY_RENEWAL',
+        description: 'Monthly credit renewal',
+        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ]);
   }, []);
-
-  useEffect(() => {
-    if (token) {
-      fetchCreditData();
-    }
-  }, [token, pagination.offset]);
 
   const fetchCreditData = async () => {
     if (!token) return;
@@ -69,6 +96,13 @@ export default function CreditsPage() {
           'Authorization': `Bearer ${token}`,
         },
       });
+      
+      if (!balanceRes.ok) {
+        console.error('Failed to fetch balance:', balanceRes.status, await balanceRes.text());
+        setLoading(false);
+        return;
+      }
+      
       const balanceData = await balanceRes.json();
       setBalance(balanceData);
 
