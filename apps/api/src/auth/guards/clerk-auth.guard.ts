@@ -5,8 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { verifyToken } from '@clerk/clerk-sdk-node';
 import { ClerkSyncService } from '../clerk-sync.service';
+import * as jwt from 'jsonwebtoken';
+import jwksClient from 'jwks-rsa';
 
 /**
  * ClerkAuthGuard - Validates Clerk JWT tokens
@@ -35,22 +36,39 @@ export class ClerkAuthGuard implements CanActivate {
     }
 
     try {
-      // Verify Clerk JWT token
-      const secretKey = this.configService.get<string>('CLERK_SECRET_KEY');
-      if (!secretKey) {
-        throw new Error('CLERK_SECRET_KEY not configured');
+      // Decode token to get the issuer (Clerk instance URL)
+      const decoded: any = jwt.decode(token, { complete: true });
+      if (!decoded || !decoded.header || !decoded.payload) {
+        throw new Error('Invalid token format');
       }
 
-      const payload = await verifyToken(token, {
-        secretKey,
-        issuer: (iss) => iss.startsWith('https://'),
+      const issuer = decoded.payload.iss;
+      if (!issuer) {
+        throw new Error('Token missing issuer');
+      }
+
+      // Create JWKS client for Clerk's public keys
+      const client = jwksClient({
+        jwksUri: `${issuer}/.well-known/jwks.json`,
+        cache: true,
+        rateLimit: true,
+      });
+
+      // Get signing key
+      const key = await client.getSigningKey(decoded.header.kid);
+      const publicKey = key.getPublicKey();
+
+      // Verify token
+      const payload: any = jwt.verify(token, publicKey, {
+        algorithms: ['RS256'],
+        issuer,
       });
 
       // Sync Clerk user with database
       const user = await this.clerkSync.syncUser(
         payload.sub,
-        payload.email as string,
-        payload.name as string,
+        payload.email,
+        payload.name || payload.first_name || payload.username,
       );
 
       // Attach user data to request
@@ -60,7 +78,11 @@ export class ClerkAuthGuard implements CanActivate {
       return true;
     } catch (error) {
       console.error('Clerk token verification failed:', error);
-      throw new UnauthorizedException('Invalid or expired token');
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+      });
+      throw new UnauthorizedException(`Invalid or expired token: ${error.message}`);
     }
   }
 }
