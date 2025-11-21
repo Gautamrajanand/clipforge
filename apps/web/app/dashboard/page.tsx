@@ -88,8 +88,8 @@ export default function Dashboard() {
 
     while (attempts < maxAttempts) {
       try {
-        const response = await fetch(`http://localhost:3000/v1/projects/${projectId}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
+        const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${projectId}`, {
+          getToken: getClerkToken,
         });
 
         if (response.ok) {
@@ -188,11 +188,11 @@ export default function Dashboard() {
       // Create project with clip settings
       // Use temporary title - will be updated with video title after import
       console.log('📥 Creating project for URL:', url);
-      const createResponse = await fetch('http://localhost:3000/v1/projects', {
+      const createResponse = await fetchWithAuth('http://localhost:3000/v1/projects', {
         method: 'POST',
+        getToken: getClerkToken,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ 
           title: title || 'Importing...',
@@ -218,11 +218,11 @@ export default function Dashboard() {
       });
 
       console.log('📥 Calling import-url endpoint...');
-      const importResponse = await fetch(`http://localhost:3000/v1/projects/${project.id}/import-url`, {
+      const importResponse = await fetchWithAuth(`http://localhost:3000/v1/projects/${project.id}/import-url`, {
         method: 'POST',
+        getToken: getClerkToken,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ url, title }),
       });
@@ -291,11 +291,11 @@ export default function Dashboard() {
     try {
       // Create project with clip settings
       console.log('📤 Sending clip settings:', clipSettings);
-      const createResponse = await fetch('http://localhost:3000/v1/projects', {
+      const createResponse = await fetchWithAuth('http://localhost:3000/v1/projects', {
         method: 'POST',
+        getToken: getClerkToken,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ 
           title,
@@ -398,11 +398,11 @@ export default function Dashboard() {
     if (!token) return;
     
     try {
-      const response = await fetch(`http://localhost:3000/v1/projects/${id}`, {
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${id}`, {
         method: 'PATCH',
+        getToken: getClerkToken,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ title: newTitle }),
       });
@@ -423,9 +423,9 @@ export default function Dashboard() {
     if (!token) return;
     
     try {
-      const response = await fetch(`http://localhost:3000/v1/projects/${id}`, {
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        getToken: getClerkToken,
       });
 
       if (response.ok) {
