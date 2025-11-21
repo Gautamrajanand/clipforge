@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { ArrowLeft, Download, Share2, Sparkles, Type, Wand2 } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
@@ -11,6 +13,9 @@ import ClipSettings from '@/components/clips/ClipSettings';
 import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
 
 export default function ProjectDetail({ params }: { params: { id: string } }) {
+  const router = useRouter();
+  const { getToken: getClerkToken, isLoaded, isSignedIn } = useAuth();
+  
   const [project, setProject] = useState<any>(null);
   const [clips, setClips] = useState<any[]>([]);
   const [selectedClips, setSelectedClips] = useState<string[]>([]);
@@ -31,28 +36,28 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [transcript, setTranscript] = useState<any>(null);
 
   useEffect(() => {
-    const getToken = async () => {
-      try {
-        const loginResponse = await fetch('http://localhost:3000/v1/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: 'demo@clipforge.dev',
-            password: 'demo123',
-          }),
-        });
+    const initAuth = async () => {
+      if (!isLoaded) return;
+      
+      if (!isSignedIn) {
+        router.push('/sign-in');
+        return;
+      }
 
-        if (loginResponse.ok) {
-          const data = await loginResponse.json();
-          setToken(data.access_token);
-          fetchProjectData(data.access_token);
+      try {
+        const clerkToken = await getClerkToken();
+        if (clerkToken) {
+          console.log('✅ Clerk token obtained');
+          setToken(clerkToken);
+          fetchProjectData(clerkToken);
         }
       } catch (error) {
-        console.error('Auth error:', error);
+        console.error('❌ Auth error:', error);
+        router.push('/sign-in');
       }
     };
-    getToken();
-  }, []);
+    initAuth();
+  }, [isLoaded, isSignedIn, getClerkToken, router]);
 
   const fetchProjectData = async (authToken: string, silent = false) => {
     try {
