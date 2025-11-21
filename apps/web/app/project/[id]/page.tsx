@@ -11,6 +11,7 @@ import ClipsGrid from '@/components/clips/ClipsGrid';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import ClipSettings from '@/components/clips/ClipSettings';
 import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
+import { fetchWithAuth } from '@/lib/api';
 
 export default function ProjectDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         if (clerkToken) {
           console.log('✅ Clerk token obtained');
           setToken(clerkToken);
-          fetchProjectData(clerkToken);
+          fetchProjectData();
         }
       } catch (error) {
         console.error('❌ Auth error:', error);
@@ -59,10 +60,10 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     initAuth();
   }, [isLoaded, isSignedIn, getClerkToken, router]);
 
-  const fetchProjectData = async (authToken: string, silent = false) => {
+  const fetchProjectData = async (silent = false) => {
     try {
-      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}`, {
-        headers: { 'Authorization': `Bearer ${authToken}` },
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}`, {
+        getToken: getClerkToken,
       });
       if (response.ok) {
         const data = await response.json();
@@ -89,7 +90,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           if (data.status === 'TRANSCRIBING' || data.status === 'IMPORTING' || data.status === 'INGESTING' || data.status === 'DETECTING') {
             console.log(`🔄 Project status: ${data.status} - will poll for updates`);
             // Start polling
-            setTimeout(() => fetchProjectData(authToken, true), 5000);
+            setTimeout(() => fetchProjectData(true), 5000);
           } else if (isReframeMode && data.status === 'READY') {
             // For reframe projects, check if reframed asset exists
             // If not, poll until it's ready (reframe processing happens async after transcription)
@@ -97,17 +98,17 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
             
             if (!hasReframedAsset) {
               console.log('📐 Reframe project but no reframed asset yet - polling...');
-              setTimeout(() => fetchProjectData(authToken, true), 2000);
+              setTimeout(() => fetchProjectData(true), 2000);
             } else {
               console.log('✅ Reframed asset found - loading reframed video');
               // Load the reframed video
               if (data?.sourceUrl) {
-                await loadVideoBlob(authToken);
+                await loadVideoBlob();
               }
             }
           } else if (data?.sourceUrl) {
             // For subtitles mode or other cases, load video normally
-            await loadVideoBlob(authToken);
+            await loadVideoBlob();
           }
           
           return;
@@ -115,7 +116,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         
         // Load video for normal AI Clips mode
         if (data?.sourceUrl) {
-          await loadVideoBlob(authToken);
+          await loadVideoBlob();
         }
         
         // Auto-generate Smart Clips if none exist and transcript is available
@@ -127,7 +128,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           console.log('No Smart Clips found, auto-generating...');
           sessionStorage.setItem(`smart-clips-generated-${params.id}`, 'true');
           // Generate Smart Clips in background (don't await)
-          generateSmartClipsInBackground(authToken);
+          generateSmartClipsInBackground();
         }
       }
     } catch (error) {
@@ -135,13 +136,13 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     }
   };
   
-  const generateSmartClipsInBackground = async (authToken: string) => {
+  const generateSmartClipsInBackground = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/clips/pro`, {
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/clips/pro`, {
         method: 'POST',
+        getToken: getClerkToken,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           numClips: 10, // Try to generate up to 10, but return however many are actually found
@@ -153,14 +154,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       if (response.ok) {
         console.log('Smart Clips generated in background');
         // Refresh to show new Smart Clips
-        await fetchProjectData(authToken);
+        await fetchProjectData();
       }
     } catch (error) {
       console.error('Background Smart Clips generation failed:', error);
     }
   };
 
-  const loadVideoBlob = async (authToken: string) => {
+  const loadVideoBlob = async () => {
     try {
       // Clear old video URL and revoke blob
       setVideoUrl(prev => {
@@ -174,8 +175,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       // Add cache-busting parameter to force fresh fetch
       const cacheBuster = Date.now();
       console.log(`📥 Fetching video with cache buster: ${cacheBuster}`);
-      const resp = await fetch(`http://localhost:3000/v1/projects/${params.id}/video?t=${cacheBuster}`, {
-        headers: { 'Authorization': `Bearer ${authToken}` },
+      const resp = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/video?t=${cacheBuster}`, {
+        getToken: getClerkToken,
       });
       if (!resp.ok) {
         console.error('Failed to fetch video stream');
