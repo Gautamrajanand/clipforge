@@ -46,8 +46,27 @@ export default function SubtitlesModal({
   const [fontSize, setFontSize] = useState(48);
   const [position, setPosition] = useState<'top' | 'center' | 'bottom'>('bottom');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const [estimatedCredits, setEstimatedCredits] = useState<number | null>(null);
 
   if (!isOpen) return null;
+
+  const handleFileSelect = (selectedFile: File) => {
+    setFile(selectedFile);
+    
+    // Get video duration to calculate credits
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(video.src);
+      const durationMinutes = video.duration / 60;
+      setVideoDuration(video.duration);
+      // Calculate credits: 1 credit per minute, round down, minimum 1
+      const credits = Math.max(1, Math.floor(durationMinutes));
+      setEstimatedCredits(credits);
+    };
+    video.src = URL.createObjectURL(selectedFile);
+  };
 
   const handleSubmit = async () => {
     console.log('🎬 SubtitlesModal handleSubmit called', { tab, url, file });
@@ -90,7 +109,7 @@ export default function SubtitlesModal({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
+      handleFileSelect(selectedFile);
     }
   };
 
@@ -205,6 +224,27 @@ export default function SubtitlesModal({
                     </div>
                   )}
                 </label>
+              </div>
+            </div>
+          )}
+
+          {/* Credit Cost Preview */}
+          {file && estimatedCredits !== null && (
+            <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">💳</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Estimated Cost</p>
+                    <p className="text-xs text-gray-600">
+                      {Math.floor(videoDuration! / 60)}:{String(Math.floor(videoDuration! % 60)).padStart(2, '0')} video duration
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-purple-600">{estimatedCredits}</p>
+                  <p className="text-xs text-gray-600">credits</p>
+                </div>
               </div>
             </div>
           )}
