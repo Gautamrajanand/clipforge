@@ -1,11 +1,11 @@
 import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { CreditsService } from './credits.service';
 
 @ApiTags('credits')
 @Controller('v1/credits')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkAuthGuard)
 @ApiBearerAuth()
 export class CreditsController {
   constructor(private credits: CreditsService) {}
