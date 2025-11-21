@@ -13,6 +13,7 @@ import NewProjectCard from '@/components/cards/NewProjectCard';
 import UploadModal from '@/components/modals/UploadModal';
 import ReframeModal from '@/components/modals/ReframeModal';
 import SubtitlesModal from '@/components/modals/SubtitlesModal';
+import { fetchWithAuth } from '@/lib/api';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function Dashboard() {
           console.log('✅ Clerk token obtained');
           setToken(clerkToken);
           setIsAuthReady(true);
-          fetchProjects(clerkToken);
+          fetchProjects();
         }
       } catch (error) {
         console.error('❌ Auth error:', error);
@@ -61,10 +62,10 @@ export default function Dashboard() {
     initAuth();
   }, [isLoaded, isSignedIn, getClerkToken, router]);
 
-  const fetchProjects = async (authToken: string) => {
+  const fetchProjects = async () => {
     try {
-      const response = await fetch('http://localhost:3000/v1/projects?take=1000', {
-        headers: { 'Authorization': `Bearer ${authToken}` },
+      const response = await fetchWithAuth('http://localhost:3000/v1/projects?take=1000', {
+        getToken: getClerkToken,
       });
       if (response.ok) {
         const data = await response.json();
@@ -77,7 +78,7 @@ export default function Dashboard() {
         console.error('❌ Failed to fetch projects:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('❌ Failed to fetch projects:', error);
+      console.error('❌ Error fetching projects:', error);
     }
   };
 
