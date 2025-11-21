@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth';
+import { useUser } from '@clerk/nextjs';
 import {
   Key,
   Plus,
@@ -27,7 +27,7 @@ interface ApiKey {
 }
 
 export default function ApiKeysPage() {
-  const { user } = useAuth();
+  const { user, isLoaded } = useUser();
   const [token, setToken] = useState<string | null>(null);
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);

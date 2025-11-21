@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth';
+import { useUser } from '@clerk/nextjs';
 import {
   CreditCard,
   Check,
@@ -66,7 +66,7 @@ const FEATURES = {
 };
 
 export default function BillingPage() {
-  const { user } = useAuth();
+  const { user, isLoaded } = useUser();
   const [token, setToken] = useState<string | null>(null);
   const [pricing, setPricing] = useState<Pricing | null>(null);
   const [loading, setLoading] = useState(true);

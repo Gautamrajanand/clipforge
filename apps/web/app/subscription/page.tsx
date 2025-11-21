@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { Sparkles, Zap, Check, X, ExternalLink } from 'lucide-react';
-import { useAuth } from '@/lib/auth';
+import { useUser } from '@clerk/nextjs';
 
 export default function SubscriptionPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
 
   const planFeatures = {
     FREE: [

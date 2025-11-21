@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth';
+import { useUser } from '@clerk/nextjs';
 import { 
   Zap, 
   TrendingUp, 
@@ -33,7 +33,7 @@ interface CreditBalance {
 }
 
 export default function CreditsPage() {
-  const { user } = useAuth();
+  const { user, isLoaded } = useUser();
   const [token, setToken] = useState<string | null>(null);
   const [balance, setBalance] = useState<CreditBalance | null>(null);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
