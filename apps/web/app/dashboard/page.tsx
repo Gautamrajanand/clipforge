@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
-import { Video, Mic2, Scissors, Sparkles, Type, Wand2, FileVideo } from 'lucide-react';
+import { Video, Mic2, Scissors, Sparkles, Type, Wand2, FileVideo, Coins } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import FeatureCard from '@/components/cards/FeatureCard';
@@ -25,6 +25,8 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [showLowCreditsWarning, setShowLowCreditsWarning] = useState(false);
   const [uploadState, setUploadState] = useState({
     stage: 'uploading' as 'uploading' | 'processing' | 'transcribing' | 'detecting' | 'complete' | 'error',
     progress: 0,
@@ -53,6 +55,7 @@ export default function Dashboard() {
           setToken(clerkToken);
           setIsAuthReady(true);
           fetchProjects();
+          fetchCredits();
         }
       } catch (error) {
         console.error('❌ Auth error:', error);
@@ -79,6 +82,28 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('❌ Error fetching projects:', error);
+    }
+  };
+
+  const fetchCredits = async () => {
+    try {
+      const response = await fetchWithAuth('http://localhost:3000/v1/credits/balance', {
+        getToken: getClerkToken,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log('💳 Credits fetched:', data);
+        setCredits(data.balance);
+        
+        // Show low credits warning if < 10
+        if (data.balance < 10 && data.balance > 0) {
+          setShowLowCreditsWarning(true);
+        }
+      } else {
+        console.error('❌ Failed to fetch credits:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching credits:', error);
     }
   };
 
@@ -447,7 +472,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <TopBar />
+      <TopBar credits={credits} />
       
       <main className="ml-64 pt-16">
         <div className="p-8">
@@ -752,6 +777,41 @@ export default function Dashboard() {
           }
         }}
       />
+
+      {/* Low Credits Warning Modal */}
+      {showLowCreditsWarning && credits !== null && credits < 10 && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Coins className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Running Low on Credits</h3>
+              <p className="text-gray-600 mb-6">
+                You have <span className="font-bold text-yellow-600">{credits} credits</span> remaining. 
+                Upgrade your plan to get more credits and continue creating amazing content.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLowCreditsWarning(false)}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Continue
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLowCreditsWarning(false);
+                    router.push('/pricing');
+                  }}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-blue-600 transition-all shadow-lg"
+                >
+                  Upgrade Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
