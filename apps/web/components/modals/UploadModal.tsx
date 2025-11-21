@@ -38,6 +38,8 @@ export default function UploadModal({
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const [estimatedCredits, setEstimatedCredits] = useState<number | null>(null);
   const [showClipSettings, setShowClipSettings] = useState(false);
   const [clipSettings, setClipSettings] = useState<ClipSettings>({
     clipLength: 45,
@@ -54,6 +56,19 @@ export default function UploadModal({
     if (!title) {
       setTitle(selectedFile.name.replace(/\.[^/.]+$/, ''));
     }
+    
+    // Get video duration to calculate credits
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(video.src);
+      const durationMinutes = video.duration / 60;
+      setVideoDuration(video.duration);
+      // Calculate credits: 1 credit per minute, round down, minimum 1
+      const credits = Math.max(1, Math.floor(durationMinutes));
+      setEstimatedCredits(credits);
+    };
+    video.src = URL.createObjectURL(selectedFile);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -231,6 +246,27 @@ export default function UploadModal({
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
+
+              {/* Credit Cost Preview */}
+              {file && estimatedCredits !== null && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">💳</span>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Estimated Cost</p>
+                        <p className="text-xs text-gray-600">
+                          {Math.floor(videoDuration! / 60)}:{String(Math.floor(videoDuration! % 60)).padStart(2, '0')} video duration
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-purple-600">{estimatedCredits}</p>
+                      <p className="text-xs text-gray-600">credits</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Clip Settings Button */}
               {file && (

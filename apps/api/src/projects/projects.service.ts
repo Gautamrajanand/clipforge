@@ -190,10 +190,29 @@ export class ProjectsService {
 
       if (!transcript) {
         console.error(`No transcript found for project ${projectId}`);
+        
+        // Get project to refund credits
+        const project = await this.prisma.project.findUnique({
+          where: { id: projectId },
+          select: { orgId: true, creditsUsed: true },
+        });
+        
         await this.prisma.project.update({
           where: { id: projectId },
           data: { status: 'FAILED' },
         });
+        
+        // Refund credits if any were deducted
+        if (project && project.creditsUsed > 0) {
+          this.logger.log(`💸 Refunding ${project.creditsUsed} credits for failed project ${projectId}`);
+          await this.credits.addCredits(
+            project.orgId,
+            project.creditsUsed,
+            'REFUND',
+            `Refund for failed project processing (${projectId})`,
+          );
+        }
+        
         return;
       }
 
@@ -217,10 +236,28 @@ export class ProjectsService {
       console.log(`✅ Detection queued for project ${projectId}:`, result);
     } catch (error) {
       console.error(`❌ ML worker detection failed for ${projectId}:`, error);
+      
+      // Get project to refund credits
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        select: { orgId: true, creditsUsed: true },
+      });
+      
       await this.prisma.project.update({
         where: { id: projectId },
         data: { status: 'FAILED' },
       });
+      
+      // Refund credits if any were deducted
+      if (project && project.creditsUsed > 0) {
+        this.logger.log(`💸 Refunding ${project.creditsUsed} credits for failed project ${projectId}`);
+        await this.credits.addCredits(
+          project.orgId,
+          project.creditsUsed,
+          'REFUND',
+          `Refund for failed project processing (${projectId})`,
+        );
+      }
     }
   }
 
