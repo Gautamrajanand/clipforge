@@ -18,7 +18,7 @@ import {
   Zap,
   Key
 } from 'lucide-react';
-import { useAuth } from '@/lib/auth';
+import { useUser } from '@clerk/nextjs';
 
 interface NavItem {
   name: string;
@@ -50,7 +50,7 @@ const bottomItems: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user } = useUser();
   
   const handleNavClick = (item: NavItem, e: React.MouseEvent) => {
     // If item requires Pro and user is on free plan, redirect to pricing
