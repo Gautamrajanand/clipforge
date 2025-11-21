@@ -2,9 +2,19 @@
 
 import { Bell, HelpCircle, User } from 'lucide-react';
 import { useState } from 'react';
+import { useClerk, useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 export default function TopBar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { signOut } = useClerk();
+  const { user } = useUser();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/sign-in');
+  };
 
   return (
     <div className="h-16 bg-white border-b border-gray-200 fixed top-0 right-0 left-64 z-10 flex items-center justify-between px-8">
@@ -44,14 +54,18 @@ export default function TopBar() {
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium hover:shadow-md transition-all"
           >
-            G
+            {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() || 'U'}
           </button>
 
           {showUserMenu && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
               <div className="px-4 py-3 border-b border-gray-100">
-                <p className="text-sm font-semibold text-gray-900">gautam-809272518</p>
-                <p className="text-xs text-gray-500">gautam@hubhopper.com</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {user?.fullName || user?.username || 'User'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {user?.emailAddresses?.[0]?.emailAddress || 'No email'}
+                </p>
               </div>
               <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 Profile settings
@@ -69,7 +83,10 @@ export default function TopBar() {
                 Press
               </a>
               <div className="border-t border-gray-100 mt-2 pt-2">
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                <button 
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
                   <span>🚪</span>
                   Log out
                 </button>
