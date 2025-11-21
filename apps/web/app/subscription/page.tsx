@@ -2,10 +2,49 @@
 
 import Link from 'next/link';
 import { Sparkles, Zap, Check, X, ExternalLink } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { fetchWithAuth } from '@/lib/api';
+
+interface OrgData {
+  tier: string;
+  credits: number;
+  creditsResetDate: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+}
 
 export default function SubscriptionPage() {
   const { user } = useUser();
+  const { isLoaded, isSignedIn, getToken: getClerkToken } = useAuth();
+  const [orgData, setOrgData] = useState<OrgData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      fetchOrgData();
+    }
+  }, [isLoaded, isSignedIn]);
+
+  const fetchOrgData = async () => {
+    try {
+      const response = await fetchWithAuth('http://localhost:3000/v1/credits/balance', {
+        getToken: getClerkToken,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setOrgData({
+          tier: data.tier,
+          credits: data.balance,
+          creditsResetDate: data.resetDate,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch org data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const planFeatures = {
     FREE: [
@@ -38,7 +77,8 @@ export default function SubscriptionPage() {
     ],
   };
 
-  const features = planFeatures[user?.planType || 'FREE'];
+  const currentTier = orgData?.tier || 'FREE';
+  const features = planFeatures[currentTier as keyof typeof planFeatures] || planFeatures.FREE;
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -69,13 +109,13 @@ export default function SubscriptionPage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold mb-1">
-                {user?.planType === 'FREE' ? 'Free Plan' : `${user?.planType} Plan`}
+                {currentTier === 'FREE' ? 'Free Plan' : `${currentTier} Plan`}
               </h2>
               <div className="inline-flex items-center px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium">
                 Active
               </div>
             </div>
-            {user?.planType === 'FREE' && (
+            {currentTier === 'FREE' && (
               <Link
                 href="/pricing"
                 className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-gray-900 font-semibold rounded-lg transition-colors"
@@ -88,30 +128,30 @@ export default function SubscriptionPage() {
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div>
               <div className="text-sm text-gray-600 mb-1">Email account</div>
-              <div className="text-gray-900 font-medium">{user?.email || 'user@example.com'}</div>
+              <div className="text-gray-900 font-medium">{user?.emailAddresses?.[0]?.emailAddress || 'user@example.com'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-600 mb-1">Current balance</div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-500" />
-                <span className="text-gray-900 font-bold">{user?.creditBalance || 0}</span>
+                <span className="text-gray-900 font-bold">{loading ? '...' : orgData?.credits || 0}</span>
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-600 mb-1">Next cycle credits</div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-500" />
-                <span className="text-gray-900 font-bold">{user?.creditsPerMonth || 60}</span>
+                <span className="text-gray-900 font-bold">{currentTier === 'FREE' ? 60 : currentTier === 'STARTER' ? 150 : 300}</span>
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-600 mb-1">Resets on</div>
               <div className="text-gray-900 font-medium">
-                {new Date(user?.nextCreditReset || Date.now()).toLocaleDateString('en-US', {
+                {orgData?.creditsResetDate ? new Date(orgData.creditsResetDate).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
-                })}
+                }) : 'N/A'}
               </div>
             </div>
           </div>
@@ -124,13 +164,13 @@ export default function SubscriptionPage() {
             <div>
               <div className="text-sm text-gray-600 mb-1">Seats</div>
               <div className="text-gray-900 font-medium">
-                {user?.planType === 'FREE' ? '1/1' : user?.planType === 'PRO' ? '1/2' : '1/1'}
+                {currentTier === 'FREE' ? '1/1' : currentTier === 'PRO' ? '1/2' : '1/1'}
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-600 mb-1">Brand Templates</div>
               <div className="text-gray-900 font-medium">
-                {user?.planType === 'FREE' ? '1/1' : user?.planType === 'PRO' ? '1/2' : '1/1'}
+                {currentTier === 'FREE' ? '1/1' : currentTier === 'PRO' ? '1/2' : '1/1'}
               </div>
             </div>
           </div>
@@ -173,7 +213,7 @@ export default function SubscriptionPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Next payment</span>
               <span className="text-gray-900 font-medium">
-                {user?.planType === 'FREE' ? '$0 / mo' : user?.planType === 'STARTER' ? '$9 / mo' : '$9.5 / mo'}
+                {currentTier === 'FREE' ? '$0 / mo' : currentTier === 'STARTER' ? '$29 / mo' : '$79 / mo'}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -183,16 +223,16 @@ export default function SubscriptionPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Renew date</span>
               <span className="text-gray-900 font-medium">
-                {new Date(user?.nextCreditReset || Date.now()).toLocaleDateString('en-US', {
+                {orgData?.creditsResetDate ? new Date(orgData.creditsResetDate).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
-                })}
+                }) : 'N/A'}
               </span>
             </div>
           </div>
 
-          {user?.planType !== 'FREE' && (
+          {currentTier !== 'FREE' && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <button className="text-red-500 hover:text-red-400 text-sm font-medium">
                 Cancel subscription
@@ -202,7 +242,7 @@ export default function SubscriptionPage() {
         </div>
 
         {/* Upgrade CTA for Free Users */}
-        {user?.planType === 'FREE' && (
+        {currentTier === 'FREE' && (
           <div className="mt-8 bg-gradient-to-r from-primary-500/20 to-purple-500/20 rounded-xl p-8 border border-primary-500/30">
             <h3 className="text-2xl font-bold mb-2">Ready to unlock more?</h3>
             <p className="text-gray-700 mb-6">
