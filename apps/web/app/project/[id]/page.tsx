@@ -193,8 +193,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const loadExportVideoBlob = async (exportId: string) => {
     try {
-      const resp = await fetch(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+      const resp = await fetchWithAuth(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
+        getToken: getClerkToken,
       });
       if (!resp.ok) return null;
       const blob = await resp.blob();
@@ -222,11 +222,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const handleExport = async (options: ExportOptions) => {
     setIsExporting(true);
     try {
-      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/export`, {
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/export`, {
         method: 'POST',
+        getToken: getClerkToken,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           momentIds: selectedClips,
@@ -268,11 +268,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const handleDetectClips = async () => {
     setIsDetecting(true);
     try {
-      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/detect`, {
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/detect`, {
         method: 'POST',
+        getToken: getClerkToken,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           clipLength: clipSettings.clipLength,
@@ -282,7 +282,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
       if (response.ok) {
         // Refresh project data to get new clips
-        await fetchProjectData(token);
+        await fetchProjectData();
         alert('Clips detected successfully!');
       } else {
         alert('Failed to detect clips');
@@ -312,8 +312,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       }
 
       // Fallback: fetch from API if for some reason we don't have the blob URL cached
-      const response = await fetch(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
+        getToken: getClerkToken,
       });
       if (!response.ok) {
         console.error('Download failed with status', response.status);
@@ -421,8 +421,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       setExportedClips([exportItem]);
                       
                       // Load the captioned video as a blob
-                      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/download-captioned`, {
-                        headers: { 'Authorization': `Bearer ${token}` },
+                      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/download-captioned`, {
+                        getToken: getClerkToken,
                       });
                       
                       if (!response.ok) {
@@ -464,8 +464,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       console.log('📐 Starting AI Reframe download...');
                       
                       // Fetch the reframed video from the API
-                      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/video`, {
-                        headers: { 'Authorization': `Bearer ${token}` },
+                      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/video`, {
+                        getToken: getClerkToken,
                       });
                       
                       if (!response.ok) {
