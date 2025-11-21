@@ -319,6 +319,12 @@ export default function Dashboard() {
       formData.append('video', file);
 
       // Use XMLHttpRequest for progress tracking
+      // Get fresh token before upload
+      const uploadToken = await getClerkToken();
+      if (!uploadToken) {
+        throw new Error('Failed to get authentication token');
+      }
+
       await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
@@ -346,7 +352,7 @@ export default function Dashboard() {
         xhr.addEventListener('error', () => reject(new Error('Upload failed')));
 
         xhr.open('POST', `http://localhost:3000/v1/projects/${project.id}/upload`);
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.setRequestHeader('Authorization', `Bearer ${uploadToken}`);
         xhr.send(formData);
       });
 
