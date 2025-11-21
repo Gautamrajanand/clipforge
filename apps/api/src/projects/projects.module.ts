@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { ProjectsController } from './projects.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { AuthModule } from '../auth/auth.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { StorageModule } from '../storage/storage.module';
 import { AIModule } from '../ai/ai.module';
@@ -14,7 +15,7 @@ import { CreditsModule } from '../credits/credits.module';
 // import { EmailModule } from '../email/email.module'; // TEMPORARILY DISABLED
 
 @Module({
-  imports: [PrismaModule, JobsModule, StorageModule, AIModule, TranscriptionModule, CaptionsModule, QueuesModule, CreditsModule],
+  imports: [PrismaModule, AuthModule, JobsModule, StorageModule, AIModule, TranscriptionModule, CaptionsModule, QueuesModule, CreditsModule],
   providers: [ProjectsService, VideoService, FFmpegService],
   controllers: [ProjectsController],
   exports: [ProjectsService],

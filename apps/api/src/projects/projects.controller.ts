@@ -15,9 +15,9 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Response } from 'express';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { ProjectsService } from './projects.service';
 import { ExportMomentsDto } from './dto/export-moments.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -28,7 +28,7 @@ import { SubtitlesDto } from './dto/subtitles.dto';
 @ApiTags('projects')
 @ApiBearerAuth()
 @Controller('v1/projects')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkAuthGuard)
 export class ProjectsController {
   constructor(private projectsService: ProjectsService) {}
 

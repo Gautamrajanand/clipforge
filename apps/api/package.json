@@ -17,6 +17,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^10.2.0",

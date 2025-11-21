@@ -20,7 +20,8 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String
-  password  String   // hashed
+  password  String?  // hashed (optional for Clerk users)
+  clerkId   String?  @unique // Clerk user ID
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -29,6 +30,7 @@ model User {
   webhooks    Webhook[]
 
   @@index([email])
+  @@index([clerkId])
 }
 
 model Organization {
