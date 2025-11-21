@@ -375,6 +375,16 @@ export class ProjectsService {
   }
 
   async uploadVideo(projectId: string, orgId: string, file: any) {
+    this.logger.log(`📤 uploadVideo called - projectId: ${projectId}, orgId: ${orgId}, file: ${file?.originalname}`);
+    
+    try {
+      const project = await this.findOne(projectId, orgId);
+      this.logger.log(`✅ Project found: ${project.id}`);
+    } catch (error) {
+      this.logger.error(`❌ Error finding project:`, error);
+      throw error;
+    }
+
     const project = await this.findOne(projectId, orgId);
 
     if (!file) {

@@ -88,7 +88,10 @@ export class ProjectsController {
     @Param('id') id: string,
     @UploadedFile() file: any,
   ) {
+    console.log('📤 Upload request - req.user:', JSON.stringify(req.user, null, 2));
+    console.log('📤 Upload request - memberships:', req.user?.memberships);
     const orgId = req.user.memberships[0]?.org?.id;
+    console.log('📤 Upload request - orgId:', orgId);
     if (!orgId) {
       throw new Error('No organization found');
     }
