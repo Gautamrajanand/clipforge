@@ -1,15 +1,11 @@
 'use client';
 
-import { Bell, HelpCircle, User, Coins } from 'lucide-react';
+import { Bell, HelpCircle, User } from 'lucide-react';
 import { useState } from 'react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
-interface TopBarProps {
-  credits?: number | null;
-}
-
-export default function TopBar({ credits }: TopBarProps) {
+export default function TopBar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { signOut } = useClerk();
   const { user } = useUser();
@@ -35,14 +31,6 @@ export default function TopBar({ credits }: TopBarProps) {
 
       {/* Right Actions */}
       <div className="flex items-center gap-4">
-        {/* Credits Display */}
-        {credits !== null && credits !== undefined && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
-            <Coins className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-semibold text-gray-900">{credits}</span>
-            <span className="text-xs text-gray-600">credits</span>
-          </div>
-        )}
         {/* Try Premium Button */}
         <button className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium rounded-lg text-sm transition-colors flex items-center gap-2">
           <span>✨</span>

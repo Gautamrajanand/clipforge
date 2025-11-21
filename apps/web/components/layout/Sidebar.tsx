@@ -20,6 +20,12 @@ import {
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 
+interface SidebarProps {
+  credits?: number | null;
+  creditsAllocation?: number;
+  resetDate?: string;
+}
+
 interface NavItem {
   name: string;
   href: string;
@@ -47,7 +53,7 @@ const bottomItems: NavItem[] = [
   { name: 'Help center', href: '/help', icon: HelpCircle },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ credits, creditsAllocation = 60, resetDate }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
@@ -159,17 +165,17 @@ export default function Sidebar() {
       </nav>
 
       {/* Credit Balance Widget */}
-      <Link href="/credits" className="block p-4 m-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer">
+      <Link href="/dashboard/credits" className="block p-4 m-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">Credits</span>
           <Zap className="w-4 h-4 text-yellow-500" />
         </div>
         <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-2xl font-bold text-gray-900">{user?.creditBalance || 0}</span>
-          <span className="text-sm text-gray-500">/ {user?.creditsPerMonth || 60}</span>
+          <span className="text-2xl font-bold text-gray-900">{credits !== null && credits !== undefined ? credits : '...'}</span>
+          <span className="text-sm text-gray-500">/ {creditsAllocation}</span>
         </div>
         <div className="text-xs text-gray-500 mb-3">
-          Resets {user?.nextCreditReset ? new Date(user.nextCreditReset).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'N/A'}
+          Resets {resetDate ? new Date(resetDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'Loading...'}
         </div>
         <div className="w-full text-center px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
           View Details

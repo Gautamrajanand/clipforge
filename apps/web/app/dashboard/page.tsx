@@ -26,6 +26,8 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
+  const [creditsAllocation, setCreditsAllocation] = useState<number>(60);
+  const [creditsResetDate, setCreditsResetDate] = useState<string | null>(null);
   const [showLowCreditsWarning, setShowLowCreditsWarning] = useState(false);
   const [uploadState, setUploadState] = useState({
     stage: 'uploading' as 'uploading' | 'processing' | 'transcribing' | 'detecting' | 'complete' | 'error',
@@ -94,6 +96,8 @@ export default function Dashboard() {
         const data = await response.json();
         console.log('💳 Credits fetched:', data);
         setCredits(data.balance);
+        setCreditsAllocation(data.allocation || 60);
+        setCreditsResetDate(data.resetDate);
         
         // Show low credits warning if < 10
         if (data.balance < 10 && data.balance > 0) {
@@ -471,8 +475,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <TopBar credits={credits} />
+      <Sidebar credits={credits} creditsAllocation={creditsAllocation} resetDate={creditsResetDate || undefined} />
+      <TopBar />
       
       <main className="ml-64 pt-16">
         <div className="p-8">
