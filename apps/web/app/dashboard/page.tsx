@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import { Video, Mic2, Scissors, Sparkles, Type, Wand2, FileVideo } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
@@ -33,53 +34,32 @@ export default function Dashboard() {
 
   const PROJECTS_PER_PAGE = 11; // 11 projects + 1 "New Project" card = 12 total (3x4 grid)
 
-  useEffect(() => {
-    const getToken = async () => {
-      try {
-        console.log('🔐 Attempting login...');
-        const loginResponse = await fetch('http://localhost:3000/v1/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: 'demo@clipforge.dev',
-            password: 'demo123',
-          }),
-        });
+  const { getToken: getClerkToken, isLoaded, isSignedIn } = useAuth();
 
-        if (loginResponse.ok) {
-          const data = await loginResponse.json();
-          console.log('✅ Login successful!');
-          setToken(data.access_token);
+  useEffect(() => {
+    const initAuth = async () => {
+      if (!isLoaded) return;
+      
+      if (!isSignedIn) {
+        router.push('/sign-in');
+        return;
+      }
+
+      try {
+        const clerkToken = await getClerkToken();
+        if (clerkToken) {
+          console.log('✅ Clerk token obtained');
+          setToken(clerkToken);
           setIsAuthReady(true);
-          fetchProjects(data.access_token);
-        } else {
-          console.log('⚠️ Login failed, trying registration...');
-          const registerResponse = await fetch('http://localhost:3000/v1/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: 'demo@clipforge.dev',
-              name: 'Demo User',
-              password: 'demo123',
-            }),
-          });
-          
-          if (registerResponse.ok) {
-            const data = await registerResponse.json();
-            console.log('✅ Registration successful!');
-            setToken(data.access_token);
-            setIsAuthReady(true);
-            fetchProjects(data.access_token);
-          } else {
-            console.error('❌ Both login and registration failed');
-          }
+          fetchProjects(clerkToken);
         }
       } catch (error) {
         console.error('❌ Auth error:', error);
+        router.push('/sign-in');
       }
     };
-    getToken();
-  }, []);
+    initAuth();
+  }, [isLoaded, isSignedIn, getClerkToken, router]);
 
   const fetchProjects = async (authToken: string) => {
     try {
