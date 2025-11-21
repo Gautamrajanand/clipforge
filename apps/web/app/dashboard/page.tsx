@@ -374,11 +374,17 @@ export default function Dashboard() {
           if (xhr.status >= 200 && xhr.status < 300) {
             resolve(xhr.response);
           } else {
-            reject(new Error('Upload failed'));
+            // Parse error response
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              reject(new Error(errorData.message || 'Upload failed'));
+            } catch {
+              reject(new Error('Upload failed'));
+            }
           }
         });
 
-        xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+        xhr.addEventListener('error', () => reject(new Error('Network error. Please check your connection.')));
 
         xhr.open('POST', `http://localhost:3000/v1/projects/${project.id}/upload`);
         xhr.setRequestHeader('Authorization', `Bearer ${uploadToken}`);
@@ -403,12 +409,17 @@ export default function Dashboard() {
       router.push(`/project/${project.id}`);
     } catch (error) {
       console.error('Upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed. Please try again.';
+      
+      // Check if it's an insufficient credits error
+      const isInsufficientCredits = errorMessage.toLowerCase().includes('insufficient credits');
+      
       setUploadState({
         stage: 'error',
         progress: 0,
         message: '',
         eta: '',
-        error: 'Upload failed. Please try again.',
+        error: errorMessage,
       });
       
       // Keep modal open on error so user can see the error
