@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
+import { fetchWithAuth } from '@/lib/api';
 import { 
   Zap, 
   TrendingUp, 
@@ -33,8 +34,7 @@ interface CreditBalance {
 }
 
 export default function CreditsPage() {
-  const { user, isLoaded } = useUser();
-  const [token, setToken] = useState<string | null>(null);
+  const { isLoaded, isSignedIn, getToken: getClerkToken } = useAuth();
   const [balance, setBalance] = useState<CreditBalance | null>(null);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,55 +46,18 @@ export default function CreditsPage() {
   });
 
   useEffect(() => {
-    // TODO: Replace with real auth when implemented
-    // For now, use mock data like dashboard does
-    console.log('Credits page - Using mock data (no real auth yet)');
-    setLoading(false);
-    
-    // Set mock balance data
-    setBalance({
-      balance: 42,
-      usedThisMonth: 18,
-      allocation: 60,
-      resetDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-      tier: 'FREE',
-    });
-    
-    // Set mock transactions
-    setTransactions([
-      {
-        id: '1',
-        amount: -5,
-        balanceBefore: 47,
-        balanceAfter: 42,
-        type: 'VIDEO_UPLOAD',
-        description: 'Video upload: 58 Years Apart - A Glimpse...',
-        videoDuration: 300,
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '2',
-        amount: 60,
-        balanceBefore: 0,
-        balanceAfter: 60,
-        type: 'MONTHLY_RENEWAL',
-        description: 'Monthly credit renewal',
-        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ]);
-  }, []);
+    if (isLoaded && isSignedIn) {
+      fetchCreditData();
+    }
+  }, [isLoaded, isSignedIn]);
 
   const fetchCreditData = async () => {
-    if (!token) return;
-
     try {
       setLoading(true);
 
       // Fetch balance
-      const balanceRes = await fetch('http://localhost:3000/v1/credits/balance', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const balanceRes = await fetchWithAuth('http://localhost:3000/v1/credits/balance', {
+        getToken: getClerkToken,
       });
       
       if (!balanceRes.ok) {
@@ -107,14 +70,19 @@ export default function CreditsPage() {
       setBalance(balanceData);
 
       // Fetch history
-      const historyRes = await fetch(
+      const historyRes = await fetchWithAuth(
         `http://localhost:3000/v1/credits/history?limit=${pagination.limit}&offset=${pagination.offset}`,
         {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          getToken: getClerkToken,
         }
       );
+      
+      if (!historyRes.ok) {
+        console.error('Failed to fetch history:', historyRes.status);
+        setLoading(false);
+        return;
+      }
+      
       const historyData = await historyRes.json();
       setTransactions(historyData.transactions);
       setPagination(prev => ({

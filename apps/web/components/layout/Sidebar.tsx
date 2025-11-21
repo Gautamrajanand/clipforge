@@ -165,7 +165,7 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate }: 
       </nav>
 
       {/* Credit Balance Widget */}
-      <Link href="/dashboard/credits" className="block p-4 m-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer">
+      <Link href="/credits" className="block p-4 m-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">Credits</span>
           <Zap className="w-4 h-4 text-yellow-500" />
