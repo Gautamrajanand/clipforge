@@ -399,9 +399,11 @@ export class PaymentsService {
     // Log credit transaction
     await this.prisma.creditTransaction.create({
       data: {
-        organizationId: org.id,
+        orgId: org.id,
         amount: creditsToAdd,
-        type: 'PURCHASE',
+        balanceBefore: org.credits,
+        balanceAfter: org.credits + creditsToAdd,
+        type: 'ADDITION_PURCHASE',
         description: `${tier} subscription activated - monthly credits`,
       },
     });
