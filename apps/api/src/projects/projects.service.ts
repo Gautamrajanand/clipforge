@@ -61,12 +61,28 @@ export class ProjectsService {
 
     console.log('📝 Creating project with settings:', JSON.stringify(clipSettings, null, 2));
 
+    // Get organization tier for project expiration
+    const org = await this.prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { tier: true },
+    });
+
+    // Calculate project expiration based on tier
+    let expiresAt: Date | null = null;
+    if (org?.tier === 'FREE') {
+      expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+    } else if (org?.tier === 'STARTER') {
+      expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 90 days
+    }
+    // PRO and BUSINESS: null (never expire)
+
     return this.prisma.project.create({
       data: {
         orgId,
         title: dto.title,
         sourceUrl: dto.sourceUrl,
         clipSettings: clipSettings as any,
+        expiresAt,
       },
     });
   }
@@ -476,10 +492,14 @@ export class ProjectsService {
       select: { tier: true },
     });
 
-    // Calculate project expiration (Free tier: 2 days, Paid: never)
-    const expiresAt = org?.tier === 'FREE' 
-      ? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // 2 days from now
-      : null; // Never expire for paid tiers
+    // Calculate project expiration based on tier
+    let expiresAt: Date | null = null;
+    if (org?.tier === 'FREE') {
+      expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+    } else if (org?.tier === 'STARTER') {
+      expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 90 days
+    }
+    // PRO and BUSINESS: null (never expire)
 
     // Update project with video info and expiration
     await this.prisma.project.update({

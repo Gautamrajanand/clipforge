@@ -1,6 +1,6 @@
 'use client';
 
-import { Play, Video, Edit2, Trash2, MoreVertical } from 'lucide-react';
+import { Play, Video, Edit2, Trash2, MoreVertical, Clock, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -12,6 +12,7 @@ interface ProjectCardProps {
   videoUrl?: string;
   isEmpty?: boolean;
   settings?: any;
+  expiresAt?: string | null;
   onEdit?: (id: string, newTitle: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -24,6 +25,7 @@ export default function ProjectCard({
   videoUrl,
   isEmpty,
   settings,
+  expiresAt,
   onEdit,
   onDelete 
 }: ProjectCardProps) {
@@ -38,6 +40,23 @@ export default function ProjectCard({
     if (settings?.reframeMode) return 'Reframe';
     return 'Clips';
   };
+
+  // Calculate time until expiry
+  const getExpiryInfo = () => {
+    if (!expiresAt) return null;
+    
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const hoursLeft = Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60));
+    const daysLeft = Math.floor(hoursLeft / 24);
+    
+    if (hoursLeft < 0) return { text: 'Expired', color: 'bg-red-500', urgent: true };
+    if (hoursLeft < 24) return { text: `${hoursLeft}h left`, color: 'bg-orange-500', urgent: true };
+    if (daysLeft < 7) return { text: `${daysLeft}d left`, color: 'bg-yellow-500', urgent: false };
+    return { text: `${daysLeft}d left`, color: 'bg-gray-500', urgent: false };
+  };
+
+  const expiryInfo = getExpiryInfo();
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -103,6 +122,14 @@ export default function ProjectCard({
           {isEmpty && (
             <div className="absolute bottom-3 right-3 bg-gray-500 text-white text-xs px-2 py-1 rounded-md z-10">
               empty
+            </div>
+          )}
+          
+          {/* Expiry Badge */}
+          {expiryInfo && (
+            <div className={`absolute bottom-3 ${isEmpty ? 'left-3' : 'right-3'} ${expiryInfo.color} text-white text-xs px-2 py-1 rounded-md z-10 flex items-center gap-1`}>
+              {expiryInfo.urgent ? <AlertTriangle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+              {expiryInfo.text}
             </div>
           )}
           

@@ -588,6 +588,7 @@ export default function Dashboard() {
                     videoUrl={project.sourceUrl ? `http://localhost:3000/v1/projects/${project.id}/video` : undefined}
                     isEmpty={!project.sourceUrl}
                     settings={project.clipSettings}
+                    expiresAt={project.expiresAt}
                     onEdit={handleEditProject}
                     onDelete={handleDeleteProject}
                   />
