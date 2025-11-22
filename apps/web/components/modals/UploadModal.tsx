@@ -5,6 +5,7 @@ import { useState, useRef } from 'react';
 import UploadProgress from '../progress/UploadProgress';
 import ClipSettingsModal from './ClipSettingsModal';
 import { ClipSettings } from '@/lib/platform-presets';
+import { analytics, AnalyticsEvents } from '@/lib/analytics';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -85,12 +86,32 @@ export default function UploadModal({
     
     if (activeTab === 'upload' && file && title) {
       console.log('📤 Calling onUpload');
+      
+      // Track video upload
+      analytics.track(AnalyticsEvents.VIDEO_UPLOADED, {
+        method: 'file_upload',
+        fileSize: file.size,
+        fileName: file.name,
+        estimatedCredits: estimatedCredits || 0,
+        videoDuration: videoDuration || 0,
+        clipSettings: clipSettings,
+      });
+      
       onUpload(file, title, clipSettings);
       // Don't close modal or clear form during upload
       // The parent component will handle closing after upload completes
     } else if (activeTab === 'url' && url && onImportUrl) {
       // Use title if provided, otherwise pass empty string to let backend auto-fill from video metadata
       console.log('📥 Calling onImportUrl with:', { url, title: title || '' });
+      
+      // Track URL import
+      analytics.track(AnalyticsEvents.VIDEO_IMPORTED_FROM_URL, {
+        method: 'url_import',
+        url: url,
+        platform: detectPlatform(url),
+        clipSettings: clipSettings,
+      });
+      
       onImportUrl(url, title || '', clipSettings);
     } else {
       console.warn('⚠️ Submit conditions not met', { 

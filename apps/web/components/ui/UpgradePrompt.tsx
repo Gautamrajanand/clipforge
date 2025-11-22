@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Lock, ArrowLeft } from 'lucide-react';
+import { useEffect } from 'react';
+import { trackUpgradePromptShown, trackUpgradePromptClicked } from '@/lib/analytics';
 
 interface UpgradePromptProps {
   feature: string;
@@ -11,6 +13,11 @@ interface UpgradePromptProps {
 
 export function UpgradePrompt({ feature, description }: UpgradePromptProps) {
   const router = useRouter();
+  
+  // Track upgrade prompt shown
+  useEffect(() => {
+    trackUpgradePromptShown(feature, 'FREE');
+  }, [feature]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -65,6 +72,7 @@ export function UpgradePrompt({ feature, description }: UpgradePromptProps) {
         <div className="space-y-3">
           <Link
             href="/pricing"
+            onClick={() => trackUpgradePromptClicked(feature, 'PRO')}
             className="block w-full px-6 py-3.5 bg-primary-500 hover:bg-primary-600 
                      text-gray-900 font-semibold rounded-lg transition-colors shadow-lg"
           >

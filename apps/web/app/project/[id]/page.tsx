@@ -12,10 +12,15 @@ import VideoPlayer from '@/components/video/VideoPlayer';
 import ClipSettings from '@/components/clips/ClipSettings';
 import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
 import { fetchWithAuth } from '@/lib/api';
+import { analytics, AnalyticsEvents } from '@/lib/analytics';
+import { usePageTracking } from '@/hooks/useAnalytics';
 
 export default function ProjectDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { getToken: getClerkToken, isLoaded, isSignedIn } = useAuth();
+  
+  // Track project page view
+  usePageTracking('Project Detail', { projectId: params.id });
   
   const [project, setProject] = useState<any>(null);
   const [clips, setClips] = useState<any[]>([]);
@@ -222,6 +227,17 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const handleExport = async (options: ExportOptions) => {
     setIsExporting(true);
+    
+    // Track export initiation
+    analytics.track(AnalyticsEvents.CLIP_EXPORTED, {
+      projectId: params.id,
+      clipCount: selectedClips.length,
+      aspectRatio: options.aspectRatio,
+      cropMode: options.cropMode,
+      burnCaptions: options.burnCaptions,
+      captionStyle: options.captionStyle,
+    });
+    
     try {
       const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/export`, {
         method: 'POST',
@@ -254,12 +270,28 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         }
         setExportVideoUrls(urls);
         
+        // Track successful export
+        analytics.track('clip_export_success', {
+          projectId: params.id,
+          clipCount: data.exports.length,
+          aspectRatio: options.aspectRatio,
+        });
+        
         alert(`Successfully exported ${data.exports.length} clips with ${options.aspectRatio} aspect ratio!`);
       } else {
+        // Track export failure
+        analytics.track('clip_export_failed', {
+          projectId: params.id,
+          clipCount: selectedClips.length,
+        });
         alert('Failed to export clips');
       }
     } catch (error) {
       console.error('Export error:', error);
+      analytics.track('clip_export_error', {
+        projectId: params.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       alert('Failed to export clips');
     } finally {
       setIsExporting(false);

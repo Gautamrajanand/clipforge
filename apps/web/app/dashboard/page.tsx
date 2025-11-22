@@ -15,6 +15,7 @@ import ReframeModal from '@/components/modals/ReframeModal';
 import SubtitlesModal from '@/components/modals/SubtitlesModal';
 import { fetchWithAuth } from '@/lib/api';
 import { useAnalytics, usePageTracking } from '@/hooks/useAnalytics';
+import { AnalyticsEvents } from '@/lib/analytics';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -243,6 +244,14 @@ export default function Dashboard() {
       }
       const project = await createResponse.json();
       console.log('✅ Project created:', project.id);
+      
+      // Track project creation
+      track(AnalyticsEvents.PROJECT_CREATED, {
+        projectId: project.id,
+        projectType: 'CLIPS',
+        method: 'url_import',
+        hasClipSettings: !!clipSettings,
+      });
 
       // Import video from URL
       setUploadState({
@@ -341,6 +350,15 @@ export default function Dashboard() {
 
       if (!createResponse.ok) throw new Error('Failed to create project');
       const project = await createResponse.json();
+      
+      // Track project creation
+      track(AnalyticsEvents.PROJECT_CREATED, {
+        projectId: project.id,
+        projectType: 'CLIPS',
+        method: 'file_upload',
+        fileSize: file.size,
+        hasClipSettings: !!clipSettings,
+      });
 
       // Upload video with progress tracking
       setUploadState({
