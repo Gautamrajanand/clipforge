@@ -1,11 +1,15 @@
 'use client';
 
-import { Bell, HelpCircle, User } from 'lucide-react';
+import { Bell, HelpCircle, User, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
-export default function TopBar() {
+interface TopBarProps {
+  onMenuClick?: () => void;
+}
+
+export default function TopBar({ onMenuClick }: TopBarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { signOut } = useClerk();
   const { user } = useUser();
@@ -17,28 +21,42 @@ export default function TopBar() {
   };
 
   return (
-    <div className="h-16 bg-white border-b border-gray-200 fixed top-0 right-0 left-64 z-10 flex items-center justify-between px-8">
-      {/* Workspace Selector */}
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-          <User className="w-4 h-4 text-gray-600" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-900">Personal Workspace</p>
-          <p className="text-xs text-gray-500">Basic • 1 Premier limit</p>
+    <div className="h-16 bg-white border-b border-gray-200 fixed top-0 right-0 left-0 lg:left-64 z-10 flex items-center justify-between px-4 lg:px-8">
+      {/* Left Side */}
+      <div className="flex items-center gap-3">
+        {/* Hamburger Menu (Mobile Only) */}
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Menu className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
+        
+        {/* Workspace Selector */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+            <User className="w-4 h-4 text-gray-600" />
+          </div>
+          <div className="hidden sm:block">
+            <p className="text-sm font-semibold text-gray-900">Personal Workspace</p>
+            <p className="text-xs text-gray-500">Basic • 1 Premier limit</p>
+          </div>
         </div>
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 lg:gap-4">
         {/* Try Premium Button */}
-        <button className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium rounded-lg text-sm transition-colors flex items-center gap-2">
+        <button className="hidden md:flex px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium rounded-lg text-sm transition-colors items-center gap-2">
           <span>✨</span>
-          Try Premium for free
+          <span className="hidden lg:inline">Try Premium for free</span>
+          <span className="lg:hidden">Premium</span>
         </button>
 
         {/* Help */}
-        <button className="w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
+        <button className="hidden sm:flex w-10 h-10 rounded-lg hover:bg-gray-100 items-center justify-center transition-colors">
           <HelpCircle className="w-5 h-5 text-gray-600" />
         </button>
 

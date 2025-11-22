@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [creditsAllocation, setCreditsAllocation] = useState<number>(60);
   const [creditsResetDate, setCreditsResetDate] = useState<string | null>(null);
   const [showLowCreditsWarning, setShowLowCreditsWarning] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [uploadState, setUploadState] = useState({
     stage: 'uploading' as 'uploading' | 'processing' | 'transcribing' | 'detecting' | 'complete' | 'error',
     progress: 0,
@@ -486,15 +487,21 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar credits={credits} creditsAllocation={creditsAllocation} resetDate={creditsResetDate || undefined} />
-      <TopBar />
+      <Sidebar 
+        credits={credits} 
+        creditsAllocation={creditsAllocation} 
+        resetDate={creditsResetDate || undefined}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+      <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
       
-      <main className="ml-64 pt-16">
-        <div className="p-8">
+      <main className="lg:ml-64 pt-16">
+        <div className="p-4 lg:p-8">
           {/* Let's start with section */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Let's start with</h2>
-            <div className="grid grid-cols-3 gap-6">
+            <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">Let's start with</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
               <FeatureCard
                 title="Recording Studio"
                 icon={Video}
@@ -518,8 +525,8 @@ export default function Dashboard() {
 
           {/* AI Tools section */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">AI Tools</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">AI Tools</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
               <AIToolCard
                 title="AI Clips"
                 icon={Sparkles}
@@ -567,15 +574,15 @@ export default function Dashboard() {
 
           {/* Recent Projects section */}
           <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Recent</h2>
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Recent</h2>
               {projects.length > PROJECTS_PER_PAGE && (
-                <div className="text-sm text-gray-600">
+                <div className="hidden sm:block text-sm text-gray-600">
                   Showing {Math.min((currentPage - 1) * PROJECTS_PER_PAGE + 1, projects.length)}-{Math.min(currentPage * PROJECTS_PER_PAGE, projects.length)} of {projects.length} projects
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
               <NewProjectCard onClick={() => setShowUploadModal(true)} />
               {projects
                 .slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE)

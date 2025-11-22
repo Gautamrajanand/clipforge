@@ -16,7 +16,8 @@ import {
   Sparkles,
   Plus,
   Zap,
-  Key
+  Key,
+  X
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 
@@ -24,6 +25,8 @@ interface SidebarProps {
   credits?: number | null;
   creditsAllocation?: number;
   resetDate?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 interface NavItem {
@@ -53,7 +56,7 @@ const bottomItems: NavItem[] = [
   { name: 'Help center', href: '/help', icon: HelpCircle },
 ];
 
-export default function Sidebar({ credits, creditsAllocation = 60, resetDate }: SidebarProps) {
+export default function Sidebar({ credits, creditsAllocation = 60, resetDate, isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
@@ -98,16 +101,40 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate }: 
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0">
-      {/* Logo */}
-      <div className="p-4 border-b border-gray-200">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-bold text-lg text-gray-900">ClipForge</span>
-        </Link>
-      </div>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && onClose && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        w-64 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0 z-50 transition-transform duration-300
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0
+      `}>
+        {/* Mobile Close Button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 lg:hidden p-2 rounded-lg hover:bg-gray-100"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
+        
+        {/* Logo */}
+        <div className="p-4 border-b border-gray-200">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-lg text-gray-900">ClipForge</span>
+          </Link>
+        </div>
 
       {/* Create Button */}
       <div className="p-4">
@@ -181,6 +208,7 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate }: 
           View Details
         </div>
       </Link>
-    </div>
+      </div>
+    </>
   );
 }
