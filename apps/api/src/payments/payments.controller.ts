@@ -11,7 +11,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { PaymentsService } from './payments.service';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
@@ -47,7 +47,7 @@ export class PaymentsController {
    * Create a checkout session
    */
   @Post('checkout')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a checkout session' })
   async createCheckout(
@@ -79,7 +79,7 @@ export class PaymentsController {
    * Create a billing portal session (Stripe only)
    */
   @Post('portal')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a billing portal session' })
   async createPortal(@Request() req: any) {
@@ -162,7 +162,7 @@ export class PaymentsController {
    * Get current subscription status
    */
   @Get('subscription')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(ClerkAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current subscription status' })
   async getSubscription(@Request() req: any) {
