@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Check, X, ArrowRight, Sparkles } from 'lucide-react';
 import { fetchWithAuth } from '@/lib/api';
@@ -70,8 +70,7 @@ const PRICING_TIERS = {
 };
 
 export default function PricingPage() {
-  const { isLoaded, isSignedIn, getToken: getClerkToken } = useAuth();
-  const { user } = useUser();
+  const { isSignedIn, getToken: getClerkToken } = useAuth();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -86,6 +85,9 @@ export default function PricingPage() {
       const response = await fetchWithAuth('http://localhost:3000/v1/payments/checkout', {
         method: 'POST',
         getToken: getClerkToken,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           tier,
           interval: billingCycle,
