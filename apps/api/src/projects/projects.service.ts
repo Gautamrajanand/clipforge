@@ -569,6 +569,19 @@ export class ProjectsService {
   private async processUrlImport(projectId: string, url: string, customTitle?: string) {
     this.logger.log(`🔄 Processing URL import for project ${projectId}`);
 
+    // Get project and organization info
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { 
+        orgId: true,
+        clipSettings: true,
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
     // Import VideoDownloadService dynamically
     const { VideoDownloadService } = await import('../video/video-download.service');
     const downloadService = new VideoDownloadService();
@@ -580,15 +593,66 @@ export class ProjectsService {
     const fileBuffer = await fs.readFile(filePath);
     const fileSize = (await fs.stat(filePath)).size;
 
+    // Get video metadata
+    const metadata = await this.video.getVideoMetadata(filePath);
+
+    // 💳 CREDIT SYSTEM: Calculate and deduct credits (1.5x for URL imports)
+    const baseCredits = this.credits.calculateCredits(metadata.duration);
+    const creditsNeeded = Math.ceil(baseCredits * 1.5); // 1.5x multiplier for URL imports
+    this.logger.log(`💳 URL Import - Video duration: ${metadata.duration}s (${(metadata.duration / 60).toFixed(2)} min) → ${creditsNeeded} credits (1.5x base: ${baseCredits})`);
+
+    // Check if organization has sufficient credits
+    const hasSufficientCredits = await this.credits.hasSufficientCredits(project.orgId, creditsNeeded);
+    if (!hasSufficientCredits) {
+      // Cleanup downloaded file before throwing error
+      await downloadService.cleanup(filePath);
+      
+      const currentBalance = await this.credits.getBalance(project.orgId);
+      throw new BadRequestException(
+        `Insufficient credits. You need ${creditsNeeded} credits (1.5x for URL imports) but only have ${currentBalance}. Please upgrade your plan or wait for your monthly renewal.`
+      );
+    }
+
+    // Determine processing type from clipSettings
+    const clipSettings = project.clipSettings as any;
+    let processingType: 'CLIPS' | 'REFRAME' | 'CAPTIONS' = 'CLIPS'; // Default
+    if (clipSettings?.reframeMode) {
+      processingType = 'REFRAME';
+    } else if (clipSettings?.subtitlesMode) {
+      processingType = 'CAPTIONS';
+    }
+
+    // Deduct credits
+    await this.credits.deductCredits(
+      project.orgId,
+      creditsNeeded,
+      processingType,
+      projectId,
+      metadata.duration / 60, // Convert to minutes
+      `${processingType} processing (URL import): ${(metadata.duration / 60).toFixed(2)} minutes`
+    );
+
     // Upload to MinIO
     const key = `projects/${projectId}/source.mp4`;
     const result = await this.storage.uploadFile(key, fileBuffer, 'video/mp4');
 
-    // Get video metadata
-    const metadata = await this.video.getVideoMetadata(filePath);
-
     // Cleanup downloaded file
     await downloadService.cleanup(filePath);
+
+    // Get organization tier for project expiration
+    const org = await this.prisma.organization.findUnique({
+      where: { id: project.orgId },
+      select: { tier: true },
+    });
+
+    // Calculate project expiration based on tier
+    let expiresAt: Date | null = null;
+    if (org?.tier === 'FREE') {
+      expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+    } else if (org?.tier === 'STARTER') {
+      expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 90 days
+    }
+    // PRO and BUSINESS: null (never expire)
 
     // Update project with video info
     // Use video title from metadata if no custom title provided
@@ -601,6 +665,7 @@ export class ProjectsService {
         title: finalTitle,
         sourceUrl: result.key,
         status: 'INGESTING',
+        expiresAt,
       },
     });
 
