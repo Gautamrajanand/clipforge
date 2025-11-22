@@ -82,6 +82,15 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-ClipForge <noreply@clipforge.ai>}
       APP_URL: ${APP_URL:-http://localhost:3001}
+      # Clerk Authentication
+      CLERK_SECRET_KEY: sk_test_HDxBd9tzinwO6dNNFbVdETXaFRGEzh8V13LuluC8wu
+      CLERK_PUBLISHABLE_KEY: pk_test_dW5iaWFzZWQtbW9zcXVpdG8tNjMuY2xlcmsuYWNjb3VudHMuZGV2JA
+      # Stripe Configuration
+      STRIPE_SECRET_KEY: sk_test_51SWBB662BJnrL0Sql0Al2chpIOBlqocjRjDWNXYlUetXPuLcGSG3334oQlVM6YV82xyOuKPhOP46T17VeCFA0gxO00uyW48kYw
+      STRIPE_PUBLISHABLE_KEY: pk_test_51SWBB662BJnrL0Sqhb7bR7sLUBK0oEZbfRtsx5Z3dFO0DZCEs1B2qJPIyN2LDzfEJuQqvNvyk32FXhgOurfyzIUq00wThpRFL0
+      STRIPE_WEBHOOK_SECRET: whsec_YOUR_WEBHOOK_SECRET_HERE
+      # Frontend URL
+      FRONTEND_URL: http://localhost:3001
     ports:
       - "3000:3000"
     depends_on:
