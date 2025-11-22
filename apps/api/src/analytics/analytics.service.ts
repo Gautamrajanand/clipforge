@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 
 export interface ExportMetrics {
   views: number;
@@ -24,7 +25,37 @@ export interface AnalyticsData {
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(AnalyticsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private config: ConfigService,
+  ) {}
+
+  /**
+   * Track backend event (logs for now, can integrate with Mixpanel later)
+   */
+  async trackEvent(
+    eventName: string,
+    properties: Record<string, any>,
+    userId?: string,
+  ): Promise<void> {
+    try {
+      // Log event for now (can integrate with Mixpanel Node SDK later)
+      this.logger.log(
+        `📊 Analytics Event: ${eventName}`,
+        JSON.stringify({ userId, ...properties }),
+      );
+
+      // TODO: Send to Mixpanel via HTTP API or Node SDK
+      // const mixpanelToken = this.config.get('MIXPANEL_TOKEN');
+      // if (mixpanelToken) {
+      //   await this.sendToMixpanel(eventName, properties, userId);
+      // }
+    } catch (error) {
+      this.logger.error(`Failed to track event: ${eventName}`, error);
+    }
+  }
 
   /**
    * Record export metrics (called after publishing)

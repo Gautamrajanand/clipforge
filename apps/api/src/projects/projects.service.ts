@@ -9,6 +9,7 @@ import { TranscriptionService } from '../transcription/transcription.service';
 import { CaptionsService } from '../captions/captions.service';
 import { QueuesService } from '../queues/queues.service';
 import { CreditsService } from '../credits/credits.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 // import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ReframeDto } from './dto/reframe.dto';
@@ -30,6 +31,7 @@ export class ProjectsService {
     private captions: CaptionsService,
     private queues: QueuesService,
     private credits: CreditsService,
+    private analytics: AnalyticsService,
     // private email: EmailService, // TEMPORARILY DISABLED
   ) {}
 
@@ -380,6 +382,14 @@ export class ProjectsService {
       await this.prisma.project.update({
         where: { id: projectId },
         data: { status: 'READY' },
+      });
+
+      // Track clips detected event
+      await this.analytics.trackEvent('clips_detected', {
+        projectId,
+        clipCount: momentsWithTitles.length,
+        avgScore: momentsWithTitles.reduce((sum, m) => sum + m.score, 0) / momentsWithTitles.length,
+        avgDuration: momentsWithTitles.reduce((sum, m) => sum + m.duration, 0) / momentsWithTitles.length,
       });
 
       // Send email notification - TEMPORARILY DISABLED

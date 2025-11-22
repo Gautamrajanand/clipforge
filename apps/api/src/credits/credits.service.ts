@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Tier } from '@prisma/client';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 /**
  * CreditService - Handles all credit operations (Opus Clip parity)
@@ -19,7 +20,10 @@ import { Tier } from '@prisma/client';
 export class CreditsService {
   private readonly logger = new Logger(CreditsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private analytics: AnalyticsService,
+  ) {}
 
   /**
    * Calculate credits needed for video processing (Opus Clip rules)
@@ -123,6 +127,17 @@ export class CreditsService {
       this.logger.warn(
         `❌ Insufficient credits for org ${orgId} (${org.name}): needs ${creditsToDeduct}, has ${balanceBefore}`,
       );
+      
+      // Track insufficient credits event
+      await this.analytics.trackEvent('credits_insufficient', {
+        orgId,
+        creditsNeeded: creditsToDeduct,
+        creditsAvailable: balanceBefore,
+        tier: org.tier,
+        type,
+        projectId,
+      });
+      
       throw new BadRequestException(
         `Insufficient credits. You need ${creditsToDeduct} credits but only have ${balanceBefore}. Please upgrade your plan.`,
       );
@@ -178,6 +193,18 @@ export class CreditsService {
     this.logger.log(
       `✅ Deducted ${creditsToDeduct} credits from org ${orgId} (${org.name}): ${balanceBefore} → ${balanceAfter}`,
     );
+
+    // Track credit deduction event
+    await this.analytics.trackEvent('credits_deducted', {
+      orgId,
+      amount: creditsToDeduct,
+      balanceBefore,
+      balanceAfter,
+      type,
+      tier: org.tier,
+      projectId,
+      videoDuration,
+    });
   }
 
   /**
