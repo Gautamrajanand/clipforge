@@ -375,16 +375,38 @@ export class PaymentsService {
     const tier = subscription.metadata?.tier || 'PRO';
     const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
 
+    // Calculate credits based on tier
+    const tierCredits = {
+      STARTER: 150,
+      PRO: 300,
+      BUSINESS: 1000,
+    };
+    const creditsToAdd = tierCredits[tier as keyof typeof tierCredits] || 300;
+
+    // Update organization tier and add credits
     await this.prisma.organization.update({
       where: { id: org.id },
       data: {
         tier: tier as any,
         stripeSubscriptionId: subscription.id,
         stripeCurrentPeriodEnd: currentPeriodEnd,
+        credits: {
+          increment: creditsToAdd,
+        },
       },
     });
 
-    this.logger.log(`✅ Updated subscription for org ${org.id}: ${tier}`);
+    // Log credit transaction
+    await this.prisma.creditTransaction.create({
+      data: {
+        organizationId: org.id,
+        amount: creditsToAdd,
+        type: 'PURCHASE',
+        description: `${tier} subscription activated - monthly credits`,
+      },
+    });
+
+    this.logger.log(`✅ Updated subscription for org ${org.id}: ${tier} (+${creditsToAdd} credits)`);
   }
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
