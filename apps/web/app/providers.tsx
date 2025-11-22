@@ -3,6 +3,7 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
+import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
 
 const queryClient = new QueryClient();
 
@@ -18,8 +19,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        {children}
-        <Toaster position="top-right" />
+        <AnalyticsProvider>
+          {children}
+          <Toaster position="top-right" />
+        </AnalyticsProvider>
       </QueryClientProvider>
     </ClerkProvider>
   );

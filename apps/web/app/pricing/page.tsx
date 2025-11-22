@@ -5,6 +5,8 @@ import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Check, X, ArrowRight, Sparkles } from 'lucide-react';
 import { fetchWithAuth } from '@/lib/api';
+import { usePageTracking } from '@/hooks/useAnalytics';
+import { trackCheckoutInitiated } from '@/lib/analytics';
 
 const PRICING_TIERS = {
   starter: {
@@ -73,6 +75,9 @@ export default function PricingPage() {
   const { isSignedIn, getToken: getClerkToken } = useAuth();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
+  
+  // Track pricing page view
+  usePageTracking('Pricing');
 
   const handleUpgrade = async (tier: 'STARTER' | 'PRO' | 'BUSINESS') => {
     if (!isSignedIn) {
@@ -82,6 +87,11 @@ export default function PricingPage() {
 
     try {
       setLoading(tier);
+      
+      // Track checkout initiation
+      const tierPrices = { STARTER: 29, PRO: 79, BUSINESS: 99 };
+      trackCheckoutInitiated(tier, tierPrices[tier]);
+      
       const response = await fetchWithAuth('http://localhost:3000/v1/payments/checkout', {
         method: 'POST',
         getToken: getClerkToken,

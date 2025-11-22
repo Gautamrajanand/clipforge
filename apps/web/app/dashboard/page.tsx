@@ -14,9 +14,15 @@ import UploadModal from '@/components/modals/UploadModal';
 import ReframeModal from '@/components/modals/ReframeModal';
 import SubtitlesModal from '@/components/modals/SubtitlesModal';
 import { fetchWithAuth } from '@/lib/api';
+import { useAnalytics, usePageTracking } from '@/hooks/useAnalytics';
 
 export default function Dashboard() {
   const router = useRouter();
+  const { track } = useAnalytics();
+  
+  // Track page view
+  usePageTracking('Dashboard');
+  
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showReframeModal, setShowReframeModal] = useState(false);
   const [showSubtitlesModal, setShowSubtitlesModal] = useState(false);
