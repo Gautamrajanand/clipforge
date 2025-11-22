@@ -123,28 +123,30 @@ export default function PricingPage() {
             </div>
             <span className="font-bold text-lg text-gray-900">ClipForge</span>
           </Link>
-          <Link
+          <Link 
             href="/dashboard"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm lg:text-base"
           >
-            Back to Dashboard
+            <ArrowRight className="w-4 h-4 rotate-180" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Link>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-16">
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 lg:py-12">
         {/* Title */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-8 lg:mb-12">
+          <h1 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-3 lg:mb-4">
             Upgrade your plan
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-lg lg:text-xl text-gray-600 mb-6 lg:mb-8">
             Choose the perfect plan for your content creation needs
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-3 bg-white rounded-full p-1 border border-gray-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 lg:gap-3 bg-white rounded-full p-1 border border-gray-200 shadow-sm text-sm lg:text-base">
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-full font-medium transition-colors ${
@@ -170,7 +172,7 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {/* Starter */}
           <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:border-gray-300 transition-all shadow-sm">
             <div className="mb-6">
