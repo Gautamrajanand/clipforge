@@ -65,30 +65,22 @@ function mixpanelRequest(method, endpoint, data) {
   });
 }
 
-// Funnel 1: Signup to First Clip
-async function createSignupToFirstClipFunnel() {
-  console.log('📊 Creating "Signup to First Clip" funnel...');
-  
-  const funnel = {
-    name: 'Signup to First Clip',
-    project_id: MIXPANEL_PROJECT_ID,
-    steps: [
-      { event: 'user_signed_up' },
-      { event: 'dashboard_viewed' },
-      { event: 'video_uploaded' },
-      { event: 'project_created' },
-      { event: 'clips_detected' },
-      { event: 'clip_exported' },
-    ],
-    conversion_window: 86400, // 24 hours in seconds
-  };
+// Note: Mixpanel's Management API doesn't support creating funnels programmatically
+// Funnels must be created manually through the UI
+// This script will output the configuration you need to copy-paste
 
-  try {
-    const result = await mixpanelRequest('POST', '/funnels', funnel);
-    console.log('✅ Funnel created:', result);
-  } catch (error) {
-    console.error('❌ Failed to create funnel:', error.message);
-  }
+async function createSignupToFirstClipFunnel() {
+  console.log('📊 Configuration for "Signup to First Clip" funnel:');
+  console.log('   Name: Signup to First Clip');
+  console.log('   Steps:');
+  console.log('     1. user_signed_up');
+  console.log('     2. dashboard_viewed');
+  console.log('     3. video_uploaded');
+  console.log('     4. project_created');
+  console.log('     5. clips_detected');
+  console.log('     6. clip_exported');
+  console.log('   Conversion window: 24 hours');
+  console.log('   ✅ Ready to create manually\n');
 }
 
 // Funnel 2: Free to Paid

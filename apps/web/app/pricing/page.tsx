@@ -8,6 +8,9 @@ import { fetchWithAuth } from '@/lib/api';
 import { usePageTracking } from '@/hooks/useAnalytics';
 import { trackCheckoutInitiated } from '@/lib/analytics';
 
+// Note: Since this is a client component, metadata should be set in layout or use next/head
+// For now, we'll add it via the parent layout's template feature
+
 const PRICING_TIERS = {
   starter: {
     name: 'Starter',
