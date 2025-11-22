@@ -28,38 +28,38 @@ export class PaymentsService {
   private readonly plans = {
     STARTER: {
       stripe: {
-        monthly: 'price_starter_monthly', // TODO: Create in Stripe Dashboard
+        monthly: 'price_1SWBfe62BJnrL0SqUcbjUWR8', // ✅ Real Stripe Price ID
         yearly: 'price_starter_yearly',
-        amount: 1900, // $19/month
+        amount: 2900, // $29/month
       },
       razorpay: {
         monthly: 'plan_starter_monthly', // TODO: Create in Razorpay Dashboard
         yearly: 'plan_starter_yearly',
-        amount: 149900, // ₹1499/month
+        amount: 229900, // ₹2299/month (~$29 USD)
       },
     },
     PRO: {
       stripe: {
-        monthly: 'price_pro_monthly',
+        monthly: 'price_1SWBiG62BJnrL0SqYZu4Adx9', // ✅ Real Stripe Price ID
         yearly: 'price_pro_yearly',
-        amount: 4900, // $49/month
+        amount: 7900, // $79/month
       },
       razorpay: {
         monthly: 'plan_pro_monthly',
         yearly: 'plan_pro_yearly',
-        amount: 399900, // ₹3999/month
+        amount: 599900, // ₹5999/month (~$79 USD)
       },
     },
     BUSINESS: {
       stripe: {
-        monthly: 'price_business_monthly',
+        monthly: 'price_1SWBjo62BJnrL0SqAGKawrxE', // ✅ Real Stripe Price ID
         yearly: 'price_business_yearly',
         amount: 9900, // $99/month
       },
       razorpay: {
         monthly: 'plan_business_monthly',
         yearly: 'plan_business_yearly',
-        amount: 799900, // ₹7999/month
+        amount: 799900, // ₹7999/month (~$99 USD)
       },
     },
   };
@@ -199,8 +199,8 @@ export class PaymentsService {
               quantity: 1,
             },
           ],
-          success_url: `${this.config.get('FRONTEND_URL')}/subscription?success=true`,
-          cancel_url: `${this.config.get('FRONTEND_URL')}/subscription?canceled=true`,
+          success_url: `${this.config.get('FRONTEND_URL')}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${this.config.get('FRONTEND_URL')}/payment/cancel`,
           metadata: {
             orgId,
             tier,

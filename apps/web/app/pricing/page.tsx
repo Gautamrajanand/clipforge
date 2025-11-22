@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Check, X, ArrowRight, Sparkles } from 'lucide-react';
+import { fetchWithAuth } from '@/lib/api';
 
 const PRICING_TIERS = {
   starter: {
     name: 'Starter',
-    price: 9,
-    priceYearly: 9,
+    price: 29,
+    priceYearly: 24, // $24/mo when billed annually ($288/year)
     credits: 150,
     popular: false,
     features: [
@@ -25,8 +27,8 @@ const PRICING_TIERS = {
   },
   pro: {
     name: 'Pro',
-    price: 9.5,
-    priceYearly: 114, // $9.5/mo billed annually
+    price: 79,
+    priceYearly: 66, // $66/mo when billed annually ($792/year)
     credits: 3600,
     creditsMonthly: 300,
     popular: true,
@@ -48,8 +50,8 @@ const PRICING_TIERS = {
   },
   business: {
     name: 'Business',
-    price: null,
-    priceYearly: null,
+    price: 99,
+    priceYearly: 83, // $83/mo when billed annually ($996/year)
     credits: 'Custom',
     popular: false,
     features: [
@@ -68,7 +70,45 @@ const PRICING_TIERS = {
 };
 
 export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
+  const { isLoaded, isSignedIn, getToken: getClerkToken } = useAuth();
+  const { user } = useUser();
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const handleUpgrade = async (tier: 'STARTER' | 'PRO' | 'BUSINESS') => {
+    if (!isSignedIn) {
+      window.location.href = '/sign-in?redirect_url=/pricing';
+      return;
+    }
+
+    try {
+      setLoading(tier);
+      const response = await fetchWithAuth('http://localhost:3000/v1/payments/checkout', {
+        method: 'POST',
+        getToken: getClerkToken,
+        body: JSON.stringify({
+          tier,
+          interval: billingCycle,
+          gateway: 'stripe', // Default to Stripe, can add gateway selection later
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Checkout error:', error);
+        alert('Failed to create checkout session. Please try again.');
+        return;
+      }
+
+      const { url } = await response.json();
+      window.location.href = url; // Redirect to Stripe Checkout
+    } catch (error) {
+      console.error('Upgrade error:', error);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setLoading(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -147,8 +187,12 @@ export default function PricingPage() {
               )}
             </div>
 
-            <button className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors mb-6">
-              Get Starter
+            <button 
+              onClick={() => handleUpgrade('STARTER')}
+              disabled={loading === 'STARTER'}
+              className="w-full py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors mb-6"
+            >
+              {loading === 'STARTER' ? 'Loading...' : 'Get Starter'}
             </button>
 
             <div className="space-y-3">
@@ -178,7 +222,7 @@ export default function PricingPage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">{PRICING_TIERS.pro.name}</h3>
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-4xl font-bold text-gray-900">
-                  ${billingCycle === 'yearly' ? '9.5' : PRICING_TIERS.pro.price}
+                  ${billingCycle === 'yearly' ? PRICING_TIERS.pro.priceYearly : PRICING_TIERS.pro.price}
                 </span>
                 <span className="text-gray-600">USD</span>
                 <span className="text-gray-500">/mo</span>
@@ -190,9 +234,17 @@ export default function PricingPage() {
               )}
             </div>
 
-            <button className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors mb-6 flex items-center justify-center gap-2">
-              Get Pro
-              <ArrowRight className="w-4 h-4" />
+            <button 
+              onClick={() => handleUpgrade('PRO')}
+              disabled={loading === 'PRO'}
+              className="w-full py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors mb-6 flex items-center justify-center gap-2"
+            >
+              {loading === 'PRO' ? 'Loading...' : (
+                <>
+                  Get Pro
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
 
             <div className="space-y-3">
@@ -214,15 +266,25 @@ export default function PricingPage() {
             <div className="mb-6">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">{PRICING_TIERS.business.name}</h3>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl font-bold text-gray-900">Let's talk</span>
+                <span className="text-4xl font-bold text-gray-900">
+                  ${billingCycle === 'yearly' ? PRICING_TIERS.business.priceYearly : PRICING_TIERS.business.price}
+                </span>
+                <span className="text-gray-600">USD</span>
+                <span className="text-gray-500">/mo</span>
               </div>
-              <p className="text-sm text-gray-600">
-                Fit for business, dressed in a tux
-              </p>
+              {billingCycle === 'yearly' && (
+                <p className="text-sm text-gray-600">
+                  ${(PRICING_TIERS.business.priceYearly || 0) * 12} billed annually
+                </p>
+              )}
             </div>
 
-            <button className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors mb-6">
-              Contact us
+            <button 
+              onClick={() => handleUpgrade('BUSINESS')}
+              disabled={loading === 'BUSINESS'}
+              className="w-full py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors mb-6"
+            >
+              {loading === 'BUSINESS' ? 'Loading...' : 'Get Business'}
             </button>
 
             <div className="space-y-3">
