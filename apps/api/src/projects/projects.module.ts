@@ -12,10 +12,11 @@ import { FFmpegService } from '../video/ffmpeg.service';
 import { CaptionsModule } from '../captions/captions.module';
 import { QueuesModule } from '../queues/queues.module';
 import { CreditsModule } from '../credits/credits.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
 // import { EmailModule } from '../email/email.module'; // TEMPORARILY DISABLED
 
 @Module({
-  imports: [PrismaModule, AuthModule, JobsModule, StorageModule, AIModule, TranscriptionModule, CaptionsModule, QueuesModule, CreditsModule],
+  imports: [PrismaModule, AuthModule, JobsModule, StorageModule, AIModule, TranscriptionModule, CaptionsModule, QueuesModule, CreditsModule, AnalyticsModule],
   providers: [ProjectsService, VideoService, FFmpegService],
   controllers: [ProjectsController],
   exports: [ProjectsService],
