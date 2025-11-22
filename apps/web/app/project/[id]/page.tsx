@@ -27,6 +27,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportVideoUrls, setExportVideoUrls] = useState<Record<string, string>>({});
   const [selectedClipForPlayback, setSelectedClipForPlayback] = useState<any>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [clipSettings, setClipSettings] = useState({
     clipLength: 45,
     clipCount: 5,
@@ -361,32 +362,40 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <TopBar />
+      <Sidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+      <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
       
-      <main className="ml-64 pt-16">
+      <main className="lg:ml-64 pt-16">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 lg:gap-4 w-full lg:w-auto">
               <Link href="/dashboard">
                 <button className="w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
                   <ArrowLeft className="w-5 h-5 text-gray-600" />
                 </button>
               </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{project.title}</h1>
-                <p className="text-sm text-gray-500">
+              <div className="flex-1 lg:flex-none">
+                <h1 className="text-lg lg:text-2xl font-bold text-gray-900 truncate">{project.title}</h1>
+                <p className="text-xs lg:text-sm text-gray-500">
                   {projectMode === 'subtitles' && '🎬 AI Subtitles Project'}
                   {projectMode === 'reframe' && '📐 AI Reframe Project'}
-                  {projectMode === 'clips' && `${clips.length} clips detected • ${selectedClips.length} selected`}
+                  {projectMode === 'clips' && (
+                    <>
+                      <span className="hidden sm:inline">{clips.length} clips detected • {selectedClips.length} selected</span>
+                      <span className="sm:hidden">{clips.length} clips • {selectedClips.length} selected</span>
+                    </>
+                  )}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+            <div className="flex items-center gap-2 lg:gap-3 w-full lg:w-auto">
+              <button className="hidden sm:flex px-3 lg:px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors items-center gap-2 text-sm lg:text-base">
                 <Share2 className="w-4 h-4" />
-                Share
+                <span className="hidden lg:inline">Share</span>
               </button>
               
               {/* Show Export button for subtitles/reframe, Export button for clips */}

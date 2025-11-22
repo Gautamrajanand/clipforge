@@ -112,34 +112,35 @@ export default function CalendarPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 lg:px-6 py-6 lg:py-8">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Calendar</h1>
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 lg:mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold">Calendar</h1>
+          <div className="flex items-center gap-2 lg:gap-3 w-full sm:w-auto">
             <button
               onClick={handleSchedulePost}
-              className="px-4 py-2 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors text-sm lg:text-base"
             >
               Schedule post
             </button>
-            <button className="px-4 py-2 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2">
+            <button className="hidden sm:flex px-3 lg:px-4 py-2 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors items-center gap-2 text-sm lg:text-base">
               <Upload className="w-4 h-4" />
-              Upload local video
+              <span className="hidden lg:inline">Upload local video</span>
+              <span className="lg:hidden">Upload</span>
             </button>
           </div>
         </div>
 
         {/* Month Navigation */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center mb-4 lg:mb-6">
+          <div className="flex items-center gap-2 lg:gap-4">
             <button
               onClick={previousMonth}
               className="p-2 hover:bg-white rounded-lg transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h2 className="text-xl font-semibold min-w-[200px] text-center">
+            <h2 className="text-lg lg:text-xl font-semibold min-w-[180px] lg:min-w-[200px] text-center">
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h2>
             <button
@@ -152,34 +153,36 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar Grid */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          {/* Day Headers */}
-          <div className="grid grid-cols-7 border-b border-gray-200">
-            {dayNames.map((day) => (
-              <div
-                key={day}
-                className="p-4 text-center text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Calendar Days */}
-          <div className="grid grid-cols-7">
-            {days.map((day, index) => {
-              const isToday =
-                day.fullDate.toDateString() === new Date().toDateString();
-              
-              return (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+          <div className="min-w-[700px]">
+            {/* Day Headers */}
+            <div className="grid grid-cols-7 border-b border-gray-200">
+              {dayNames.map((day) => (
                 <div
-                  key={index}
-                  className={`min-h-[100px] p-3 border-r border-b border-gray-200 last:border-r-0 ${
+                  key={day}
+                  className="p-2 lg:p-4 text-center text-xs lg:text-sm font-semibold text-gray-600 border-r border-gray-200 last:border-r-0"
+                >
+                  <span className="hidden sm:inline">{day}</span>
+                  <span className="sm:hidden">{day.slice(0, 3)}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Days */}
+            <div className="grid grid-cols-7">
+              {days.map((day, index) => {
+                const isToday =
+                  day.fullDate.toDateString() === new Date().toDateString();
+                
+                return (
+                  <div
+                    key={index}
+                    className={`min-h-[80px] lg:min-h-[100px] p-2 lg:p-3 border-r border-b border-gray-200 last:border-r-0 ${
                     !day.isCurrentMonth ? 'bg-gray-50/50' : ''
                   } ${isToday ? 'bg-primary-500/10' : ''}`}
                 >
-                  <div
-                    className={`text-sm font-medium mb-2 ${
+                    <div
+                      className={`text-xs lg:text-sm font-medium mb-1 lg:mb-2 ${
                       !day.isCurrentMonth
                         ? 'text-gray-600'
                         : isToday
@@ -190,13 +193,14 @@ export default function CalendarPage() {
                     {day.date}
                   </div>
                   
-                  {/* Scheduled posts would appear here */}
-                  {isToday && (
-                    <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-                  )}
-                </div>
-              );
-            })}
+                    {/* Scheduled posts would appear here */}
+                    {isToday && (
+                      <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
