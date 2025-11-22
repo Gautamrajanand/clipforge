@@ -1,551 +1,248 @@
-# ClipForge - Current Status & Progress
-**Last Updated:** November 15, 2025 (11:40 PM IST)
+# ClipForge - Current Status (Nov 22, 2025)
 
-## ✅ **SYSTEM STATUS: STABLE & PRODUCTION READY**
+## 🎯 Where We Are: Week 2 Day 3
 
-**All core features working correctly. Watermark & tier system fully implemented across all video export types.**
+### ✅ COMPLETED
 
-### **Latest Updates (Nov 15, 2025 - Night):**
-- ✅ **Watermark & Tier System** - FREE tier watermarking complete
-  - Organization tier field added (FREE/PRO/BUSINESS/ENTERPRISE)
-  - "Made with ClipForge" watermark for FREE tier users
-  - Watermark visible throughout entire video (all chunks)
-  - Applied to AI Clips, AI Subtitles, and AI Reframe exports
-  - FFmpeg drawtext filter with white text, dark background box
-  - Top-right corner placement (20px from edges)
-  - Automatic removal for PRO+ tier users
-  
-- ✅ **Unified Caption Rendering Pipeline** - AI Clips and AI Subtitles now use identical rendering
-  - Generic `burnCaptionsToVideo()` method works for any video
-  - AI Subtitles uses same pipeline as AI Clips (no more duplicate code)
-  - Same 14 caption styles, same customization options
-  - Same chunked rendering for long videos (>15s)
-  
-- ✅ **AI Subtitles Export Preview Workflow** - Matches AI Clips exactly
-  - "Export with Captions" button generates video for preview
-  - Exported video shows in dedicated section below
-  - Full caption settings displayed (style, size, color)
-  - Users preview THEN download (better UX)
-  
-- ✅ **Improved Caption Preview** - No confusing simplified captions
-  - Purple notice explains advanced styles can't be previewed in real-time
-  - Clean source video preview (no overlay for advanced styles)
-  - Real-time captions only for basic styles that work in browser
+#### Week 1: Foundation (Nov 18-20, 2025)
+**Day 1-4: Clerk Authentication**
+- ✅ Clerk integration (frontend + backend)
+- ✅ JWT verification with JWKS
+- ✅ `ClerkAuthGuard` protecting all routes
+- ✅ `fetchWithAuth` helper for auto token refresh
+- ✅ User/Organization sync
+- ✅ Multi-tenant architecture
+- **Commits:** `5f962af` to `4657abf`
 
----
+**Day 5-7: Payment Integration**
+- ✅ Stripe SDK integrated (global markets)
+- ✅ Razorpay SDK integrated (India)
+- ✅ Payment service with customer creation
+- ✅ Subscription management
+- ✅ Checkout session creation
+- ✅ Billing portal integration
+- ✅ Webhook handlers (both gateways)
+- ✅ All API endpoints (`/v1/payments/*`)
+- ✅ Billing UI page (`/billing`)
+- **Commits:** `dee205d`, `999d48b`
 
-## ✅ **COMPLETED FEATURES**
-
-### **FREE TIER - Basic Clips** (Production Ready)
-
-#### **1. AI-Powered Titles & Descriptions**
-- **Technology:** OpenAI GPT-3.5-turbo
-- **Features:**
-  - 3-8 word descriptive titles
-  - 80-character max descriptions (fits UI perfectly)
-  - Avoids vague pronouns
-  - Graceful fallback to heuristics
-- **Cost:** ~$0.0001 per clip (very affordable)
-- **Files:**
-  - `workers/routers/ranker.py` - `_generate_ai_title()`, `_generate_ai_description()`
-  - `docker-compose.yml` - OpenAI API key configuration
-- **Status:** ✅ Production-ready, tested, working
-
-#### **2. Score Display & Breakdown**
-- **Features:**
-  - Fixed score display (34% not 3400%)
-  - Expandable score breakdown UI
-  - Shows: hook, emotion, clarity, quote, novelty, structure
-  - Color-coded indicators with emojis
-  - Clickable score badge
-- **Files:**
-  - `apps/web/components/clips/ClipsGrid.tsx`
-  - `apps/web/components/clips/clip-card.tsx`
-- **Status:** ✅ Production-ready, tested, working
-
-#### **3. Smart Boundary Detection**
-- **Features:**
-  - Quality-scored cut points
-  - Prioritizes sentence boundaries
-  - Avoids cutting mid-phrase
-  - Detects natural pauses (breath, sentence ends)
-  - Balances quality vs proximity to target time
-- **Files:**
-  - `workers/services/ranker_engine.py` - `_snap_to_silence()`
-- **Status:** ✅ Production-ready
-
-#### **4. Clip Settings Integration**
-- **Features:**
-  - Customizable clip length (15-180s)
-  - Customizable number of clips (1-10)
-  - Settings passed from UI to ML worker
-  - Dynamic min/max duration calculation
-- **Files:**
-  - `apps/web/components/clips/ClipSettings.tsx`
-  - `apps/api/src/transcription/transcription.service.ts`
-  - `workers/routers/ranker.py`
-- **Status:** ✅ Production-ready
-
-#### **5. Segment Tracking**
-- **Features:**
-  - Stores which transcript segments are used
-  - Foundation for transcript visualization
-  - Includes speaker attribution
-  - Overlap detection
-- **Files:**
-  - `workers/services/ranker_engine.py`
-- **Status:** ✅ Production-ready
+#### Week 2: Testing & PLG Foundation
+**Day 1-2: Credit System Testing (Nov 21-22, 2025)**
+- ✅ Credit deduction on all operations
+- ✅ Cost preview in all modals (Upload, Reframe, Subtitles)
+- ✅ Insufficient credits blocking
+- ✅ Credit refund on processing failure
+- ✅ Credits widget in sidebar
+- ✅ `/credits` page with real API data
+- ✅ `/subscription` page with real API data
+- ✅ Transaction history with pagination
+- ✅ Low credits warning
+- **Commits:** `2dd21bc` to `50ef089`
 
 ---
 
-### **PRO TIER - Pro Clips** (Core Complete, Integration Ready)
+## 🔄 IN PROGRESS: Week 2 Day 3-4
 
-#### **1. Multi-Segment Detection Algorithm**
-- **Features:**
-  - Combines 2-4 high-value segments from different parts of video
-  - Well-spaced segments (5s+ apart)
-  - Duration matching (±30% tolerance)
-  - Chronological ordering
-  - Score-based selection
-  - Avoids reusing segments across clips
-- **Files:**
-  - `workers/services/ranker_engine.py`:
-    - `ClipSegment` dataclass
-    - `MultiSegmentClip` dataclass
-    - `detect_multi_segment_clips()` method
-    - `_find_segment_combination()` method
-    - `_create_multi_segment_clip()` method
-- **Status:** ✅ Complete, tested with test script
+### Stripe & Razorpay Configuration (15-30 minutes)
 
-#### **2. FFmpeg Multi-Segment Stitching Pipeline**
-- **Features:**
-  - Extract individual video segments
-  - Simple concatenation (fast, no re-encoding)
-  - Crossfade mode (professional 300ms transitions)
-  - Automatic temp file cleanup
-  - Quality-preserved encoding (CRF 23)
-- **Methods:**
-  - `extractSegment()` - Extract single segment
-  - `stitchSimple()` - Fast concat without re-encoding
-  - `stitchWithCrossfade()` - Professional transitions
-  - `createMultiSegmentClip()` - Main entry point
-- **Files:**
-  - `apps/api/src/video/ffmpeg.service.ts`
-- **Status:** ✅ Complete, ready for testing
+**What's Already Built:**
+- ✅ Backend payment service (100% complete)
+- ✅ All API endpoints working
+- ✅ Frontend billing UI ready
+- ✅ Webhook handlers implemented
 
-#### **3. Transcript Visualization UI**
-- **Features:**
-  - Expandable/collapsible interface
-  - Visual timeline bar showing segment distribution
-  - Color-coded segment cards (blue, green, purple, orange)
-  - Timestamp display for each segment
-  - Speaker attribution
-  - Segment order indicators (1, 2, 3...)
-  - Click handlers for future video navigation
-  - Pro Clip indicator message
-- **Files:**
-  - `apps/web/components/clips/TranscriptViewer.tsx` (new)
-  - `apps/web/components/clips/ClipsGrid.tsx` (integrated)
-- **Status:** ✅ Complete, ready for data
+**What's Missing (Configuration Only):**
 
-#### **4. API Integration**
-- **Endpoint:** `POST /v1/projects/:projectId/clips/pro`
-- **Request Body:**
-  ```json
-  {
-    "numClips": 3,
-    "withCrossfade": true
-  }
-  ```
-- **Features:**
-  - Calls ML worker for multi-segment detection
-  - Uses FFmpeg service to stitch segments
-  - Saves Pro Clips to database
-  - Stores segment metadata in features JSON
-  - Sets `isProClip` flag
-- **Files:**
-  - `apps/api/src/clips/clips.controller.ts` - Pro Clips endpoint
-  - `apps/api/src/clips/clips.service.ts` - `generateProClips()` method
-  - `apps/api/src/clips/clips.module.ts` - VideoModule import
-- **Status:** ✅ Complete, ready for testing
+#### 1. Stripe Setup
+- ⚠️ Get real API keys from https://dashboard.stripe.com/test/apikeys
+- ⚠️ Create 3 products in Stripe Dashboard:
+  - ClipForge Starter: $29/month (150 credits)
+  - ClipForge Pro: $79/month (300 credits)
+  - ClipForge Business: $99/month (unlimited)
+- ⚠️ Copy Price IDs and update `payments.service.ts` lines 31-64
+- ⚠️ Setup webhook forwarding with Stripe CLI
+- ⚠️ Add webhook secret to `.env`
 
-#### **5. ML Worker Integration**
-- **Endpoint:** `POST /v1/ranker/detect-pro`
-- **Request Body:**
-  ```json
-  {
-    "projectId": "...",
-    "transcriptId": "...",
-    "numClips": 3,
-    "targetDuration": 45.0
-  }
-  ```
-- **Response:**
-  ```json
-  [
-    {
-      "segments": [
-        {"start": 10.5, "end": 25.3, "duration": 14.8, "score": 82, "text": "...", "order": 1},
-        {"start": 45.2, "end": 58.7, "duration": 13.5, "score": 78, "text": "...", "order": 2},
-        {"start": 120.1, "end": 135.8, "duration": 15.7, "score": 85, "text": "...", "order": 3}
-      ],
-      "total_duration": 44.0,
-      "combined_score": 81.7,
-      "features": {...},
-      "reason": "Multi-segment clip with 3 high-value moments",
-      "full_text": "..."
-    }
-  ]
-  ```
-- **Files:**
-  - `workers/routers/ranker.py` - `detect_pro_clips()` endpoint
-- **Status:** ✅ Complete, ready for testing
-
-#### **6. UI Button**
-- **Location:** Project page, between Share and Export buttons
-- **Features:**
-  - Purple "✨ Pro Clips" button
-  - Disabled when no transcript available
-  - Shows loading state during generation
-  - Success alert with clip count
-  - Auto-refreshes clips list
-- **Files:**
-  - `apps/web/app/project/[id]/page.tsx` - `handleGenerateProClips()`
-- **Status:** ✅ Complete, ready for testing
-
-#### **7. Test Suite**
-- **File:** `workers/test_pro_clips.py`
-- **Features:**
-  - Tests multi-segment detection
-  - Validates data format for UI
-  - Outputs JSON results for inspection
-- **Status:** ✅ Complete
-
----
-
-### **AI FEATURES - UI Parity & Consistency** (November 14, 2025)
-
-#### **1. Caption Style Parity** ✅
-- **AI Subtitles** integrated with `CaptionStyleSelector` (14 professional presets)
-- Backend caption rendering unified with AI Clips export pipeline
-- Animated styles (bounce, wave, typewriter, etc.) work identically in both features
-- Normalized legacy style IDs for consistency
-- Preview component updated to match Clips visual style
-- **Files:**
-  - `apps/web/components/modals/SubtitlesModal.tsx`
-  - `apps/api/src/transcription/transcription.service.ts`
-  - `apps/web/components/video/CaptionedVideoPlayer.tsx`
-- **Status:** ✅ Complete, ready for pixel-perfect verification
-
-#### **2. AI Reframe UI Redesign** ✅
-- **Reframe modal** now uses same components as Export Clips:
-  - `AspectRatioSelector` - 4 aspect ratio cards
-  - `CropModeSelector` - Crop / Pad / Smart
-  - `CropPositionSelector` - Center / Top / Bottom
-- Visual design matches Export Clips exactly
-- Backend mapping preserved for compatibility
-- **Files:**
-  - `apps/web/components/modals/ReframeModal.tsx`
-  - Shared: `AspectRatioSelector`, `CropModeSelector`, `CropPositionSelector`
-- **Status:** ✅ Complete, UI symmetry achieved
-
-#### **3. Modal Tab Order Consistency** ✅
-- All modals (Clips, Subtitles, Reframe) now have:
-  - **Left tab (default):** Upload Video
-  - **Right tab:** Import from URL
-- Prevents user confusion across workflows
-- **Files:**
-  - `apps/web/components/modals/SubtitlesModal.tsx`
-  - `apps/web/components/modals/ReframeModal.tsx`
-- **Status:** ✅ Complete
-
-#### **4. Export Clips Download Fix** ✅
-- Blue "Download" button now reuses cached blob URLs
-- Eliminates redundant fetches and silent failures
-- Added error handling and user feedback
-- **Files:**
-  - `apps/web/app/project/[id]/page.tsx`
-- **Status:** ✅ Complete, tested
-
----
-
-## 🐛 **BUG FIXES**
-
-### **1. Upload Error (procps package)**
-- **Issue:** API crashed with "spawn ps ENOENT" error
-- **Fix:** Added `procps` package to Dockerfile.api
-- **File:** `Dockerfile.api`
-- **Status:** ✅ Fixed, tested
-
-### **2. Module Dependency Error**
-- **Issue:** ClipsService couldn't resolve FFmpegService dependency
-- **Fix:** Imported VideoModule in ClipsModule
-- **File:** `apps/api/src/clips/clips.module.ts`
-- **Status:** ✅ Fixed, tested
-
-### **3. TypeScript Type Errors**
-- **Issue:** multiClips array type not recognized
-- **Fix:** Added type assertion `as any[]`
-- **File:** `apps/api/src/clips/clips.service.ts`
-- **Status:** ✅ Fixed, compiled successfully
-
----
-
-## 📋 **COMPLETE FEATURE ROADMAP**
-
-### **✅ COMPLETED - FREE TIER**
-- AI-powered titles (GPT-3.5)
-- AI-powered descriptions (80 char max)
-- Score display with expandable breakdown
-- Single-segment clips
-- Smart boundary detection
-- Clip length and count settings
-- Segment tracking
-
-### **✅ COMPLETED - PRO TIER (Core)**
-- Multi-segment detection algorithm
-- FFmpeg stitching pipeline (simple + crossfade)
-- Transcript visualization UI
-- API endpoint integration
-- ML worker endpoint
-- UI button for generation
-- Test suite
-
-### **📋 FUTURE - ASPECT RATIOS**
-- 9:16 vertical (TikTok, Reels, Shorts)
-- 16:9 horizontal (YouTube, LinkedIn)
-- 1:1 square (Instagram Feed)
-- 4:5 portrait (Instagram Feed)
-- Smart cropping with face detection
-- Letterboxing options
-
-### **📋 FUTURE - CAPTIONS & STYLING**
-- Auto-generated captions from transcript
-- Word-level timing from AssemblyAI
-- Multiple caption styles:
-  * Minimal (simple white text)
-  * Bold (large text with highlighting)
-  * Creative (animated, emojis)
-- Customizable fonts, colors, positions
-- Burned into video
-
-### **📋 FUTURE - CLIP EDITING**
-- Trim start/end points
-- Adjust segment order in multi-segment clips
-- Remove/add segments
-- Preview before export
-- Manual override of AI selections
-
----
-
-## 🏗️ **ARCHITECTURE**
-
-### **Data Flow: Pro Clips Generation**
-
-```
-User clicks "✨ Pro Clips" button
-    ↓
-Frontend (page.tsx)
-    POST /v1/projects/:projectId/clips/pro
-    ↓
-API (clips.service.ts)
-    POST http://ml-workers:8000/v1/ranker/detect-pro
-    ↓
-ML Worker (ranker.py)
-    detect_multi_segment_clips()
-    ↓
-    Returns segment data
-    ↓
-API (clips.service.ts)
-    ffmpegService.createMultiSegmentClip()
-    ↓
-    Extracts segments
-    Stitches together
-    ↓
-    Saves to database with metadata
-    ↓
-Frontend
-    Refreshes clips list
-    Shows TranscriptViewer for Pro Clips
+**Current `.env` Status:**
+```bash
+STRIPE_SECRET_KEY=sk_test_xxx  # ❌ Placeholder
+STRIPE_PUBLISHABLE_KEY=pk_test_xxx  # ❌ Placeholder
+# Missing: STRIPE_WEBHOOK_SECRET
 ```
 
-### **Key Services**
+#### 2. Razorpay Setup (Optional - for India market)
+- ⚠️ Get API keys from Razorpay Dashboard
+- ⚠️ Create subscription plans
+- ⚠️ Update `.env` with keys
 
-1. **RankerEngine** (`workers/services/ranker_engine.py`)
-   - Detects highlights
-   - Scores segments
-   - Combines multi-segments
-
-2. **FFmpegService** (`apps/api/src/video/ffmpeg.service.ts`)
-   - Extracts video segments
-   - Stitches segments
-   - Handles crossfades
-
-3. **ClipsService** (`apps/api/src/clips/clips.service.ts`)
-   - Orchestrates Pro Clips generation
-   - Calls ML worker
-   - Calls FFmpeg service
-   - Saves to database
-
-4. **TranscriptViewer** (`apps/web/components/clips/TranscriptViewer.tsx`)
-   - Displays segment visualization
-   - Shows timeline
-   - Color-coded cards
+#### 3. Frontend Connection
+- ⚠️ Update `/pricing` page to call `/v1/payments/checkout`
+- ⚠️ Add "Manage Billing" button in `/subscription`
+- ⚠️ Handle payment success/cancel redirects
 
 ---
 
-## 💰 **COMPETITIVE POSITION**
+## 📋 UPCOMING: Week 2 Day 5-8
 
-### **vs Opus Clip**
+### Day 5-6: Watermark Implementation
+- Add watermark overlay to FREE tier exports
+- Remove watermark for paid tiers
+- Test watermark rendering
 
-| Feature | Opus Clip | ClipForge Free | ClipForge Pro |
-|---------|-----------|----------------|---------------|
-| AI Titles | ✅ | ✅ (GPT-3.5) | ✅ |
-| Score Breakdown | ✅ | ✅ | ✅ |
-| Multi-Segment | ✅ | ❌ | ✅ |
-| Transcript Viz | ✅ | ❌ | ✅ |
-| Captions | ✅ | ❌ | 📋 Future |
-| Aspect Ratios | ✅ | ❌ | 📋 Future |
-| Self-Hosted | ❌ | ✅ | ✅ |
-| Open Source | ❌ | ✅ | ✅ |
-| No Usage Limits | ❌ | ✅ | ✅ |
-
-**Our Advantages:**
-- ✅ Self-hosted (privacy, control)
-- ✅ No usage limits
-- ✅ Open source
-- ✅ Customizable
-- ✅ Better AI (GPT-3.5 vs proprietary)
-- ✅ More transparent scoring
+### Day 7-8: Project Expiry (48h for FREE)
+- Cron job to expire FREE tier projects after 48 hours
+- Cleanup old projects
+- Email notifications
 
 ---
 
-## 📊 **TESTING STATUS**
+## 🏗️ Architecture Summary
 
-### **✅ Tested & Working**
-- Upload flow
-- Basic clip generation
-- AI titles and descriptions
-- Score display and breakdown
-- Clip settings (length, count)
+### Tech Stack
+- **Frontend:** Next.js 14, React 18, TypeScript, TailwindCSS, Clerk
+- **Backend:** NestJS, Prisma, PostgreSQL, Redis, Clerk JWT
+- **Storage:** MinIO (local), S3/R2 (production)
+- **ML/AI:** Python FastAPI, Whisper, AssemblyAI
+- **Payments:** Stripe (global), Razorpay (India)
+- **Infrastructure:** Docker Compose
 
-### **⏳ Ready for Testing**
-- Pro Clips generation (end-to-end)
-- Multi-segment detection
-- FFmpeg stitching
-- Transcript visualization
-- Crossfade transitions
+### Key Services (All Running in Docker)
+- `postgres` - Database (port 5432)
+- `redis` - Cache/jobs (port 6379)
+- `minio` - S3 storage (port 9000)
+- `api` - NestJS backend (port 3000)
+- `web` - Next.js frontend (port 3001)
+- `ml-worker` - Python ML worker (port 8000)
 
-### **📋 Not Yet Tested**
-- Aspect ratio video processing
-- Caption generation
-- Clip editing
+### Database Schema
+- `User` - Clerk user sync
+- `Organization` - Multi-tenant org with credits, tier, Stripe IDs
+- `Membership` - User-org relationships
+- `Project` - Video projects
+- `Clip` - Generated clips with virality scores
+- `CreditTransaction` - Credit usage audit log
+- `Export` - Export jobs
 
----
+### Authentication Flow
+1. Clerk handles user auth (frontend)
+2. Frontend gets JWT token from Clerk
+3. Backend verifies JWT using Clerk JWKS
+4. `ClerkAuthGuard` protects all API routes
+5. `fetchWithAuth` auto-refreshes tokens (10min lifetime)
 
-## 🚀 **DEPLOYMENT STATUS**
-
-### **Services Running (Docker Compose)**
-- ✅ PostgreSQL (port 5432) - Database
-- ✅ Redis (port 6379) - Job queue
-- ✅ MinIO (ports 9000-9001) - Object storage
-- ✅ API (port 3000) - NestJS backend
-- ✅ ML Workers (port 8000) - Python clip detection
-- ✅ Web (port 3001) - Next.js frontend
-
-### **Environment**
-- ✅ OpenAI API key configured
-- ✅ AssemblyAI API key configured
-- ✅ FFmpeg installed (Homebrew)
-- ✅ Docker Desktop running
-- ✅ All services healthy
-- ✅ Docker Compose working
-
-### **Known Issues**
-- ⚠️ AI Subtitles can crash on long videos (>10 min) due to memory limits
-- ⚠️ 120-minute video support not implemented (requires memory optimization)
-
----
-
-## 📝 **DOCUMENTATION STATUS**
-
-### **✅ Up to Date**
-- This file (`CURRENT_STATUS.md`)
-- Memories in AI system
-- Git commit messages
-
-### **⏳ Needs Update**
-- `ARCHITECTURE.md` - Outdated architecture diagram
-- `PRODUCT_ROADMAP.md` - Outdated roadmap (from Nov 5-6)
-- `README.md` - May need API documentation update
+### Credit System
+- **FREE:** 60 credits/month
+- **STARTER:** 150 credits/month ($29)
+- **PRO:** 300 credits/month ($79)
+- **BUSINESS:** Unlimited ($99)
+- 1 credit = 1 minute of video processing
+- Monthly reset via cron job
+- Deduction on: upload, AI clips, reframe, subtitles, export
+- Refund on processing failure
 
 ---
 
-## 🎯 **NEXT STEPS**
+## 📊 Git Commit History (Recent)
 
-### **Immediate (Next Session)**
-1. ✅ System stability restored - all features working
-2. Monitor Docker container memory usage
-3. Test AI Clips caption burning with short videos
-4. Verify all three flows (Clips, Subtitles, Reframe) end-to-end
-5. Consider memory optimization for AI Subtitles
-
-### **Short-term (This Week)**
-1. Implement 120-minute video support (requires memory optimization)
-   - Increase Docker container memory limits
-   - Optimize caption animation (batch processing)
-   - Add streaming uploads/downloads
-2. Add progress tracking for long operations
-3. Complete Opus Clip parity checklist
-4. Add watermark feature
-5. Implement email notifications for AI processing completion
-
-### **Medium-term (Next Week)**
-1. Build pricing/credits/hours system
-2. Add SaaS metering and usage tracking
-3. Implement remaining free features from Opus
-4. User testing and feedback
-5. Performance optimization
+```
+50ef089 feat: Connect subscription page to real API data
+c75d1b7 feat: Connect credits page to real API data and navigation
+cb7220e feat: Add credit cost preview to AI Reframe and AI Subtitles modals
+1a9171c fix: Show specific error messages for insufficient credits
+b9f765f feat: Add cost preview and credit refund logic
+140091c feat: Move credits display from TopBar to Sidebar
+2dd21bc feat: Add credit balance display and low credits warning
+fcea375 fix: Implement automatic Clerk token refresh for API calls
+4657abf fix: Implement proper Clerk JWT verification with jwks-rsa
+999d48b feat: Add subscription/billing UI with dual gateway support
+dee205d feat: Add dual payment gateway integration (Stripe + Razorpay)
+5f962af feat: Implement Clerk authentication (Week 2 Day 1)
+```
 
 ---
 
-## 💾 **GIT STATUS**
+## 🎯 Next Action Items
 
-**Branch:** `main`
-**Last Commit:** `06e0ac5` - Fix download buttons for AI Subtitles and AI Reframe
-**Status:** Clean working directory (only Next.js build cache modified)
+### Immediate (Today - Day 3)
+1. **Get Stripe test keys** (2 minutes)
+   - Go to https://dashboard.stripe.com/test/apikeys
+   - Copy Secret key and Publishable key
+   - Update `.env` file
 
-**Recent Commits:**
-1. Fix download buttons for AI Subtitles and AI Reframe
-2. AI Clips/Subtitles/Reframe UI parity and export download fix
-3. AI-powered clip intelligence system
-4. Multi-segment clip stitching (Pro Clips Phase 1 & 2)
-5. Transcript visualization (Pro Clips Phase 3)
-6. Pro Clips integration - API and ML worker endpoints
+2. **Create Stripe products** (10 minutes)
+   - Go to https://dashboard.stripe.com/test/products
+   - Create 3 products with pricing
+   - Copy Price IDs
+   - Update `payments.service.ts`
 
----
+3. **Setup webhooks** (5 minutes)
+   - Install Stripe CLI: `brew install stripe/stripe-cli/stripe`
+   - Run: `stripe listen --forward-to localhost:3000/v1/payments/webhooks/stripe`
+   - Copy webhook secret
+   - Add to `.env`
 
-## 🎉 **SUMMARY**
+4. **Connect frontend** (30 minutes)
+   - Update `/pricing` page
+   - Add billing portal button
+   - Test payment flow
 
-### **Session Summary (November 15, 2025)**
-- ⚠️ Attempted 120-minute video support - encountered stability issues
-- ✅ Successfully rolled back to stable state (commit `06e0ac5`)
-- ✅ All Docker services restarted and healthy
-- ✅ Redis queue cleared of stuck jobs
-- ✅ System verified stable and working
-- 📝 Created detailed session notes (`SESSION_NOTES_2025-11-15.md`)
-
-### **Current Status**
-- **FREE Tier:** ✅ Production-ready, stable
-- **PRO Tier:** ✅ Core complete, ready for testing
-- **AI Clips:** ✅ Working (caption burning available)
-- **AI Subtitles:** ✅ Working (⚠️ memory limits on long videos)
-- **AI Reframe:** ✅ Working
-- **All Services:** ✅ Running via Docker Compose
-
-### **Next Milestone**
-Monitor system stability, then implement 120-minute video support with proper memory optimization!
+### Tomorrow (Day 4)
+- Test complete payment flow
+- Verify webhook updates tier correctly
+- Test subscription upgrade/downgrade
+- Document payment testing
 
 ---
 
-**ClipForge is stable and production-ready. All core features working correctly!** 🚀
+## �� Key Files
+
+### Backend
+- `apps/api/src/payments/payments.service.ts` - Payment logic
+- `apps/api/src/payments/payments.controller.ts` - API endpoints
+- `apps/api/src/credits/credits.service.ts` - Credit management
+- `apps/api/src/auth/clerk-auth.guard.ts` - JWT verification
+- `apps/api/.env` - Environment configuration
+
+### Frontend
+- `apps/web/app/billing/page.tsx` - Billing UI
+- `apps/web/app/credits/page.tsx` - Credits page
+- `apps/web/app/subscription/page.tsx` - Subscription page
+- `apps/web/lib/api.ts` - `fetchWithAuth` helper
+- `apps/web/components/layout/Sidebar.tsx` - Credits widget
+
+### Documentation
+- `docs/PAYMENT_SETUP.md` - Payment setup guide
+- `STRIPE_STATUS.md` - Stripe integration status
+- `CURRENT_STATUS.md` - This file
+
+---
+
+## 🚀 Production Readiness
+
+### ✅ Ready for Production
+- Authentication system
+- Credit system
+- Database schema
+- API endpoints
+- Frontend UI
+- Payment backend logic
+
+### ⚠️ Needs Configuration
+- Stripe API keys
+- Stripe products/prices
+- Webhook endpoints
+- Production environment variables
+
+### ❌ Not Yet Implemented
+- Watermark for FREE tier
+- Project expiry (48h for FREE)
+- AI Clips virality scoring
+- Smart Clips scene detection
+- Team workspace features
+- Social media scheduler
+
+---
+
+**Last Updated:** Nov 22, 2025, 12:30 PM IST
+**Current Branch:** main
+**Latest Commit:** 50ef089
