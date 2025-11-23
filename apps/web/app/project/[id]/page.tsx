@@ -48,7 +48,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const fetchCredits = async () => {
     try {
-      const response = await fetchWithAuth('http://localhost:3000/v1/credits', {
+      const response = await fetchWithAuth('http://localhost:3000/v1/credits/balance', {
         getToken: getClerkToken,
       });
       if (response.ok) {
