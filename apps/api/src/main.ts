@@ -32,14 +32,77 @@ async function bootstrap() {
   // Swagger/OpenAPI
   const config = new DocumentBuilder()
     .setTitle('ClipForge API')
-    .setDescription('AI video/audio clipping platform API')
-    .setVersion('1.0.0')
-    .addBearerAuth()
-    .addApiKey({ type: 'apiKey', name: 'X-Api-Key', in: 'header' }, 'api-key')
+    .setDescription(
+      'ClipForge API - AI-powered video clipping platform\n\n' +
+      '## Authentication\n' +
+      'All endpoints require a valid Clerk JWT token in the Authorization header:\n' +
+      '```\nAuthorization: Bearer <clerk-jwt-token>\n```\n\n' +
+      '## Rate Limiting\n' +
+      '- 100 requests per minute per user\n' +
+      '- 1000 requests per hour per user\n\n' +
+      '## Credits System\n' +
+      '- 1 credit = 1 minute of video processing\n' +
+      '- FREE: 60 credits/mo (rollover to 120)\n' +
+      '- STARTER: 150 credits/mo (rollover to 300)\n' +
+      '- PRO: 300 credits/mo (rollover to 600)\n\n' +
+      '## Free Trial\n' +
+      '- New users get 7-day STARTER trial\n' +
+      '- 150 credits during trial\n' +
+      '- Auto-downgrade to FREE after trial\n\n' +
+      '## Base URL\n' +
+      '- Development: http://localhost:3000\n' +
+      '- Production: https://api.clipforge.ai'
+    )
+    .setVersion('1.1.0')
+    .setContact(
+      'ClipForge Support',
+      'https://clipforge.ai',
+      'support@clipforge.ai'
+    )
+    .setLicense('Proprietary', 'https://clipforge.ai/license')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Enter your Clerk JWT token',
+        in: 'header',
+      },
+      'clerk-jwt',
+    )
+    .addTag('Authentication', 'User authentication and authorization')
+    .addTag('Credits', 'Credit balance and transaction management')
+    .addTag('Projects', 'Video project CRUD operations')
+    .addTag('Upload', 'Video file upload and URL import')
+    .addTag('Clips', 'AI clip detection and management')
+    .addTag('Reframe', 'AI video reframing (aspect ratio conversion)')
+    .addTag('Subtitles', 'AI subtitle generation and styling')
+    .addTag('Export', 'Video export and rendering')
+    .addTag('Payments', 'Stripe and Razorpay payment integration')
+    .addTag('Subscriptions', 'Subscription management')
+    .addTag('Trial', 'Free trial management')
+    .addTag('Admin', 'Admin panel endpoints')
+    .addTag('Webhooks', 'Payment gateway webhooks')
+    .addServer('http://localhost:3000', 'Development')
+    .addServer('https://api.clipforge.ai', 'Production')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  const document = SwaggerModule.createDocument(app, config, {
+    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+  });
+  
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'ClipForge API Documentation',
+    customfavIcon: 'https://clipforge.ai/favicon.ico',
+    customCss: '.swagger-ui .topbar { display: none }',
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'none',
+      filter: true,
+      showRequestDuration: true,
+    },
+  });
 
   const port = process.env.API_PORT || 3000;
   await app.listen(port, process.env.API_HOST || '0.0.0.0');
