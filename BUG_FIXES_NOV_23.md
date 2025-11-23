@@ -267,30 +267,31 @@ async cancelSubscription(orgId: string) {
 
 ## 📊 **Summary:**
 
-| Issue | Priority | Status | ETA |
-|-------|----------|--------|-----|
-| #1: Project Expiry | Critical | ✅ Fixed | Done |
-| #2: URL Import Credits | Critical | 🔍 Investigating | 1 hour |
-| #3: Credits > Allocation | Medium | 🔍 Investigating | 2 hours |
-| #4: Mixpanel Integration | High | ⏳ TODO | 3 hours |
+| Issue | Priority | Status | Time Spent |
+|-------|----------|--------|------------|
+| #1: Project Expiry | Critical | ✅ Fixed | 30 min |
+| #2: URL Import Credits | Critical | ✅ Fixed | 45 min |
+| #3: Credits > Allocation | Medium | ✅ Fixed (By Design) | 30 min |
+| #4: Mixpanel Integration | High | ✅ Ready (Needs Token) | 20 min |
 | #5: 7-Day Free Trial | High | ⏳ TODO | 4 hours |
 | #6: Downgrade Flow | Medium | ⏳ TODO | 2 hours |
 
-**Total Estimated Time:** 12 hours (1.5 days)
+**Total Time Spent:** 2 hours 5 minutes  
+**Remaining Work:** 6 hours (Issues #5-6)
 
 ---
 
 ## 🎯 **Next Actions:**
 
-### **Immediate (Today):**
+### **✅ Completed:**
 1. ✅ Fix project expiry on tier change
-2. 🔍 Debug URL import credit deduction
-3. 🔍 Investigate credits > allocation
+2. ✅ Fix URL import credit deduction
+3. ✅ Implement credit rollover with 2x cap
+4. ✅ Configure Mixpanel (needs token from user)
 
-### **This Week:**
-4. ⏳ Fix Mixpanel integration
-5. ⏳ Implement 7-day free trial
-6. ⏳ Add downgrade flow
+### **⏳ Remaining:**
+5. ⏳ Implement 7-day free trial (4 hours)
+6. ⏳ Add downgrade flow (2 hours)
 
 ### **Testing Needed:**
 - Test all Stripe webhooks with real subscriptions
