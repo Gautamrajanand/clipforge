@@ -1,8 +1,8 @@
 # ClipForge
 
-**Version:** 1.0.0  
-**Status:** ✅ Production Ready (Week 2 Day 3)  
-**Last Updated:** November 22, 2025
+**Version:** 1.1.0  
+**Status:** ✅ Production Ready (Week 3 Day 1 Complete)  
+**Last Updated:** November 23, 2025
 
 ---
 
@@ -47,10 +47,18 @@ Upload one video → Get viral clips, AI captions, multi-aspect ratios, and data
 
 ### 💳 Credit System
 - **Tier-Based Allocation:** FREE (60), STARTER (150), PRO (300)
+- **Credit Rollover:** Unused credits roll over (2x cap: 120, 300, 600)
 - **Transparent Pricing:** 1 credit = 1 minute of video
 - **Cost Preview:** See estimated credits before processing
 - **Auto Refund:** Credits returned if processing fails
-- **Monthly Reset:** Automatic credit renewal
+- **Monthly Reset:** Automatic credit renewal with rollover
+
+### 🎁 Free Trial System
+- **7-Day Trial:** Auto-activated on signup
+- **STARTER Tier Access:** 150 credits during trial
+- **Auto-Expiry:** Cron job handles trial expiration
+- **Seamless Downgrade:** Auto-downgrade to FREE after trial
+- **Trial Tracking:** Banner with countdown on dashboard
 
 ### 💰 Billing & Payments
 - **Stripe Integration:** Global payments
@@ -58,6 +66,14 @@ Upload one video → Get viral clips, AI captions, multi-aspect ratios, and data
 - **Multiple Plans:** FREE, STARTER ($29/mo), PRO ($79/mo), BUSINESS (Custom)
 - **Billing Portal:** Self-service subscription management
 - **Webhook Automation:** Real-time subscription updates
+- **Downgrade Flow:** Cancel subscription with project expiry handling
+
+### 📊 Analytics & Tracking
+- **Mixpanel Integration:** Full event tracking
+- **User Analytics:** Identify users, track behavior
+- **Event Tracking:** Page views, uploads, exports, errors
+- **Custom Properties:** Project metadata, user tier, credits
+- **Real-time Insights:** Dashboard analytics
 
 ### 🔐 Authentication & Security
 - **Clerk Integration:** OAuth (Google, LinkedIn), email/password
@@ -203,9 +219,9 @@ clipforge/
 - **Monthly reset** based on subscription tier
 
 ### Tier System
-- **FREE:** 60 credits/mo, watermarked, 48h project expiry
-- **STARTER ($29/mo):** 150 credits, no watermark, AI clipping
-- **PRO ($79/mo):** 300 credits, team workspace, brand templates
+- **FREE:** 60 credits/mo (rollover to 120), watermarked, 48h project expiry
+- **STARTER ($29/mo):** 150 credits (rollover to 300), no watermark, AI clipping, 7-day free trial
+- **PRO ($79/mo):** 300 credits (rollover to 600), team workspace, brand templates
 - **BUSINESS (Custom):** Unlimited credits, API access, SLA
 
 ### Product-Led Growth
@@ -251,23 +267,56 @@ clipforge/
 
 ---
 
-## 📈 Current Status (Nov 22, 2025)
+## 📈 Current Status (Nov 23, 2025)
 
-### ✅ Completed (Week 1-2)
-- Week 1 Day 1-4: Clerk authentication
-- Week 1 Day 5-7: Payment integration (Stripe + Razorpay)
-- Week 2 Day 1-2: Credit system testing
-- All core features working
-- All pages connected to real API data
+### ✅ Completed (Week 1-3 Day 1)
 
-### 🔄 In Progress (Week 2 Day 3)
-- Stripe product configuration
-- Frontend payment flow connection
+**Week 1: Foundation**
+- Day 1-4: Clerk authentication & JWT verification
+- Day 5-7: Payment integration (Stripe + Razorpay)
 
-### 📅 Next Steps (Week 2 Day 4-8)
-- Day 4: Test payment flow
-- Day 5-6: Watermark implementation
-- Day 7-8: Project expiry (48h for FREE)
+**Week 2: Core Features**
+- Day 1-2: Credit system with rollover (2x cap)
+- Day 3: Stripe product configuration
+- Day 4-5: Watermark system implementation
+- Day 6-7: Project expiry (48h for FREE tier)
+- Day 8: Admin panel for user/credit management
+
+**Week 3 Day 1: Growth & Analytics** ✅ COMPLETE
+- ✅ 7-Day Free Trial System
+  - Auto-activation on signup
+  - STARTER tier access (150 credits)
+  - Cron job for auto-expiry
+  - Trial banner with countdown
+- ✅ Credit Rollover System
+  - 2x cap rollover (60→120, 150→300, 300→600)
+  - Monthly reset with rollover
+  - Transaction logging
+- ✅ Downgrade Flow
+  - Cancel subscription endpoint
+  - Stripe webhook handling
+  - Project expiry on downgrade
+  - Trial-aware UI
+- ✅ Mixpanel Analytics
+  - Full event tracking
+  - User identification
+  - Page views, uploads, exports
+  - Custom properties
+- ✅ Bug Fixes
+  - Dashboard video thumbnails (auth blob loading)
+  - Project page credits API
+  - Subscription page trial handling
+  - Prisma enum updates
+
+### 🔄 In Progress (Week 3 Day 2)
+- API Documentation (Swagger/OpenAPI)
+- Endpoint documentation
+- Request/response schemas
+
+### 📅 Next Steps (Week 3 Day 3-5)
+- Day 3-4: Rate limiting & security
+- Day 5: Caption styles expansion (14 → 20+)
+- Day 6-7: Performance optimization
 
 ---
 
