@@ -128,7 +128,9 @@ export class TrialService {
   /**
    * Cron job to check and expire trials daily at midnight
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+    name: 'check-expired-trials',
+  })
   async checkExpiredTrials() {
     this.logger.log('🔍 Checking for expired trials...');
 

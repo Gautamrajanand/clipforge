@@ -389,12 +389,13 @@ model CreditTransaction {
 }
 
 enum CreditTransactionType {
-  DEDUCTION_CLIPS     // AI Clips processing
-  DEDUCTION_REFRAME   // AI Reframe processing
-  DEDUCTION_CAPTIONS  // AI Captions processing
-  ADDITION_PURCHASE   // Credits purchased
-  ADDITION_RENEWAL    // Monthly renewal
-  ADDITION_TRIAL      // Trial credits
-  ADDITION_REFUND     // Refund for failed processing
-  ADDITION_MANUAL     // Admin manual addition
+  DEDUCTION_CLIPS          // AI Clips processing
+  DEDUCTION_REFRAME        // AI Reframe processing
+  DEDUCTION_CAPTIONS       // AI Captions processing
+  DEDUCTION_TRIAL_EXPIRED  // Trial expired, credits reverted
+  ADDITION_PURCHASE        // Credits purchased
+  ADDITION_RENEWAL         // Monthly renewal
+  ADDITION_TRIAL           // Trial credits
+  ADDITION_REFUND          // Refund for failed processing
+  ADDITION_MANUAL          // Admin manual addition
 }
