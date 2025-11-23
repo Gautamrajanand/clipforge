@@ -6,6 +6,7 @@ import { StorageModule } from '../storage/storage.module';
 import { VideoModule } from '../video/video.module';
 import { TranscriptionModule } from '../transcription/transcription.module';
 import { ClipsModule } from '../clips/clips.module';
+import { CreditsModule } from '../credits/credits.module';
 
 // Processors
 import { VideoImportProcessor } from './processors/video-import.processor';
@@ -27,6 +28,7 @@ import { QueuesController } from './queues.controller';
     VideoModule,
     TranscriptionModule,
     ClipsModule,
+    CreditsModule,
     
     // Register BullMQ with Redis connection
     BullModule.forRootAsync({

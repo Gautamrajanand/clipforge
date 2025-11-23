@@ -1,9 +1,10 @@
 import { Processor, WorkerHost, OnWorkerEvent, InjectQueue } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, BadRequestException } from '@nestjs/common';
 import { Job, Queue } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../../storage/storage.service';
 import { VideoService } from '../../video/video.service';
+import { CreditsService } from '../../credits/credits.service';
 import { TranscriptionJobData } from './transcription.processor';
 import { promises as fs } from 'fs';
 
@@ -23,6 +24,7 @@ export class VideoImportProcessor extends WorkerHost {
     private prisma: PrismaService,
     private storage: StorageService,
     private video: VideoService,
+    private credits: CreditsService,
     @InjectQueue('transcription') private transcriptionQueue: Queue<TranscriptionJobData>,
   ) {
     super();
@@ -65,6 +67,54 @@ export class VideoImportProcessor extends WorkerHost {
 
       // Get video metadata
       const metadata = await this.video.getVideoMetadata(filePath);
+
+      // Get project and organization info for credit deduction
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        select: { orgId: true, clipSettings: true },
+      });
+
+      if (!project) {
+        throw new Error('Project not found');
+      }
+
+      // 💳 CREDIT SYSTEM: Calculate and deduct credits (1.5x for URL imports)
+      const baseCredits = this.credits.calculateCredits(metadata.duration);
+      const creditsNeeded = Math.ceil(baseCredits * 1.5); // 1.5x multiplier for URL imports
+      this.logger.log(`💳 URL Import - Video duration: ${metadata.duration}s (${(metadata.duration / 60).toFixed(2)} min) → ${creditsNeeded} credits (1.5x base: ${baseCredits})`);
+
+      // Check if organization has sufficient credits
+      const hasSufficientCredits = await this.credits.hasSufficientCredits(project.orgId, creditsNeeded);
+      if (!hasSufficientCredits) {
+        // Cleanup downloaded file before throwing error
+        await downloadService.cleanup(filePath);
+        
+        const currentBalance = await this.credits.getBalance(project.orgId);
+        throw new BadRequestException(
+          `Insufficient credits. You need ${creditsNeeded} credits (1.5x for URL imports) but only have ${currentBalance}. Please upgrade your plan or wait for your monthly renewal.`
+        );
+      }
+
+      // Determine processing type from clipSettings
+      const clipSettings = project.clipSettings as any;
+      let processingType: 'CLIPS' | 'REFRAME' | 'CAPTIONS' = 'CLIPS'; // Default
+      if (clipSettings?.reframeMode) {
+        processingType = 'REFRAME';
+      } else if (clipSettings?.subtitlesMode) {
+        processingType = 'CAPTIONS';
+      }
+
+      // Deduct credits
+      await this.credits.deductCredits(
+        project.orgId,
+        creditsNeeded,
+        processingType,
+        projectId,
+        metadata.duration / 60, // Convert to minutes
+        `${processingType} processing (URL import): ${(metadata.duration / 60).toFixed(2)} minutes`
+      );
+
+      this.logger.log(`✅ Deducted ${creditsNeeded} credits for URL import`);
 
       // Cleanup downloaded file
       await downloadService.cleanup(filePath);
