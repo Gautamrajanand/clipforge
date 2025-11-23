@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ProjectsModule } from './projects/projects.module';
@@ -30,6 +32,19 @@ import { TrialModule } from './trial/trial.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    // Rate Limiting: 100 requests per minute per user
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 60000, // 1 minute in milliseconds
+        limit: 100, // 100 requests per minute
+      },
+      {
+        name: 'long',
+        ttl: 3600000, // 1 hour in milliseconds
+        limit: 1000, // 1000 requests per hour
+      },
+    ]),
     PrismaModule,
     HealthModule, // Health checks for monitoring
     QueuesModule, // Job queue system for scalability
@@ -51,6 +66,13 @@ import { TrialModule } from './trial/trial.module';
     CaptionsModule,
     AdminModule,
     TrialModule,
+  ],
+  providers: [
+    // Global rate limiting guard
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

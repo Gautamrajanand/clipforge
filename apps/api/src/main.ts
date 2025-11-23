@@ -7,10 +7,32 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Security - configure helmet to allow video streaming
+  // Security - Enhanced helmet configuration
   app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "https:"],
+        fontSrc: ["'self'", "data:"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", "https:"],
+        frameSrc: ["'none'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    noSniff: true,
+    xssFilter: true,
+    hidePoweredBy: true,
   }));
 
   // CORS
@@ -38,8 +60,11 @@ async function bootstrap() {
       'All endpoints require a valid Clerk JWT token in the Authorization header:\n' +
       '```\nAuthorization: Bearer <clerk-jwt-token>\n```\n\n' +
       '## Rate Limiting\n' +
-      '- 100 requests per minute per user\n' +
-      '- 1000 requests per hour per user\n\n' +
+      '- **Short-term:** 100 requests per minute per IP/user\n' +
+      '- **Long-term:** 1000 requests per hour per IP/user\n' +
+      '- **Headers:** `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`\n' +
+      '- **Response:** 429 Too Many Requests when limit exceeded\n' +
+      '- **Retry-After:** Header indicates when to retry\n\n' +
       '## Credits System\n' +
       '- 1 credit = 1 minute of video processing\n' +
       '- FREE: 60 credits/mo (rollover to 120)\n' +
