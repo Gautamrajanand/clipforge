@@ -408,6 +408,9 @@ export class PaymentsService {
       },
     });
 
+    // Update project expiry dates for existing projects
+    await this.updateProjectExpiryForTier(org.id, tier as any);
+
     this.logger.log(`✅ Updated subscription for org ${org.id}: ${tier} (+${creditsToAdd} credits)`);
   }
 
@@ -428,6 +431,9 @@ export class PaymentsService {
         stripeCurrentPeriodEnd: null,
       },
     });
+
+    // Update project expiry dates to FREE tier (48 hours)
+    await this.updateProjectExpiryForTier(org.id, 'FREE');
 
     this.logger.log(`✅ Subscription cancelled for org ${org.id}`);
   }
@@ -515,5 +521,29 @@ export class PaymentsService {
         },
       },
     };
+  }
+
+  /**
+   * Update project expiry dates when tier changes
+   */
+  private async updateProjectExpiryForTier(orgId: string, tier: 'FREE' | 'STARTER' | 'PRO' | 'BUSINESS') {
+    let newExpiresAt: Date | null = null;
+
+    if (tier === 'FREE') {
+      // FREE tier: 48 hours from now
+      newExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    } else if (tier === 'STARTER') {
+      // STARTER tier: 90 days from now
+      newExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+    }
+    // PRO and BUSINESS: null (never expire)
+
+    // Update all projects for this organization
+    const result = await this.prisma.project.updateMany({
+      where: { orgId },
+      data: { expiresAt: newExpiresAt },
+    });
+
+    this.logger.log(`✅ Updated ${result.count} projects for org ${orgId} with new expiry: ${newExpiresAt ? newExpiresAt.toISOString() : 'never'}`);
   }
 }
