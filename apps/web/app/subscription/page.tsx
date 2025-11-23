@@ -19,6 +19,7 @@ export default function SubscriptionPage() {
   const { isLoaded, isSignedIn, getToken: getClerkToken } = useAuth();
   const [orgData, setOrgData] = useState<OrgData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -43,6 +44,35 @@ export default function SubscriptionPage() {
       console.error('Failed to fetch org data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to downgrade to the FREE plan? You will lose access to premium features at the end of your billing period.')) {
+      return;
+    }
+
+    setCancelling(true);
+    try {
+      const response = await fetchWithAuth('http://localhost:3000/v1/payments/subscription/cancel', {
+        method: 'POST',
+        getToken: getClerkToken,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message || 'Subscription cancelled successfully. You will be downgraded to FREE plan at the end of your billing period.');
+        // Refresh org data
+        await fetchOrgData();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to cancel subscription. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to cancel subscription:', error);
+      alert('Failed to cancel subscription. Please try again.');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -234,9 +264,16 @@ export default function SubscriptionPage() {
 
           {currentTier !== 'FREE' && (
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <button className="text-red-500 hover:text-red-400 text-sm font-medium">
-                Cancel subscription
+              <button 
+                onClick={handleCancelSubscription}
+                disabled={cancelling}
+                className="text-red-500 hover:text-red-400 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cancelling ? 'Cancelling...' : 'Downgrade to FREE Plan'}
               </button>
+              <p className="text-xs text-gray-500 mt-2">
+                Your subscription will be cancelled at the end of your billing period. You'll keep access to premium features until then.
+              </p>
             </div>
           )}
         </div>
