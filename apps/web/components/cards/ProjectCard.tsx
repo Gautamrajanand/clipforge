@@ -2,7 +2,9 @@
 
 import { Play, Video, Edit2, Trash2, MoreVertical, Clock, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { fetchWithAuth } from '@/lib/api';
 
 interface ProjectCardProps {
   id: string;
@@ -29,9 +31,41 @@ export default function ProjectCard({
   onEdit,
   onDelete 
 }: ProjectCardProps) {
+  const { getToken: getClerkToken } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
+  const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null);
+
+  // Load video blob with authentication
+  useEffect(() => {
+    if (!videoUrl || isEmpty) return;
+
+    const loadVideo = async () => {
+      try {
+        const response = await fetchWithAuth(videoUrl, {
+          getToken: getClerkToken,
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setVideoBlobUrl(url);
+        }
+      } catch (error) {
+        console.error('Failed to load video thumbnail:', error);
+      }
+    };
+
+    loadVideo();
+
+    // Cleanup blob URL on unmount
+    return () => {
+      if (videoBlobUrl) {
+        URL.revokeObjectURL(videoBlobUrl);
+      }
+    };
+  }, [videoUrl, isEmpty, getClerkToken]);
 
   // Determine project type from clipSettings
   const getProjectType = () => {
@@ -95,17 +129,15 @@ export default function ProjectCard({
       <Link href={`/project/${id}`}>
         <div className="aspect-video bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 relative overflow-hidden">
           {/* Video Thumbnail - using img with video poster */}
-          {videoUrl && (
-            <div className="absolute inset-0 w-full h-full">
-              <video 
-                src={videoUrl}
-                className="absolute inset-0 w-full h-full object-cover"
+          {videoBlobUrl && !isEmpty && (
+            <div className="absolute inset-0">
+              <video
+                className="w-full h-full object-cover"
+                src={videoBlobUrl}
                 preload="metadata"
                 muted
                 playsInline
-                crossOrigin="anonymous"
                 onLoadedMetadata={(e) => {
-                  // Seek to 1 second to get a better thumbnail
                   const video = e.target as HTMLVideoElement;
                   video.currentTime = 1;
                 }}

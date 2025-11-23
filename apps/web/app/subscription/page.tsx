@@ -12,6 +12,7 @@ interface OrgData {
   creditsResetDate: string;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
+  isInTrial?: boolean;
 }
 
 export default function SubscriptionPage() {
@@ -20,6 +21,7 @@ export default function SubscriptionPage() {
   const [orgData, setOrgData] = useState<OrgData | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [isInTrial, setIsInTrial] = useState(false);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -39,6 +41,7 @@ export default function SubscriptionPage() {
           credits: data.balance,
           creditsResetDate: data.resetDate,
         });
+        setIsInTrial(data.trial?.isInTrial || false);
       }
     } catch (error) {
       console.error('Failed to fetch org data:', error);
@@ -262,7 +265,7 @@ export default function SubscriptionPage() {
             </div>
           </div>
 
-          {currentTier !== 'FREE' && (
+          {currentTier !== 'FREE' && !isInTrial && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <button 
                 onClick={handleCancelSubscription}
@@ -273,6 +276,13 @@ export default function SubscriptionPage() {
               </button>
               <p className="text-xs text-gray-500 mt-2">
                 Your subscription will be cancelled at the end of your billing period. You'll keep access to premium features until then.
+              </p>
+            </div>
+          )}
+          {isInTrial && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-sm text-gray-600">
+                You're currently on a 7-day free trial. Your trial will automatically end and you'll be downgraded to the FREE plan unless you upgrade to a paid subscription.
               </p>
             </div>
           )}
