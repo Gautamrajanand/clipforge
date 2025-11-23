@@ -375,36 +375,56 @@ export class PaymentsService {
     const tier = subscription.metadata?.tier || 'PRO';
     const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
 
-    // Calculate credits based on tier
+    // Calculate credits based on tier with rollover cap (2x allocation)
     const tierCredits = {
       STARTER: 150,
       PRO: 300,
       BUSINESS: 1000,
     };
     const creditsToAdd = tierCredits[tier as keyof typeof tierCredits] || 300;
+    const maxCredits = creditsToAdd * 2; // Allow 2x rollover
+    
+    const currentCredits = org.credits;
+    const newBalance = Math.min(
+      currentCredits + creditsToAdd,
+      maxCredits
+    );
+    const actualCreditsAdded = newBalance - currentCredits;
 
-    // Update organization tier and add credits
+    // Log if credits were capped
+    if (currentCredits + creditsToAdd > maxCredits) {
+      this.logger.warn(
+        `💳 Credits capped for org ${org.id}: ` +
+        `${currentCredits} + ${creditsToAdd} = ${currentCredits + creditsToAdd} ` +
+        `→ capped at ${maxCredits} (2x ${creditsToAdd})`
+      );
+    }
+
+    // Update organization tier and add credits (with cap)
     await this.prisma.organization.update({
       where: { id: org.id },
       data: {
         tier: tier as any,
         stripeSubscriptionId: subscription.id,
         stripeCurrentPeriodEnd: currentPeriodEnd,
-        credits: {
-          increment: creditsToAdd,
-        },
+        credits: newBalance, // Use capped value instead of increment
       },
     });
 
-    // Log credit transaction
+    // Log credit transaction with actual amount added
+    const cappedAmount = creditsToAdd - actualCreditsAdded;
+    const description = cappedAmount > 0
+      ? `${tier} subscription renewed - ${actualCreditsAdded} credits added (${cappedAmount} capped at 2x limit)`
+      : `${tier} subscription renewed - ${actualCreditsAdded} credits added`;
+
     await this.prisma.creditTransaction.create({
       data: {
         orgId: org.id,
-        amount: creditsToAdd,
-        balanceBefore: org.credits,
-        balanceAfter: org.credits + creditsToAdd,
+        amount: actualCreditsAdded,
+        balanceBefore: currentCredits,
+        balanceAfter: newBalance,
         type: 'ADDITION_PURCHASE',
-        description: `${tier} subscription activated - monthly credits`,
+        description,
       },
     });
 
