@@ -146,6 +146,8 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3000
       NEXT_PUBLIC_APP_URL: http://localhost:3001
+      NEXT_PUBLIC_MIXPANEL_TOKEN: ${NEXT_PUBLIC_MIXPANEL_TOKEN}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dW5iaWFzZWQtbW9zcXVpdG8tNjMuY2xlcmsuYWNjb3VudHMuZGV2JA
     ports:
       - "3001:3000"
     depends_on:
