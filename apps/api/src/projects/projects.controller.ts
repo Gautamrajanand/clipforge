@@ -15,7 +15,7 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiResponse, ApiQuery, ApiBody, ApiParam } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { ProjectsService } from './projects.service';
@@ -25,15 +25,53 @@ import { DetectClipsDto } from './dto/clip-settings.dto';
 import { ReframeDto } from './dto/reframe.dto';
 import { SubtitlesDto } from './dto/subtitles.dto';
 
-@ApiTags('projects')
-@ApiBearerAuth()
+@ApiTags('Projects')
+@ApiBearerAuth('clerk-jwt')
 @Controller('v1/projects')
 @UseGuards(ClerkAuthGuard)
 export class ProjectsController {
   constructor(private projectsService: ProjectsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new project' })
+  @ApiOperation({ 
+    summary: 'Create a new project',
+    description: 'Creates a new video project. Returns project ID and metadata. Video must be uploaded separately using /upload or /import-url endpoints.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['title'],
+      properties: {
+        title: {
+          type: 'string',
+          description: 'Project title',
+          example: 'My Podcast Episode 1',
+        },
+        description: {
+          type: 'string',
+          description: 'Project description',
+          example: 'Interview with John Doe about AI',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Project created successfully',
+    schema: {
+      example: {
+        id: 'proj_123',
+        title: 'My Podcast Episode 1',
+        description: 'Interview with John Doe about AI',
+        status: 'CREATED',
+        createdAt: '2025-11-23T00:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   async create(@Request() req: any, @Body() dto: CreateProjectDto) {
     const orgId = req.user.memberships[0]?.org?.id;
     if (!orgId) {
@@ -43,7 +81,45 @@ export class ProjectsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List projects' })
+  @ApiOperation({ 
+    summary: 'List all projects',
+    description: 'Returns paginated list of projects for the authenticated organization. Includes project metadata, status, and expiry information.',
+  })
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    type: Number,
+    description: 'Number of projects to skip (default: 0)',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    type: Number,
+    description: 'Number of projects to return (default: 20, max: 100)',
+    example: 20,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Projects retrieved successfully',
+    schema: {
+      example: [
+        {
+          id: 'proj_123',
+          title: 'My Podcast Episode 1',
+          status: 'COMPLETED',
+          duration: 3600,
+          createdAt: '2025-11-23T00:00:00.000Z',
+          expiresAt: null,
+          clipSettings: { clipLength: 45, clipCount: 5 },
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   async findAll(
     @Request() req: any,
     @Query('skip') skip: string | number = 0,
@@ -60,7 +136,40 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get project details' })
+  @ApiOperation({ 
+    summary: 'Get project details',
+    description: 'Returns detailed information about a specific project including status, settings, transcript, detected clips, and exports.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 'proj_123',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project details retrieved successfully',
+    schema: {
+      example: {
+        id: 'proj_123',
+        title: 'My Podcast Episode 1',
+        status: 'COMPLETED',
+        duration: 3600,
+        videoUrl: 'https://storage.example.com/video.mp4',
+        transcript: { segments: [] },
+        detectedClips: [{ start: 0, end: 45, score: 0.95 }],
+        clipSettings: { clipLength: 45, clipCount: 5 },
+        createdAt: '2025-11-23T00:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
   async findOne(@Request() req: any, @Param('id') id: string) {
     const orgId = req.user.memberships[0]?.org?.id;
     if (!orgId) {
@@ -80,8 +189,48 @@ export class ProjectsController {
   }
 
   @Post(':id/upload')
-  @ApiOperation({ summary: 'Upload video file for project' })
+  @ApiOperation({ 
+    summary: 'Upload video file',
+    description: 'Uploads a video file to an existing project. Supports MP4, MOV, AVI, WebM, MKV formats. Max size: 1GB. Deducts credits based on video duration.',
+  })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        video: {
+          type: 'string',
+          format: 'binary',
+          description: 'Video file to upload',
+        },
+      },
+    },
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 'proj_123',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Video uploaded successfully',
+    schema: {
+      example: {
+        projectId: 'proj_123',
+        status: 'PROCESSING',
+        duration: 3600,
+        creditsDeducted: 60,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid file format or insufficient credits',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   @UseInterceptors(FileInterceptor('video'))
   async uploadVideo(
     @Request() req: any,
@@ -99,7 +248,53 @@ export class ProjectsController {
   }
 
   @Post(':id/import-url')
-  @ApiOperation({ summary: 'Import video from URL (YouTube, Vimeo, Rumble, etc.)' })
+  @ApiOperation({ 
+    summary: 'Import video from URL',
+    description: 'Imports video from YouTube, Vimeo, Rumble, Twitter/X, or TikTok. Automatically extracts metadata and downloads video. Deducts credits based on duration.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 'proj_123',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['url'],
+      properties: {
+        url: {
+          type: 'string',
+          description: 'Video URL (YouTube, Vimeo, Rumble, Twitter, TikTok)',
+          example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        },
+        title: {
+          type: 'string',
+          description: 'Optional custom title (auto-extracted if not provided)',
+          example: 'My Video Title',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Video import started',
+    schema: {
+      example: {
+        projectId: 'proj_123',
+        status: 'IMPORTING',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        estimatedDuration: 180,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid URL or unsupported platform',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   async importVideoFromUrl(
     @Request() req: any,
     @Param('id') id: string,
@@ -151,7 +346,71 @@ export class ProjectsController {
   }
 
   @Post(':id/export')
-  @ApiOperation({ summary: 'Export selected moments as video clips with aspect ratio conversion' })
+  @ApiOperation({ 
+    summary: 'Export clips with customization',
+    description: 'Exports selected clips with aspect ratio conversion, subtitles, and custom styling. Supports 9:16, 1:1, 16:9, 4:5 aspect ratios. Deducts 1 credit per minute exported.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 'proj_123',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['clips', 'aspectRatio'],
+      properties: {
+        clips: {
+          type: 'array',
+          description: 'Array of clips to export',
+          items: {
+            type: 'object',
+            properties: {
+              start: { type: 'number', example: 0 },
+              end: { type: 'number', example: 45 },
+            },
+          },
+        },
+        aspectRatio: {
+          type: 'string',
+          enum: ['9:16', '1:1', '16:9', '4:5'],
+          description: 'Target aspect ratio',
+          example: '9:16',
+        },
+        subtitles: {
+          type: 'object',
+          description: 'Subtitle styling options',
+          properties: {
+            enabled: { type: 'boolean', example: true },
+            style: { type: 'string', example: 'minimal' },
+            color: { type: 'string', example: '#FFFFFF' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Export started successfully',
+    schema: {
+      example: {
+        exportId: 'export_123',
+        projectId: 'proj_123',
+        status: 'PROCESSING',
+        clipCount: 5,
+        estimatedTime: 120,
+        creditsDeducted: 4,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid clips or insufficient credits',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   async exportMoments(
     @Request() req: any,
     @Param('id') id: string,
@@ -179,7 +438,46 @@ export class ProjectsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update project' })
+  @ApiOperation({ 
+    summary: 'Update project',
+    description: 'Updates project metadata such as title. Other fields are read-only.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 'proj_123',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description: 'New project title',
+          example: 'Updated Project Title',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project updated successfully',
+    schema: {
+      example: {
+        id: 'proj_123',
+        title: 'Updated Project Title',
+        updatedAt: '2025-11-23T00:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
   async update(
     @Request() req: any,
     @Param('id') id: string,
@@ -193,7 +491,33 @@ export class ProjectsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a project' })
+  @ApiOperation({ 
+    summary: 'Delete project',
+    description: 'Permanently deletes a project and all associated data (video, transcript, clips, exports). This action cannot be undone.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 'proj_123',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project deleted successfully',
+    schema: {
+      example: {
+        message: 'Project deleted successfully',
+        projectId: 'proj_123',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
   async delete(@Request() req: any, @Param('id') id: string) {
     const orgId = req.user.memberships[0]?.org?.id;
     if (!orgId) {
