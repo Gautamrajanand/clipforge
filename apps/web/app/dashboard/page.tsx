@@ -13,6 +13,7 @@ import NewProjectCard from '@/components/cards/NewProjectCard';
 import UploadModal from '@/components/modals/UploadModal';
 import ReframeModal from '@/components/modals/ReframeModal';
 import SubtitlesModal from '@/components/modals/SubtitlesModal';
+import TrialBanner from '@/components/trial/TrialBanner';
 import { fetchWithAuth } from '@/lib/api';
 import { useAnalytics, usePageTracking } from '@/hooks/useAnalytics';
 import { AnalyticsEvents } from '@/lib/analytics';
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const [creditsResetDate, setCreditsResetDate] = useState<string | null>(null);
   const [tier, setTier] = useState<string>('FREE');
   const [showLowCreditsWarning, setShowLowCreditsWarning] = useState(false);
+  const [trialInfo, setTrialInfo] = useState<any>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [uploadState, setUploadState] = useState({
     stage: 'uploading' as 'uploading' | 'processing' | 'transcribing' | 'detecting' | 'complete' | 'error',
@@ -108,6 +110,7 @@ export default function Dashboard() {
         setCreditsAllocation(data.allocation || 60);
         setCreditsResetDate(data.resetDate);
         setTier(data.tier || 'FREE');
+        setTrialInfo(data.trial || null);
         
         // Show low credits warning if < 10
         if (data.balance < 10 && data.balance > 0) {
@@ -522,6 +525,14 @@ export default function Dashboard() {
         onClose={() => setIsSidebarOpen(false)}
       />
       <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
+      
+      {/* Trial Banner */}
+      {trialInfo?.isActive && (
+        <TrialBanner 
+          isActive={trialInfo.isActive}
+          daysLeft={trialInfo.daysLeft}
+        />
+      )}
       
       <main className="lg:ml-64 pt-16">
         <div className="p-4 lg:p-8">
