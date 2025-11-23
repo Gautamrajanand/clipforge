@@ -544,6 +544,33 @@ export class PaymentsService {
   }
 
   /**
+   * Cancel subscription and downgrade to FREE plan
+   */
+  async cancelSubscription(orgId: string) {
+    const org = await this.prisma.organization.findUnique({
+      where: { id: orgId },
+    });
+
+    if (!org) {
+      throw new Error('Organization not found');
+    }
+
+    if (!org.stripeSubscriptionId) {
+      throw new Error('No active subscription to cancel');
+    }
+
+    // Cancel Stripe subscription
+    await this.stripe.subscriptions.cancel(org.stripeSubscriptionId);
+
+    this.logger.log(`✅ Subscription cancelled for org ${orgId}, webhook will handle downgrade`);
+
+    return {
+      success: true,
+      message: 'Subscription cancelled successfully. You will be downgraded to FREE plan at the end of your billing period.',
+    };
+  }
+
+  /**
    * Update project expiry dates when tier changes
    */
   private async updateProjectExpiryForTier(orgId: string, tier: 'FREE' | 'STARTER' | 'PRO' | 'BUSINESS') {

@@ -189,4 +189,20 @@ export class PaymentsController {
       currentPeriodEnd: org.stripeCurrentPeriodEnd,
     };
   }
+
+  /**
+   * Cancel subscription and downgrade to FREE
+   */
+  @Post('subscription/cancel')
+  @UseGuards(ClerkAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cancel subscription and downgrade to FREE plan' })
+  async cancelSubscription(@Request() req: any) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new BadRequestException('No organization found');
+    }
+
+    return this.paymentsService.cancelSubscription(orgId);
+  }
 }
