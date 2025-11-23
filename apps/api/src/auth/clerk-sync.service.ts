@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -8,6 +8,8 @@ import { PrismaService } from '../prisma/prisma.service';
  */
 @Injectable()
 export class ClerkSyncService {
+  private readonly logger = new Logger(ClerkSyncService.name);
+
   constructor(private prisma: PrismaService) {}
 
   /**
@@ -28,14 +30,35 @@ export class ClerkSyncService {
 
     if (!user) {
       // Create new user with personal organization
+      const trialStartDate = new Date();
+      const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
       const org = await this.prisma.organization.create({
         data: {
           name: `${name || email || 'User'}'s Workspace`,
           tier: 'FREE',
-          credits: 60, // Initial credits
+          credits: 150, // STARTER credits for 7-day trial
           creditsResetDate: this.getNextMonthDate(),
+          // Activate 7-day free trial automatically
+          trialStartDate,
+          trialEndDate,
+          trialUsed: false,
         },
       });
+
+      // Log trial activation
+      await this.prisma.creditTransaction.create({
+        data: {
+          orgId: org.id,
+          amount: 150,
+          balanceBefore: 0,
+          balanceAfter: 150,
+          type: 'ADDITION_TRIAL',
+          description: '7-day free trial activated - STARTER credits',
+        },
+      });
+
+      this.logger.log(`🎉 New user signup! Trial activated for ${email}: ${trialStartDate.toISOString()} → ${trialEndDate.toISOString()}`);
 
       user = await this.prisma.user.create({
         data: {

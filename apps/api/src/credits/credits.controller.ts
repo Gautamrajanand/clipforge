@@ -29,10 +29,21 @@ export class CreditsController {
         creditsUsedThisMonth: true,
         creditsResetDate: true,
         tier: true,
+        trialStartDate: true,
+        trialEndDate: true,
+        trialUsed: true,
       },
     });
 
     const allocation = this.credits.getCreditAllocation(org.tier);
+
+    // Check if in trial
+    const now = new Date();
+    const isInTrial = org.trialStartDate && org.trialEndDate && 
+                      now >= org.trialStartDate && now <= org.trialEndDate &&
+                      !org.trialUsed;
+    const trialDaysLeft = isInTrial ? 
+      Math.ceil((org.trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
     return {
       balance,
@@ -40,6 +51,13 @@ export class CreditsController {
       allocation,
       resetDate: org.creditsResetDate,
       tier: org.tier,
+      trial: {
+        isActive: isInTrial,
+        daysLeft: trialDaysLeft,
+        startDate: org.trialStartDate,
+        endDate: org.trialEndDate,
+        used: org.trialUsed,
+      },
     };
   }
 

@@ -22,6 +22,7 @@ import { ApiKeysModule } from './api-keys/api-keys.module';
 import { PaymentsModule } from './payments/payments.module';
 // import { EmailModule } from './email/email.module'; // TEMPORARILY DISABLED
 import { AdminModule } from './admin/admin.module';
+import { TrialModule } from './trial/trial.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { AdminModule } from './admin/admin.module';
     ProxyModule,
     CaptionsModule,
     AdminModule,
+    TrialModule,
   ],
 })
 export class AppModule {}
