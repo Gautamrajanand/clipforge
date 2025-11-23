@@ -25,6 +25,7 @@ interface SidebarProps {
   credits?: number | null;
   creditsAllocation?: number;
   resetDate?: string;
+  tier?: string;
   isOpen?: boolean;
   onClose?: () => void;
 }
@@ -56,7 +57,7 @@ const bottomItems: NavItem[] = [
   { name: 'Help center', href: '/help', icon: HelpCircle },
 ];
 
-export default function Sidebar({ credits, creditsAllocation = 60, resetDate, isOpen = true, onClose }: SidebarProps) {
+export default function Sidebar({ credits, creditsAllocation = 60, resetDate, tier = 'FREE', isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
@@ -191,8 +192,20 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate, is
         </div>
       </nav>
 
+      {/* Current Plan Badge */}
+      <div className="px-4 mb-2">
+        <div className={`px-3 py-2 rounded-lg text-center text-sm font-semibold ${
+          tier === 'FREE' ? 'bg-gray-100 text-gray-700' :
+          tier === 'STARTER' ? 'bg-blue-100 text-blue-700' :
+          tier === 'PRO' ? 'bg-purple-100 text-purple-700' :
+          'bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700'
+        }`}>
+          {tier} Plan
+        </div>
+      </div>
+
       {/* Credit Balance Widget */}
-      <Link href="/credits" className="block p-4 m-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer">
+      <Link href="/credits" className="block p-4 mx-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">Credits</span>
           <Zap className="w-4 h-4 text-yellow-500" />

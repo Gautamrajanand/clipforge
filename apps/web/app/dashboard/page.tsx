@@ -35,6 +35,7 @@ export default function Dashboard() {
   const [credits, setCredits] = useState<number | null>(null);
   const [creditsAllocation, setCreditsAllocation] = useState<number>(60);
   const [creditsResetDate, setCreditsResetDate] = useState<string | null>(null);
+  const [tier, setTier] = useState<string>('FREE');
   const [showLowCreditsWarning, setShowLowCreditsWarning] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [uploadState, setUploadState] = useState({
@@ -106,6 +107,7 @@ export default function Dashboard() {
         setCredits(data.balance);
         setCreditsAllocation(data.allocation || 60);
         setCreditsResetDate(data.resetDate);
+        setTier(data.tier || 'FREE');
         
         // Show low credits warning if < 10
         if (data.balance < 10 && data.balance > 0) {
@@ -515,6 +517,7 @@ export default function Dashboard() {
         credits={credits} 
         creditsAllocation={creditsAllocation} 
         resetDate={creditsResetDate || undefined}
+        tier={tier}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />

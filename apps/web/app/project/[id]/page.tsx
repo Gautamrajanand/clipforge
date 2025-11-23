@@ -41,6 +41,27 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   });
   const [isDetecting, setIsDetecting] = useState(false);
   const [transcript, setTranscript] = useState<any>(null);
+  const [credits, setCredits] = useState(0);
+  const [creditsAllocation, setCreditsAllocation] = useState(60);
+  const [resetDate, setResetDate] = useState<string>('');
+  const [tier, setTier] = useState<string>('FREE');
+
+  const fetchCredits = async () => {
+    try {
+      const response = await fetchWithAuth('http://localhost:3000/v1/credits', {
+        getToken: getClerkToken,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCredits(data.balance);
+        setCreditsAllocation(data.allocation);
+        setResetDate(data.resetDate);
+        setTier(data.tier || 'FREE');
+      }
+    } catch (error) {
+      console.error('Failed to fetch credits:', error);
+    }
+  };
 
   useEffect(() => {
     const initAuth = async () => {
@@ -81,6 +102,9 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         setProject(data);
         setClips(data.moments || []);
         setTranscript(data.transcript || null);
+        
+        // Fetch credits data
+        fetchCredits();
         
         // Check if this is a subtitles or reframe project
         const isSubtitlesMode = data.clipSettings?.subtitlesMode;
@@ -395,6 +419,10 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar 
+        credits={credits}
+        creditsAllocation={creditsAllocation}
+        resetDate={resetDate}
+        tier={tier}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />

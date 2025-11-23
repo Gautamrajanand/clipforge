@@ -103,10 +103,16 @@ export default function ProjectCard({
                 preload="metadata"
                 muted
                 playsInline
+                crossOrigin="anonymous"
                 onLoadedMetadata={(e) => {
                   // Seek to 1 second to get a better thumbnail
                   const video = e.target as HTMLVideoElement;
                   video.currentTime = 1;
+                }}
+                onError={(e) => {
+                  // Hide video on error, show gradient background
+                  const video = e.target as HTMLVideoElement;
+                  video.style.display = 'none';
                 }}
               />
             </div>
