@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
+import * as fs from 'fs';
+import { Readable } from 'stream';
 
 @Injectable()
 export class StorageService {
@@ -74,7 +76,7 @@ export class StorageService {
   }
 
   /**
-   * Upload file to S3
+   * Upload file to S3 (Buffer - for small files)
    */
   async uploadFile(
     key: string,
@@ -86,6 +88,30 @@ export class StorageService {
         Bucket: process.env.S3_BUCKET || 'clipforge',
         Key: key,
         Body: body,
+        ContentType: contentType,
+      })
+      .promise();
+
+    const url = await this.generatePresignedDownloadUrl(key);
+    return { url, key };
+  }
+
+  /**
+   * Upload file from disk path (Stream - for large files)
+   * Uses streaming to avoid loading entire file into memory
+   */
+  async uploadFileFromPath(
+    key: string,
+    filePath: string,
+    contentType: string,
+  ): Promise<{ url: string; key: string }> {
+    const fileStream = fs.createReadStream(filePath);
+    
+    await this.s3
+      .upload({
+        Bucket: process.env.S3_BUCKET || 'clipforge',
+        Key: key,
+        Body: fileStream,
         ContentType: contentType,
       })
       .promise();

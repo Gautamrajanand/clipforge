@@ -439,6 +439,7 @@ export class ProjectsService {
 
   async uploadVideo(projectId: string, orgId: string, file: any) {
     this.logger.log(`📤 uploadVideo called - projectId: ${projectId}, orgId: ${orgId}, file: ${file?.originalname}`);
+    this.logger.log(`📁 File path: ${file?.path}, size: ${file?.size} bytes`);
     
     try {
       const project = await this.findOne(projectId, orgId);
@@ -454,15 +455,15 @@ export class ProjectsService {
       throw new BadRequestException('No file provided');
     }
 
-    // Upload to MinIO
-    const key = `projects/${projectId}/source${path.extname(file.originalname)}`;
-    const result = await this.storage.uploadFile(key, file.buffer, file.mimetype);
+    // Get video metadata from disk file (no memory loading)
+    const metadata = await this.video.getVideoMetadata(file.path);
+    this.logger.log(`📹 Video metadata: duration=${metadata.duration}s, size=${file.size} bytes`);
 
-    // Get video metadata
-    const tempPath = this.video.getTempFilePath(path.extname(file.originalname));
-    await fs.writeFile(tempPath, file.buffer);
-    const metadata = await this.video.getVideoMetadata(tempPath);
-    await this.video.cleanupTempFile(tempPath);
+    // Upload to MinIO using streaming (no memory buffer)
+    const key = `projects/${projectId}/source${path.extname(file.originalname)}`;
+    this.logger.log(`☁️  Uploading to MinIO: ${key}`);
+    const result = await this.storage.uploadFileFromPath(key, file.path, file.mimetype);
+    this.logger.log(`✅ Upload complete: ${result.key}`);
 
     // 💳 CREDIT SYSTEM: Calculate and deduct credits (Opus Clip parity)
     const creditsNeeded = this.credits.calculateCredits(metadata.duration);
@@ -536,6 +537,14 @@ export class ProjectsService {
     // ✅ SCALE-FIRST: Use job queue instead of fire-and-forget async
     const job = await this.queues.addTranscriptionJob(projectId);
     this.logger.log(`✅ Transcription job queued: ${job.jobId}`);
+
+    // Clean up temp file after successful upload
+    try {
+      await fs.unlink(file.path);
+      this.logger.log(`🗑️  Cleaned up temp file: ${file.path}`);
+    } catch (error) {
+      this.logger.warn(`⚠️  Failed to clean up temp file: ${error.message}`);
+    }
 
     return {
       message: 'Video uploaded successfully',

@@ -3,9 +3,16 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false, // Disable default body parser
+  });
+
+  // Custom body parser with 5GB limit for video uploads
+  app.use(bodyParser.json({ limit: '5gb' }));
+  app.use(bodyParser.urlencoded({ limit: '5gb', extended: true }));
 
   // Security - Enhanced helmet configuration
   app.use(helmet({
