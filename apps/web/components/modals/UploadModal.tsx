@@ -238,9 +238,15 @@ export default function UploadModal({
                   <div className="text-center">
                     <p className="text-lg font-semibold text-gray-800 mb-2">Click to upload</p>
                     <p className="text-sm text-gray-600">or drag and drop your video here</p>
-                    <p className="text-xs text-gray-500 mt-2">MP4, MOV, AVI up to 500MB</p>
+                    <p className="text-xs text-gray-500 mt-2">MP4, MOV, AVI up to 5GB</p>
                   </div>
                 )}
+              </div>
+
+              {/* Upload Limit Info */}
+              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+                <VideoIcon className="w-4 h-4" />
+                <span>You can upload videos up to 120 minutes long.</span>
               </div>
 
               <input
@@ -341,6 +347,12 @@ export default function UploadModal({
                   <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700">Twitter</span>
                   <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700">TikTok</span>
                 </div>
+              </div>
+
+              {/* Upload Limit Info */}
+              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+                <VideoIcon className="w-4 h-4" />
+                <span>You can import videos up to 120 minutes long.</span>
               </div>
 
               {/* Project Title */}
