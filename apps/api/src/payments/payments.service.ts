@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { CacheService } from '../cache/cache.service';
 import Stripe from 'stripe';
 import Razorpay from 'razorpay';
 
@@ -67,6 +68,7 @@ export class PaymentsService {
   constructor(
     private config: ConfigService,
     private prisma: PrismaService,
+    private cache: CacheService,
   ) {
     // Initialize Stripe
     const stripeKey = this.config.get('STRIPE_SECRET_KEY');
@@ -506,10 +508,19 @@ export class PaymentsService {
   }
 
   /**
-   * Get pricing information
+   * Get pricing information (cached for 1 hour)
    */
-  getPricing() {
-    return {
+  async getPricing() {
+    const cacheKey = 'pricing:all';
+    
+    // Try cache first
+    const cached = await this.cache.get<any>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Cache miss - return pricing data
+    const pricing = {
       STARTER: {
         stripe: {
           monthly: { amount: 19, currency: 'USD' },
@@ -541,6 +552,11 @@ export class PaymentsService {
         },
       },
     };
+
+    // Cache for 1 hour (3600 seconds)
+    await this.cache.set(cacheKey, pricing, 3600);
+
+    return pricing;
   }
 
   /**

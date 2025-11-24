@@ -25,6 +25,7 @@ import { PaymentsModule } from './payments/payments.module';
 // import { EmailModule } from './email/email.module'; // TEMPORARILY DISABLED
 import { AdminModule } from './admin/admin.module';
 import { TrialModule } from './trial/trial.module';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TrialModule } from './trial/trial.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    CacheModule, // Redis caching for performance
     // Rate Limiting: 100 requests per minute per user
     ThrottlerModule.forRoot([
       {

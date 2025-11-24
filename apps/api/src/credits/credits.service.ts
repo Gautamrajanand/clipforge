@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Tier } from '@prisma/client';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { CacheService } from '../cache/cache.service';
 
 /**
  * CreditService - Handles all credit operations (Opus Clip parity)
@@ -23,6 +24,7 @@ export class CreditsService {
   constructor(
     private prisma: PrismaService,
     private analytics: AnalyticsService,
+    private cache: CacheService,
   ) {}
 
   /**
@@ -77,9 +79,18 @@ export class CreditsService {
   }
 
   /**
-   * Get organization's current credit balance
+   * Get organization's current credit balance (with caching)
    */
   async getBalance(orgId: string): Promise<number> {
+    const cacheKey = `credits:balance:${orgId}`;
+    
+    // Try cache first
+    const cached = await this.cache.get<number>(cacheKey);
+    if (cached !== null) {
+      return cached;
+    }
+
+    // Cache miss - fetch from database
     const org = await this.prisma.organization.findUnique({
       where: { id: orgId },
       select: { credits: true },
@@ -88,6 +99,9 @@ export class CreditsService {
     if (!org) {
       throw new BadRequestException('Organization not found');
     }
+
+    // Cache for 60 seconds
+    await this.cache.set(cacheKey, org.credits, 60);
 
     return org.credits;
   }
@@ -190,6 +204,9 @@ export class CreditsService {
       }
     });
 
+    // Invalidate cache
+    await this.cache.del(`credits:balance:${orgId}`);
+
     this.logger.log(
       `✅ Deducted ${creditsToDeduct} credits from org ${orgId} (${org.name}): ${balanceBefore} → ${balanceAfter}`,
     );
@@ -257,6 +274,9 @@ export class CreditsService {
         },
       });
     });
+
+    // Invalidate cache
+    await this.cache.del(`credits:balance:${orgId}`);
 
     this.logger.log(
       `✅ Added ${creditsToAdd} credits to org ${orgId} (${org.name}): ${balanceBefore} → ${balanceAfter}`,

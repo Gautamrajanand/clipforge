@@ -123,6 +123,9 @@ model Project {
   @@index([orgId])
   @@index([status])
   @@index([expiresAt])
+  @@index([createdAt])
+  @@index([orgId, status])
+  @@index([orgId, createdAt])
 }
 
 enum ProjectStatus {
@@ -202,7 +205,9 @@ model Moment {
 
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   exports Export[]
+  @@index([projectId])
   @@index([score])
+  @@index([projectId, score])
 }
 
 // ============ Brand Kits ============
@@ -262,6 +267,8 @@ model Export {
   @@index([projectId])
   @@index([momentId])
   @@index([status])
+  @@index([projectId, status])
+  @@index([createdAt])
 }
 
 enum ExportStatus {
@@ -386,6 +393,8 @@ model CreditTransaction {
   @@index([orgId])
   @@index([type])
   @@index([createdAt])
+  @@index([orgId, createdAt])
+  @@index([orgId, type])
 }
 
 enum CreditTransactionType {
