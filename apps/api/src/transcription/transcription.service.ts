@@ -9,6 +9,8 @@ import { VideoService } from '../video/video.service';
 import { CaptionsService } from '../captions/captions.service';
 // import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
 import * as path from 'path';
+import * as http from 'http';
+import * as https from 'https';
 
 @Injectable()
 export class TranscriptionService {
@@ -24,11 +26,16 @@ export class TranscriptionService {
     @InjectQueue('subtitle-export') private subtitleExportQueue: Queue,
     // private email: EmailService, // TEMPORARILY DISABLED
   ) {
+    // Increase HTTP timeout for large file uploads (10 minutes)
+    http.globalAgent.maxSockets = Infinity;
+    https.globalAgent.maxSockets = Infinity;
+    
     // Initialize AssemblyAI if API key is provided
     const apiKey = process.env.ASSEMBLYAI_API_KEY;
     if (apiKey && apiKey !== '' && !apiKey.includes('your-')) {
       this.assemblyai = new AssemblyAI({ apiKey });
       console.log('✅ AssemblyAI initialized for transcription');
+      console.log('⏱️  HTTP timeout increased to 10 minutes for large file uploads');
     } else {
       console.warn('⚠️  AssemblyAI API key not configured - transcription disabled');
     }
@@ -57,25 +64,47 @@ export class TranscriptionService {
 
       console.log(`🎙️  Starting transcription for project: ${project.title}`);
 
-      // Download file from storage as a stream
-      console.log(`📥 Downloading video from storage: ${project.sourceUrl}`);
-      const fileStream = this.storage.getFileStream(project.sourceUrl);
+      // Stream file from MinIO and upload to AssemblyAI
+      // Uses streaming to avoid loading entire file into memory
+      console.log(`📤 Streaming file to AssemblyAI: ${project.sourceUrl}`);
       
-      // Convert stream to buffer
-      const chunks: Buffer[] = [];
-      for await (const chunk of fileStream) {
-        chunks.push(Buffer.from(chunk));
+      // Retry logic for upload (network issues are common with large files)
+      let uploadUrl: string;
+      let lastError: Error;
+      const maxRetries = 3;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`⏱️  Upload attempt ${attempt}/${maxRetries} (timeout: 15 minutes)`);
+          const fileStream = this.storage.getFileStream(project.sourceUrl);
+          
+          // Increase timeout to 15 minutes for very large files
+          const uploadPromise = this.assemblyai.files.upload(fileStream);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Upload timeout after 15 minutes')), 900000)
+          );
+          
+          uploadUrl = await Promise.race([uploadPromise, timeoutPromise]) as string;
+          console.log(`✅ File uploaded to AssemblyAI: ${uploadUrl}`);
+          break; // Success! Exit retry loop
+        } catch (error) {
+          lastError = error;
+          console.error(`❌ Upload attempt ${attempt} failed:`, error.message);
+          
+          if (attempt < maxRetries) {
+            const backoffMs = Math.min(1000 * Math.pow(2, attempt), 30000); // Max 30s
+            console.log(`⏳ Retrying in ${backoffMs/1000}s...`);
+            await new Promise(resolve => setTimeout(resolve, backoffMs));
+          }
+        }
       }
-      const fileBuffer = Buffer.concat(chunks);
-      console.log(`✅ Downloaded ${fileBuffer.length} bytes`);
-
-      // Upload to AssemblyAI
-      console.log(`📤 Uploading to AssemblyAI...`);
-      const uploadUrl = await this.assemblyai.files.upload(fileBuffer);
-      console.log(`✅ Uploaded to AssemblyAI: ${uploadUrl}`);
+      
+      if (!uploadUrl) {
+        throw new Error(`Failed to upload after ${maxRetries} attempts: ${lastError.message}`);
+      }
 
       // Start transcription with AssemblyAI
-      console.log(`🎙️  Starting transcription...`);
+      console.log(`🎙️  Starting transcription with AssemblyAI...`);
       const transcript = await this.assemblyai.transcripts.transcribe({
         audio: uploadUrl,
         speaker_labels: true, // Enable speaker diarization

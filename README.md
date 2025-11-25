@@ -1,8 +1,8 @@
 # ClipForge
 
-**Version:** 1.1.0  
-**Status:** ✅ Production Ready (Week 3 Day 1 Complete)  
-**Last Updated:** November 23, 2025
+**Version:** 1.2.0  
+**Status:** ✅ Production Ready (2-Hour Video Support Complete)  
+**Last Updated:** November 26, 2025
 
 ---
 
@@ -20,8 +20,9 @@ Upload one video → Get viral clips, AI captions, multi-aspect ratios, and data
 ## ✨ Core Features
 
 ### 🎬 Video Input
-- **File Upload:** Drag-and-drop with progress tracking (up to 1GB)
-- **URL Import:** YouTube, Vimeo, Rumble, Twitter/X, TikTok
+- **File Upload:** Drag-and-drop with progress tracking (up to 5GB, 120 minutes)
+- **URL Import:** YouTube, Vimeo, Rumble, Twitter/X, TikTok (up to 120 minutes)
+- **Quality:** 1080p Full HD (industry standard)
 - **Auto-fill Metadata:** Extract title, duration, thumbnail
 - **Format Support:** MP4, MOV, AVI, WebM, MKV
 
@@ -47,6 +48,7 @@ Upload one video → Get viral clips, AI captions, multi-aspect ratios, and data
 
 ### 💳 Credit System
 - **Tier-Based Allocation:** FREE (60), STARTER (150), PRO (300)
+- **Fair Pricing:** 1 credit per minute (same for uploads and URL imports)
 - **Credit Rollover:** Unused credits roll over (2x cap: 120, 300, 600)
 - **Transparent Pricing:** 1 credit = 1 minute of video
 - **Cost Preview:** See estimated credits before processing

@@ -132,9 +132,10 @@ export class VideoDownloadService {
     );
     
     try {
-      // Download video with best quality
-      // Format: best video + best audio, merge to mp4
-      const command = `yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
+      // Download video at 1080p max (industry standard for processing)
+      // Keeps files under 2GB for Node.js compatibility
+      // Format: 1080p video + best audio, merge to mp4
+      const command = `yt-dlp -f "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best" \
         --merge-output-format mp4 \
         -o "${outputTemplate}" \
         "${url}"`;

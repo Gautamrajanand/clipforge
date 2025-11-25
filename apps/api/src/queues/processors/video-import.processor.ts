@@ -78,10 +78,10 @@ export class VideoImportProcessor extends WorkerHost {
         throw new Error('Project not found');
       }
 
-      // 💳 CREDIT SYSTEM: Calculate and deduct credits (1.5x for URL imports)
+      // 💳 CREDIT SYSTEM: Calculate and deduct credits
       const baseCredits = this.credits.calculateCredits(metadata.duration);
-      const creditsNeeded = Math.ceil(baseCredits * 1.5); // 1.5x multiplier for URL imports
-      this.logger.log(`💳 URL Import - Video duration: ${metadata.duration}s (${(metadata.duration / 60).toFixed(2)} min) → ${creditsNeeded} credits (1.5x base: ${baseCredits})`);
+      const creditsNeeded = baseCredits; // Same as direct upload (market standard)
+      this.logger.log(`💳 URL Import - Video duration: ${metadata.duration}s (${(metadata.duration / 60).toFixed(2)} min) → ${creditsNeeded} credits`);
 
       // Check if organization has sufficient credits
       const hasSufficientCredits = await this.credits.hasSufficientCredits(project.orgId, creditsNeeded);
@@ -91,7 +91,7 @@ export class VideoImportProcessor extends WorkerHost {
         
         const currentBalance = await this.credits.getBalance(project.orgId);
         throw new BadRequestException(
-          `Insufficient credits. You need ${creditsNeeded} credits (1.5x for URL imports) but only have ${currentBalance}. Please upgrade your plan or wait for your monthly renewal.`
+          `Insufficient credits. You need ${creditsNeeded} credits but only have ${currentBalance}. Please upgrade your plan or wait for your monthly renewal.`
         );
       }
 
