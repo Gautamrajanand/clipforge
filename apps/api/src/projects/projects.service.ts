@@ -1258,18 +1258,15 @@ export class ProjectsService {
       await this.video.cleanupTempFile(chunkInputPath);
       await animator.cleanupFrames(frameDir);
       
-      this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
-      
-      // Force garbage collection and pause to let memory settle
-      if (chunk.index < chunks.length - 1) {
-        // Force GC if available (requires --expose-gc flag)
-        if (global.gc) {
-          global.gc();
-          this.logger.debug('🗑️  Forced garbage collection');
-        }
-        // Longer pause for memory cleanup
-        await new Promise(resolve => setTimeout(resolve, 3000));
+      // Force garbage collection after each chunk to free memory
+      if (global.gc) {
+        global.gc();
       }
+      
+      // Add a small delay to let memory settle between chunks
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second pause
+      
+      this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
     }
     
     // Concatenate all chunks
@@ -1385,18 +1382,15 @@ export class ProjectsService {
       
       chunkVideoPaths.push(chunkOutputPath);
       
-      this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
-      
-      // Force garbage collection and pause to let memory settle
-      if (chunk.index < chunks.length - 1) {
-        // Force GC if available (requires --expose-gc flag)
-        if (global.gc) {
-          global.gc();
-          this.logger.debug('🗑️  Forced garbage collection');
-        }
-        // Longer pause for memory cleanup
-        await new Promise(resolve => setTimeout(resolve, 3000));
+      // Force garbage collection after each chunk to free memory
+      if (global.gc) {
+        global.gc();
       }
+      
+      // Add a small delay to let memory settle between chunks
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second pause
+      
+      this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
     }
     
     // Concatenate all chunks
