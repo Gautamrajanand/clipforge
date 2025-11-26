@@ -1199,9 +1199,9 @@ export class ProjectsService {
     const actualDuration = videoMetadata.duration;
     this.logger.log(`🎬 Starting chunked rendering for ${actualDuration.toFixed(1)}s video`);
     
-    // Split into chunks (15s for optimal memory/performance balance)
-    // Fewer chunks = less memory overhead, faster processing
-    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 15);
+    // Split into chunks (10s for optimal memory/performance balance)
+    // Sweet spot: limits frames per chunk (~300) to prevent FFmpeg OOM
+    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 10);
     const chunkMetadata = chunkManager.getChunkMetadata(chunks);
     this.logger.log(`📊 Split into ${chunkMetadata.totalChunks} chunks (avg ${chunkMetadata.averageChunkSize.toFixed(1)}s each)`);
     
@@ -1326,9 +1326,9 @@ export class ProjectsService {
     
     this.logger.log(`🎬 Starting chunked rendering for ${actualDuration.toFixed(1)}s clip`);
     
-    // Split into chunks (15s for optimal memory/performance balance)
-    // Fewer chunks = less memory overhead, faster processing
-    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 15);
+    // Split into chunks (10s for optimal memory/performance balance)
+    // Sweet spot: limits frames per chunk (~300) to prevent FFmpeg OOM
+    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 10);
     const chunkMetadata = chunkManager.getChunkMetadata(chunks);
     
     this.logger.log(
