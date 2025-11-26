@@ -1262,8 +1262,8 @@ export class ProjectsService {
         global.gc();
       }
       
-      // Add a small delay to let memory settle between chunks
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second pause
+      // Add a longer delay to let memory settle between chunks (OpusClip parity: 90s clips)
+      await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second pause
       
       this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
     }
@@ -1385,8 +1385,8 @@ export class ProjectsService {
         global.gc();
       }
       
-      // Add a small delay to let memory settle between chunks
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second pause
+      // Add a longer delay to let memory settle between chunks (OpusClip parity: 90s clips)
+      await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second pause
       
       this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
     }
