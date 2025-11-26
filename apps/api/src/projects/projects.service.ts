@@ -1199,8 +1199,9 @@ export class ProjectsService {
     const actualDuration = videoMetadata.duration;
     this.logger.log(`🎬 Starting chunked rendering for ${actualDuration.toFixed(1)}s video`);
     
-    // Split into chunks (8s for ultra-conservative memory management)
-    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 8);
+    // Split into chunks (15s for optimal memory/performance balance)
+    // Fewer chunks = less memory overhead, faster processing
+    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 15);
     const chunkMetadata = chunkManager.getChunkMetadata(chunks);
     this.logger.log(`📊 Split into ${chunkMetadata.totalChunks} chunks (avg ${chunkMetadata.averageChunkSize.toFixed(1)}s each)`);
     
@@ -1259,9 +1260,15 @@ export class ProjectsService {
       
       this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
       
-      // Add a small pause between chunks to let memory settle
+      // Force garbage collection and pause to let memory settle
       if (chunk.index < chunks.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Force GC if available (requires --expose-gc flag)
+        if (global.gc) {
+          global.gc();
+          this.logger.debug('🗑️  Forced garbage collection');
+        }
+        // Longer pause for memory cleanup
+        await new Promise(resolve => setTimeout(resolve, 3000));
       }
     }
     
@@ -1319,8 +1326,9 @@ export class ProjectsService {
     
     this.logger.log(`🎬 Starting chunked rendering for ${actualDuration.toFixed(1)}s clip`);
     
-    // Split into chunks (8s for ultra-conservative memory management)
-    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 8);
+    // Split into chunks (15s for optimal memory/performance balance)
+    // Fewer chunks = less memory overhead, faster processing
+    const chunks = chunkManager.splitIntoChunks(words, actualDuration, 15);
     const chunkMetadata = chunkManager.getChunkMetadata(chunks);
     
     this.logger.log(
@@ -1377,15 +1385,18 @@ export class ProjectsService {
       
       chunkVideoPaths.push(chunkOutputPath);
       
-      // Force garbage collection after each chunk to free memory
-      if (global.gc) {
-        global.gc();
-      }
-      
-      // Add a small delay to let memory settle between chunks
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second pause
-      
       this.logger.log(`✅ Chunk ${chunk.index + 1}/${chunks.length} completed`);
+      
+      // Force garbage collection and pause to let memory settle
+      if (chunk.index < chunks.length - 1) {
+        // Force GC if available (requires --expose-gc flag)
+        if (global.gc) {
+          global.gc();
+          this.logger.debug('🗑️  Forced garbage collection');
+        }
+        // Longer pause for memory cleanup
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
     }
     
     // Concatenate all chunks
