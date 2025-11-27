@@ -44,7 +44,7 @@ export default function UploadModal({
   const [showClipSettings, setShowClipSettings] = useState(false);
   const [clipSettings, setClipSettings] = useState<ClipSettings>({
     clipLength: 45,
-    numberOfClips: 5,
+    numberOfClips: 3,
     aspectRatio: '16:9',
     targetPlatform: 'youtube',
   });

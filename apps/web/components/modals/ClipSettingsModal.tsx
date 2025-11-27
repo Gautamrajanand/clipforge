@@ -88,7 +88,7 @@ export default function ClipSettingsModal({
             <input
               type="range"
               min="15"
-              max="180"
+              max="90"
               step="5"
               value={clipLength}
               onChange={(e) => setClipLength(Number(e.target.value))}
