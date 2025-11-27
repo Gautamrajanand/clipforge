@@ -19,7 +19,7 @@ export default function ClipSettingsModal({
 }: ClipSettingsModalProps) {
   const [selectedPreset, setSelectedPreset] = useState<string>('custom');
   const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1' | '4:5'>('16:9');
-  const [clipLength, setClipLength] = useState(60);
+  const [clipLength, setClipLength] = useState(45);
   const [numberOfClips, setNumberOfClips] = useState(3);
   const [useTimeframe, setUseTimeframe] = useState(false);
   const [timeframeStart, setTimeframeStart] = useState(0);
