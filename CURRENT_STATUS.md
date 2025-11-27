@@ -1,6 +1,6 @@
-# ClipForge - Current Status (Nov 22, 2025)
+# ClipForge - Current Status (Nov 27, 2025)
 
-## 🎯 Where We Are: Week 2 Day 3
+## 🎯 Where We Are: Week 2 Day 5 - Subtitle Memory Optimization Complete
 
 ### ✅ COMPLETED
 
@@ -39,11 +39,23 @@
 - ✅ Low credits warning
 - **Commits:** `2dd21bc` to `50ef089`
 
+**Day 3-4: Subtitle Memory Optimization (Nov 26-27, 2025)**
+- ✅ Fixed API crashes during subtitle rendering
+- ✅ Reduced chunk size from 8s → 6s (25% fewer frames per chunk)
+- ✅ Increased pause from 2s → 5s between chunks
+- ✅ OpusClip parity: Support up to 90-second clips with subtitles
+- ✅ Tested successfully: 44s, 53s, 60s clips all working
+- ✅ Frontend: Max clip length slider set to 90s
+- ✅ Frontend: Default settings 45s/3clips (consistent across modals)
+- ✅ Frontend: Fixed modal scrolling to prevent button cutoff
+- **Commits:** `7f5e049` to `50d0a1e`
+- **Key Files:** `projects.service.ts`, `ClipSettingsModal.tsx`, `UploadModal.tsx`
+
 ---
 
-## 🔄 IN PROGRESS: Week 2 Day 3-4
+## 🔄 IN PROGRESS: Week 2 Day 5-6
 
-### Stripe & Razorpay Configuration (15-30 minutes)
+### Watermark Implementation (Next Priority)
 
 **What's Already Built:**
 - ✅ Backend payment service (100% complete)

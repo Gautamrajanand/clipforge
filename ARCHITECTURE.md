@@ -822,22 +822,28 @@ ffmpeg -i input.mp4 -framerate 30 -i frames/caption_%06d.png \
   -c:v libx264 -preset fast output.mp4
 ```
 
-**5. Duration Support** ✅ UPDATED
+**5. Duration Support** ✅ UPDATED (Nov 27, 2025)
 
 | Style Type | Max Duration | Processing Method |
 |------------|--------------|-------------------|
-| Animated | 90+ seconds | Chunked rendering (8s chunks) |
+| Animated | 90 seconds | Chunked rendering (6s chunks) - OpusClip parity |
 | Karaoke | Unlimited | ASS subtitle burning (efficient) |
 | Static | Unlimited | ASS subtitle burning (efficient) |
 
-**Processing Flow:**
+**Processing Flow (Optimized for Memory):**
 - **≤15s clips:** Single-pass rendering (fast, ~30-60 seconds)
 - **>15s clips:** Automatic chunked rendering
-  1. Split into 8-second chunks
+  1. Split into 6-second chunks (180 frames @ 30fps)
   2. Process each chunk sequentially
-  3. 2-second memory recovery between chunks
-  4. Seamless concatenation
+  3. 5-second memory recovery between chunks (GC + pause)
+  4. Seamless concatenation with cut transition
   5. Total time: ~5-10 minutes for 60-90s clips
+  
+**Memory Optimization (Nov 27, 2025):**
+- Reduced chunk size: 8s → 6s (25% fewer frames per chunk)
+- Increased pause: 2s → 5s (better memory cleanup)
+- Explicit garbage collection after each chunk
+- Successfully tested: 44s, 53s, 60s, 90s clips
 
 **6. Future Enhancements**
 - ✅ ~~Support for 60-90 second clips~~ **COMPLETE**

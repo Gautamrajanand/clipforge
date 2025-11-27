@@ -2,7 +2,7 @@
 
 **Mission:** One Input, Many Outputs  
 **Vision:** The all-in-one content transformation platform  
-**Last Updated:** November 15, 2025
+**Last Updated:** November 27, 2025
 
 ---
 
@@ -66,6 +66,15 @@ Phase 1.11: Watermark & Tier System (✅ COMPLETE - Nov 15, 2025)
 ├── Watermark on AI Reframe exports (full video)
 ├── FFmpeg drawtext filter integration
 └── Automatic watermark removal for PRO+ tiers
+
+Phase 1.12: Subtitle Memory Optimization (✅ COMPLETE - Nov 27, 2025)
+├── Fixed API crashes during subtitle rendering
+├── Reduced chunk size from 8s → 6s (25% fewer frames)
+├── Increased pause from 2s → 5s between chunks
+├── OpusClip parity: Support up to 90-second clips
+├── Frontend: Max clip length slider set to 90s
+├── Frontend: Default settings 45s/3clips
+└── Frontend: Fixed modal scrolling issues
 
 Phase 2: Content Generation (⏳ Q1 2026 - 3 months)
 ├── Blog posts
