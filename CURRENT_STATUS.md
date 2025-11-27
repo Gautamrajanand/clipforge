@@ -39,6 +39,17 @@
 - ✅ Low credits warning
 - **Commits:** `2dd21bc` to `50ef089`
 
+**Day 2.5: 120-Minute Upload Support (Nov 24, 2025)**
+- ✅ OpusClip parity: Support 2-hour video uploads
+- ✅ UI messaging: "You can upload videos up to 120 minutes long"
+- ✅ File size limit: 5GB (increased from 500MB)
+- ✅ Streaming architecture: Memory-efficient download
+- ✅ Real-world testing: 2-hour Joe Rogan podcast (119 minutes)
+- ✅ Memory stable: 1.5GB constant during processing
+- ✅ Credit calculation: 179 credits (119 × 1.5 for URL import)
+- **Commits:** `27bb918`, `fa83b99`
+- **Key Files:** `UploadModal.tsx`, `TESTING_SUMMARY_120MIN.md`
+
 **Day 3-4: Subtitle Memory Optimization (Nov 26-27, 2025)**
 - ✅ Fixed API crashes during subtitle rendering
 - ✅ Reduced chunk size from 8s → 6s (25% fewer frames per chunk)

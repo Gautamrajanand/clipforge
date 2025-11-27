@@ -67,6 +67,14 @@ Phase 1.11: Watermark & Tier System (✅ COMPLETE - Nov 15, 2025)
 ├── FFmpeg drawtext filter integration
 └── Automatic watermark removal for PRO+ tiers
 
+Phase 1.11.5: 120-Minute Upload Support (✅ COMPLETE - Nov 24, 2025)
+├── OpusClip parity: 2-hour video uploads
+├── UI messaging: "Upload videos up to 120 minutes"
+├── File size limit: 5GB (increased from 500MB)
+├── Streaming architecture for memory efficiency
+├── Real-world testing: 2-hour Joe Rogan podcast
+└── Credit calculation: 179 credits for 119-minute video
+
 Phase 1.12: Subtitle Memory Optimization (✅ COMPLETE - Nov 27, 2025)
 ├── Fixed API crashes during subtitle rendering
 ├── Reduced chunk size from 8s → 6s (25% fewer frames)
