@@ -1,7 +1,7 @@
 # ClipForge Architecture Documentation
 
-**Last Updated:** November 28, 2025  
-**Version:** 2.2 (Docker-First Architecture + UI Overhaul + PLG Email System)
+**Last Updated:** November 29, 2025  
+**Version:** 2.3 (Docker-First Architecture + UI Overhaul + Complete PLG Email System)
 
 ---
 
