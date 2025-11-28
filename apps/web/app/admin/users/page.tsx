@@ -30,6 +30,8 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [creditAdjustment, setCreditAdjustment] = useState({ amount: 0, reason: '' });
   const [adjusting, setAdjusting] = useState(false);
+  const [showTierModal, setShowTierModal] = useState(false);
+  const [selectedTier, setSelectedTier] = useState('FREE');
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -138,6 +140,57 @@ export default function AdminUsersPage() {
     } catch (err) {
       console.error('Error updating admin status:', err);
       alert('Failed to update admin status');
+    }
+  };
+
+  const handleChangeTier = async (orgId: string, newTier: string) => {
+    try {
+      const response = await fetchWithAuth(
+        `http://localhost:3000/admin/organizations/${orgId}/tier`,
+        {
+          method: 'PATCH',
+          getToken: getClerkToken,
+          body: JSON.stringify({ tier: newTier }),
+        }
+      );
+
+      if (response.ok) {
+        alert(`Tier changed to ${newTier} successfully`);
+        setShowTierModal(false);
+        setSelectedUser(null);
+        loadUsers(searchQuery || undefined);
+      } else {
+        alert('Failed to change tier');
+      }
+    } catch (err) {
+      console.error('Error changing tier:', err);
+      alert('Failed to change tier');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to DELETE user "${userName}"? This action cannot be undone!`)) {
+      return;
+    }
+
+    try {
+      const response = await fetchWithAuth(
+        `http://localhost:3000/admin/users/${userId}`,
+        {
+          method: 'DELETE',
+          getToken: getClerkToken,
+        }
+      );
+
+      if (response.ok) {
+        alert('User deleted successfully');
+        loadUsers(searchQuery || undefined);
+      } else {
+        alert('Failed to delete user');
+      }
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert('Failed to delete user');
     }
   };
 
@@ -270,21 +323,41 @@ export default function AdminUsersPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      {user.memberships?.[0] && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
+                        {user.memberships?.[0] && (
+                          <>
+                            <button
+                              onClick={() => setSelectedUser(user)}
+                              className="text-xs text-primary-600 hover:text-primary-900 text-left"
+                            >
+                              Adjust Credits
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setSelectedTier(user.memberships[0].org.tier);
+                                setShowTierModal(true);
+                              }}
+                              className="text-xs text-blue-600 hover:text-blue-900 text-left"
+                            >
+                              Change Tier
+                            </button>
+                          </>
+                        )}
                         <button
-                          onClick={() => setSelectedUser(user)}
-                          className="text-primary-600 hover:text-primary-900"
+                          onClick={() => handleToggleAdmin(user.id, user.isAdmin)}
+                          className="text-xs text-indigo-600 hover:text-indigo-900 text-left"
                         >
-                          Adjust Credits
+                          {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
                         </button>
-                      )}
-                      <button
-                        onClick={() => handleToggleAdmin(user.id, user.isAdmin)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
-                      </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          className="text-xs text-red-600 hover:text-red-900 text-left"
+                        >
+                          Delete User
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -360,6 +433,60 @@ export default function AdminUsersPage() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tier Change Modal */}
+      {showTierModal && selectedUser && selectedUser.memberships?.[0] && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Change Tier</h2>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">User: {selectedUser.name}</p>
+              <p className="text-sm text-gray-600">Organization: {selectedUser.memberships[0].org.name}</p>
+              <p className="text-sm text-gray-600">Current Tier: {selectedUser.memberships[0].org.tier}</p>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              {['FREE', 'STARTER', 'PRO', 'BUSINESS'].map((tier) => (
+                <button
+                  key={tier}
+                  onClick={() => setSelectedTier(tier)}
+                  className={`w-full px-4 py-3 rounded-lg border-2 text-left transition-colors ${
+                    selectedTier === tier
+                      ? 'border-primary-500 bg-primary-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-semibold">{tier}</div>
+                  <div className="text-xs text-gray-500">
+                    {tier === 'FREE' && '60 credits/month'}
+                    {tier === 'STARTER' && '150 credits/month - $29/mo'}
+                    {tier === 'PRO' && '300 credits/month - $79/mo'}
+                    {tier === 'BUSINESS' && 'Unlimited - $99/mo'}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleChangeTier(selectedUser.memberships[0].org.id, selectedTier)}
+                className="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 font-medium"
+              >
+                Confirm Change
+              </button>
+              <button
+                onClick={() => {
+                  setShowTierModal(false);
+                  setSelectedUser(null);
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

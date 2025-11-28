@@ -427,4 +427,18 @@ export class AdminService {
       user,
     };
   }
+
+  async deleteUser(userId: string) {
+    this.logger.log(`Deleting user ${userId}`);
+
+    // Delete user (cascade will handle related records)
+    await this.prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return {
+      success: true,
+      message: 'User deleted successfully',
+    };
+  }
 }

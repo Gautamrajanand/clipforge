@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
@@ -80,5 +80,10 @@ export class AdminController {
     @Body() body: { isAdmin: boolean },
   ) {
     return this.adminService.toggleAdmin(userId, body.isAdmin);
+  }
+
+  @Delete('users/:id')
+  async deleteUser(@Param('id') userId: string) {
+    return this.adminService.deleteUser(userId);
   }
 }
