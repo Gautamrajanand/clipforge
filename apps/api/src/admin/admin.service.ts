@@ -134,8 +134,21 @@ export class AdminService {
         id: true,
         email: true,
         name: true,
+        isAdmin: true,
         createdAt: true,
         updatedAt: true,
+        memberships: {
+          include: {
+            org: {
+              select: {
+                id: true,
+                name: true,
+                tier: true,
+                credits: true,
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -294,7 +307,20 @@ export class AdminService {
         id: true,
         email: true,
         name: true,
+        isAdmin: true,
         createdAt: true,
+        memberships: {
+          include: {
+            org: {
+              select: {
+                id: true,
+                name: true,
+                tier: true,
+                credits: true,
+              },
+            },
+          },
+        },
       },
     });
   }
