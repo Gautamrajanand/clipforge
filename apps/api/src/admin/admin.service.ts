@@ -335,10 +335,11 @@ export class AdminService {
     // Create credit transaction
     await this.prisma.creditTransaction.create({
       data: {
-        organizationId: orgId,
+        orgId: orgId,
         amount,
         type: amount > 0 ? 'ADMIN_ADJUSTMENT' : 'ADMIN_DEDUCTION',
         description: reason,
+        balanceBefore: org.credits - amount,
         balanceAfter: org.credits,
       },
     });
