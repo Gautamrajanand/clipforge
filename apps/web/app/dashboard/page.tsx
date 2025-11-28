@@ -544,19 +544,19 @@ export default function Dashboard() {
                 title="Recording Studio"
                 icon={Video}
                 color="pink"
-                onClick={() => alert('Recording Studio coming soon!')}
+                soon
               />
               <FeatureCard
                 title="Video Editor"
                 icon={Scissors}
                 color="blue"
-                onClick={handleOpenUploadModal}
+                soon
               />
               <FeatureCard
                 title="Audio Editor"
                 icon={Mic2}
                 color="mint"
-                onClick={() => alert('Audio Editor coming soon!')}
+                soon
               />
             </div>
           </section>
