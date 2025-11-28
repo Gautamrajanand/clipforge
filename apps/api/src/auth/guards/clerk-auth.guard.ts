@@ -64,11 +64,23 @@ export class ClerkAuthGuard implements CanActivate {
         issuer,
       });
 
+      // Extract email from Clerk JWT (try multiple fields)
+      const email = payload.email || 
+                    payload.email_address ||
+                    payload.primary_email_address ||
+                    (payload.email_addresses && payload.email_addresses[0]?.email_address);
+      
+      // Extract name from Clerk JWT
+      const name = payload.name || 
+                   `${payload.first_name || ''} ${payload.last_name || ''}`.trim() ||
+                   payload.username ||
+                   'User';
+
       // Sync Clerk user with database
       const user = await this.clerkSync.syncUser(
         payload.sub,
-        payload.email,
-        payload.name || payload.first_name || payload.username,
+        email,
+        name,
       );
 
       // Attach user data to request

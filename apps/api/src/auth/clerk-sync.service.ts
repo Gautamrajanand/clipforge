@@ -33,7 +33,30 @@ export class ClerkSyncService {
       },
     });
 
-    if (!user) {
+    if (user) {
+      // Update existing user's email and name if they've changed
+      const needsUpdate = 
+        (email && email !== user.email && !email.includes('@clerk.local')) ||
+        (name && name !== user.name && name !== 'User');
+
+      if (needsUpdate) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            ...(email && !email.includes('@clerk.local') && { email }),
+            ...(name && name !== 'User' && { name }),
+          },
+          include: {
+            memberships: {
+              include: {
+                org: true,
+              },
+            },
+          },
+        });
+        this.logger.log(`✅ Updated user ${user.id} with email: ${email}, name: ${name}`);
+      }
+    } else {
       // Create new user with personal organization
       const trialStartDate = new Date();
       const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
