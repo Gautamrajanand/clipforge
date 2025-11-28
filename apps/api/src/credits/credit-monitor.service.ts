@@ -87,8 +87,9 @@ export class CreditMonitorService {
   /**
    * Periodic check for low credits (backup to real-time checks)
    * Runs every hour to catch any missed warnings
+   * TEMPORARILY DISABLED due to crypto issue - will re-enable after fix
    */
-  @Cron(CronExpression.EVERY_HOUR)
+  // @Cron(CronExpression.EVERY_HOUR)
   async checkAllOrganizationsForLowCredits(): Promise<void> {
     this.logger.log('🔍 Running periodic low credit check...');
 

@@ -25,6 +25,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "src/email/templates/**/*.tsx"]
 }
