@@ -22,6 +22,7 @@ model User {
   name      String
   password  String?  // hashed (optional for Clerk users)
   clerkId   String?  @unique // Clerk user ID
+  isAdmin   Boolean  @default(false) // Admin role for platform management
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -31,6 +32,7 @@ model User {
 
   @@index([email])
   @@index([clerkId])
+  @@index([isAdmin])
 }
 
 model Organization {
@@ -407,4 +409,6 @@ enum CreditTransactionType {
   ADDITION_TRIAL           // Trial credits
   ADDITION_REFUND          // Refund for failed processing
   ADDITION_MANUAL          // Admin manual addition
+  ADMIN_ADJUSTMENT         // Admin credit adjustment (positive)
+  ADMIN_DEDUCTION          // Admin credit deduction (negative)
 }

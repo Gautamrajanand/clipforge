@@ -17,9 +17,11 @@ import {
   Plus,
   Zap,
   Key,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+import { useAdmin } from '@/hooks/useAdmin';
 
 interface SidebarProps {
   credits?: number | null;
@@ -61,6 +63,7 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate, ti
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
+  const { isAdmin } = useAdmin();
   
   const handleNavClick = (item: NavItem, e: React.MouseEvent) => {
     // If item requires Pro and user is on free plan, redirect to pricing
@@ -189,6 +192,24 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate, ti
               </Link>
             );
           })}
+          
+          {/* Admin Link (only for admins) */}
+          {isAdmin && (
+            <>
+              <div className="my-2 border-t border-gray-200" />
+              <Link
+                href="/admin"
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  pathname.startsWith('/admin')
+                    ? 'bg-red-50 text-red-700'
+                    : 'text-red-600 hover:bg-red-50'
+                }`}
+              >
+                <Shield className="w-5 h-5" />
+                <span>Admin Panel</span>
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 

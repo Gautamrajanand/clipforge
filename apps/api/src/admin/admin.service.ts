@@ -318,4 +318,86 @@ export class AdminService {
       },
     });
   }
+
+  async adjustCredits(orgId: string, amount: number, reason: string) {
+    this.logger.log(`Adjusting credits for org ${orgId}: ${amount} (${reason})`);
+
+    // Update organization credits
+    const org = await this.prisma.organization.update({
+      where: { id: orgId },
+      data: {
+        credits: {
+          increment: amount,
+        },
+      },
+    });
+
+    // Create credit transaction
+    await this.prisma.creditTransaction.create({
+      data: {
+        organizationId: orgId,
+        amount,
+        type: amount > 0 ? 'ADMIN_ADJUSTMENT' : 'ADMIN_DEDUCTION',
+        description: reason,
+        balanceAfter: org.credits,
+      },
+    });
+
+    return {
+      success: true,
+      newBalance: org.credits,
+      adjustment: amount,
+      reason,
+    };
+  }
+
+  async updateTier(orgId: string, tier: string) {
+    this.logger.log(`Updating tier for org ${orgId} to ${tier}`);
+
+    const org = await this.prisma.organization.update({
+      where: { id: orgId },
+      data: {
+        tier: tier as any,
+      },
+      include: {
+        memberships: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      organization: org,
+    };
+  }
+
+  async toggleAdmin(userId: string, isAdmin: boolean) {
+    this.logger.log(`Setting admin status for user ${userId} to ${isAdmin}`);
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isAdmin,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isAdmin: true,
+      },
+    });
+
+    return {
+      success: true,
+      user,
+    };
+  }
 }

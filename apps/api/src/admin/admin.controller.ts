@@ -1,9 +1,10 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('admin')
-@UseGuards(ClerkAuthGuard)
+@UseGuards(ClerkAuthGuard, AdminGuard)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -55,5 +56,29 @@ export class AdminController {
   @Get('health')
   async getSystemHealth() {
     return this.adminService.getSystemHealth();
+  }
+
+  @Post('organizations/:id/credits/adjust')
+  async adjustCredits(
+    @Param('id') orgId: string,
+    @Body() body: { amount: number; reason: string },
+  ) {
+    return this.adminService.adjustCredits(orgId, body.amount, body.reason);
+  }
+
+  @Patch('organizations/:id/tier')
+  async updateTier(
+    @Param('id') orgId: string,
+    @Body() body: { tier: string },
+  ) {
+    return this.adminService.updateTier(orgId, body.tier);
+  }
+
+  @Patch('users/:id/admin')
+  async toggleAdmin(
+    @Param('id') userId: string,
+    @Body() body: { isAdmin: boolean },
+  ) {
+    return this.adminService.toggleAdmin(userId, body.isAdmin);
   }
 }
