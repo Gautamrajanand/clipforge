@@ -114,8 +114,18 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">Monitor your ClipForge application</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="mt-1 text-sm text-gray-500">Monitor your ClipForge application</p>
+            </div>
+            <button
+              onClick={() => router.push('/admin/users')}
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 font-medium"
+            >
+              Manage Users
+            </button>
+          </div>
         </div>
       </div>
 
