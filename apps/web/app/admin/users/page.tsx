@@ -79,8 +79,14 @@ export default function AdminUsersPage() {
       return;
     }
 
+    if (creditAdjustment.amount === 0) {
+      alert('Please enter a non-zero amount');
+      return;
+    }
+
     try {
       setAdjusting(true);
+      console.log('Adjusting credits:', { orgId, ...creditAdjustment });
       const response = await fetchWithAuth(
         `http://localhost:3000/admin/organizations/${orgId}/credits/adjust`,
         {
@@ -96,7 +102,9 @@ export default function AdminUsersPage() {
         setSelectedUser(null);
         loadUsers(searchQuery || undefined);
       } else {
-        alert('Failed to adjust credits');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', errorData);
+        alert(`Failed to adjust credits: ${errorData.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('Error adjusting credits:', err);
@@ -310,8 +318,11 @@ export default function AdminUsersPage() {
                 </label>
                 <input
                   type="number"
-                  value={creditAdjustment.amount}
-                  onChange={(e) => setCreditAdjustment({ ...creditAdjustment, amount: parseInt(e.target.value) || 0 })}
+                  value={creditAdjustment.amount === 0 ? '' : creditAdjustment.amount}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                    setCreditAdjustment({ ...creditAdjustment, amount: isNaN(value) ? 0 : value });
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="e.g., 100 or -50"
                 />
