@@ -1,12 +1,16 @@
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { AnalyticsService } from './analytics.service';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('admin')
 @UseGuards(ClerkAuthGuard, AdminGuard)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly analyticsService: AnalyticsService,
+  ) {}
 
   @Get('dashboard')
   async getDashboard() {
@@ -85,5 +89,15 @@ export class AdminController {
   @Delete('users/:id')
   async deleteUser(@Param('id') userId: string) {
     return this.adminService.deleteUser(userId);
+  }
+
+  @Get('analytics')
+  async getAnalytics() {
+    return this.analyticsService.getAnalytics();
+  }
+
+  @Get('analytics/timeseries')
+  async getTimeSeriesData(@Query('days') days?: string) {
+    return this.analyticsService.getTimeSeriesData(days ? parseInt(days) : 30);
   }
 }
