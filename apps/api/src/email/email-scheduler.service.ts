@@ -31,8 +31,10 @@ export class EmailSchedulerService {
    * Runs daily at 9 AM
    * Sends to users who signed up 24 hours ago
    * Different message if they've created a clip or not
+   * 
+   * TEMPORARILY DISABLED: crypto.randomUUID() issue in Node 18
    */
-  @Cron('0 9 * * *') // Every day at 9 AM
+  // @Cron('0 9 * * *') // Every day at 9 AM
   async sendOnboardingDay1Emails(): Promise<void> {
     this.logger.log('🚀 Running Onboarding Day 1 email job...');
 
@@ -107,8 +109,10 @@ export class EmailSchedulerService {
    * Runs daily at 9 AM
    * Sends to users who signed up 3 days ago
    * Includes usage stats and feature education
+   * 
+   * TEMPORARILY DISABLED: crypto.randomUUID() issue in Node 18
    */
-  @Cron('0 9 * * *') // Every day at 9 AM
+  // @Cron('0 9 * * *') // Every day at 9 AM
   async sendOnboardingDay3Emails(): Promise<void> {
     this.logger.log('🚀 Running Onboarding Day 3 email job...');
 
@@ -195,8 +199,10 @@ export class EmailSchedulerService {
    * Runs daily at 9 AM
    * Sends to users whose trial expires in 3 days
    * Critical for conversion (15-25% conversion rate)
+   * 
+   * TEMPORARILY DISABLED: crypto.randomUUID() issue in Node 18
    */
-  @Cron('0 9 * * *') // Every day at 9 AM
+  // @Cron('0 9 * * *') // Every day at 9 AM
   async sendTrialExpiryEmails(): Promise<void> {
     this.logger.log('🚀 Running Trial Expiry email job...');
 
@@ -260,8 +266,10 @@ export class EmailSchedulerService {
    * Runs every Monday at 9 AM
    * Sends usage stats and recommendations
    * Drives 15-20% engagement boost
+   * 
+   * TEMPORARILY DISABLED: crypto.randomUUID() issue in Node 18
    */
-  @Cron('0 9 * * 1') // Every Monday at 9 AM
+  // @Cron('0 9 * * 1') // Every Monday at 9 AM
   async sendWeeklySummaryEmails(): Promise<void> {
     this.logger.log('🚀 Running Weekly Summary email job...');
 
@@ -376,8 +384,10 @@ export class EmailSchedulerService {
    * Runs daily at 9 AM
    * Sends to users inactive for exactly 7 days
    * Achieves 10-15% reactivation rate
+   * 
+   * TEMPORARILY DISABLED: crypto.randomUUID() issue in Node 18
    */
-  @Cron('0 9 * * *') // Every day at 9 AM
+  // @Cron('0 9 * * *') // Every day at 9 AM
   async sendInactivityEmails(): Promise<void> {
     this.logger.log('🚀 Running Inactivity Re-engagement email job...');
 
