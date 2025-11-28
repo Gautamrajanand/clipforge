@@ -226,14 +226,14 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {user.memberships[0] ? (
+                      {user.memberships?.[0] ? (
                         <div className="text-sm text-gray-900">{user.memberships[0].org.name}</div>
                       ) : (
                         <span className="text-sm text-gray-400">No organization</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {user.memberships[0] && (
+                      {user.memberships?.[0] && (
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           user.memberships[0].org.tier === 'FREE' ? 'bg-gray-100 text-gray-800' :
                           user.memberships[0].org.tier === 'STARTER' ? 'bg-blue-100 text-blue-800' :
@@ -245,7 +245,7 @@ export default function AdminUsersPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {user.memberships[0] && (
+                      {user.memberships?.[0] && (
                         <div className="text-sm font-medium text-gray-900">
                           {user.memberships[0].org.credits}
                         </div>
@@ -263,7 +263,7 @@ export default function AdminUsersPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      {user.memberships[0] && (
+                      {user.memberships?.[0] && (
                         <button
                           onClick={() => setSelectedUser(user)}
                           className="text-primary-600 hover:text-primary-900"
@@ -293,7 +293,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Credit Adjustment Modal */}
-      {selectedUser && selectedUser.memberships[0] && (
+      {selectedUser && selectedUser.memberships?.[0] && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Adjust Credits</h2>
