@@ -7,6 +7,10 @@ import { CreditLowEmail } from './templates/credit-low';
 import { CreditAdjustmentEmail } from './templates/credit-adjustment';
 import { PaymentConfirmationEmail } from './templates/payment-confirmation';
 import { TrialExpiryEmail } from './templates/trial-expiry';
+import { OnboardingDay1Email } from './templates/onboarding-day1';
+import { OnboardingDay3Email } from './templates/onboarding-day3';
+import { WeeklySummaryEmail } from './templates/weekly-summary';
+import { InactivityReengagementEmail } from './templates/inactivity-reengagement';
 
 @Injectable()
 export class ResendService {
@@ -208,6 +212,170 @@ export class ResendService {
       this.logger.log(`✅ Trial expiry email sent to ${params.to}`);
     } catch (error) {
       this.logger.error(`❌ Failed to send trial expiry email to ${params.to}:`, error);
+    }
+  }
+
+  // ============================================================================
+  // PLG ONBOARDING & ENGAGEMENT EMAILS
+  // ============================================================================
+
+  async sendOnboardingDay1Email(params: {
+    to: string;
+    userName?: string;
+    userEmail: string;
+    hasCreatedClip: boolean;
+    credits: number;
+  }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn('Resend not configured. Skipping onboarding day 1 email.');
+      return;
+    }
+
+    try {
+      const html = await render(
+        OnboardingDay1Email({
+          userName: params.userName,
+          userEmail: params.userEmail,
+          hasCreatedClip: params.hasCreatedClip,
+          credits: params.credits,
+        })
+      );
+
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: params.hasCreatedClip 
+          ? '🎉 Great Start! Here\'s What to Do Next'
+          : '🚀 Create Your First Clip in 5 Minutes',
+        html,
+      });
+
+      this.logger.log(`✅ Onboarding Day 1 email sent to ${params.to}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send onboarding day 1 email to ${params.to}:`, error);
+    }
+  }
+
+  async sendOnboardingDay3Email(params: {
+    to: string;
+    userName?: string;
+    clipsCreated: number;
+    creditsUsed: number;
+    creditsRemaining: number;
+  }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn('Resend not configured. Skipping onboarding day 3 email.');
+      return;
+    }
+
+    try {
+      const html = await render(
+        OnboardingDay3Email({
+          userName: params.userName,
+          clipsCreated: params.clipsCreated,
+          creditsUsed: params.creditsUsed,
+          creditsRemaining: params.creditsRemaining,
+        })
+      );
+
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: '🎓 Master ClipForge in 5 Minutes',
+        html,
+      });
+
+      this.logger.log(`✅ Onboarding Day 3 email sent to ${params.to}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send onboarding day 3 email to ${params.to}:`, error);
+    }
+  }
+
+  async sendWeeklySummaryEmail(params: {
+    to: string;
+    userName?: string;
+    weekStart: string;
+    weekEnd: string;
+    clipsCreated: number;
+    videosProcessed: number;
+    creditsUsed: number;
+    creditsRemaining: number;
+    totalMinutesProcessed: number;
+    mostUsedFeature: string;
+    tier: string;
+  }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn('Resend not configured. Skipping weekly summary email.');
+      return;
+    }
+
+    try {
+      const html = await render(
+        WeeklySummaryEmail({
+          userName: params.userName,
+          weekStart: params.weekStart,
+          weekEnd: params.weekEnd,
+          clipsCreated: params.clipsCreated,
+          videosProcessed: params.videosProcessed,
+          creditsUsed: params.creditsUsed,
+          creditsRemaining: params.creditsRemaining,
+          totalMinutesProcessed: params.totalMinutesProcessed,
+          mostUsedFeature: params.mostUsedFeature,
+          tier: params.tier,
+        })
+      );
+
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: `📊 Your ClipForge Week: ${params.clipsCreated} Clips Created`,
+        html,
+      });
+
+      this.logger.log(`✅ Weekly summary email sent to ${params.to}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send weekly summary email to ${params.to}:`, error);
+    }
+  }
+
+  async sendInactivityReengagementEmail(params: {
+    to: string;
+    userName?: string;
+    daysSinceLastActivity: number;
+    lastClipCreated?: string;
+    creditsRemaining: number;
+    tier: string;
+    trialDaysLeft?: number;
+  }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn('Resend not configured. Skipping inactivity reengagement email.');
+      return;
+    }
+
+    try {
+      const html = await render(
+        InactivityReengagementEmail({
+          userName: params.userName,
+          daysSinceLastActivity: params.daysSinceLastActivity,
+          lastClipCreated: params.lastClipCreated,
+          creditsRemaining: params.creditsRemaining,
+          tier: params.tier,
+          trialDaysLeft: params.trialDaysLeft,
+        })
+      );
+
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: params.daysSinceLastActivity === 7 
+          ? '👋 We Miss You at ClipForge!'
+          : '🔔 Your ClipForge Account is Waiting',
+        html,
+      });
+
+      this.logger.log(`✅ Inactivity reengagement email sent to ${params.to}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send inactivity reengagement email to ${params.to}:`, error);
     }
   }
 }
