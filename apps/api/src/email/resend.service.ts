@@ -130,14 +130,14 @@ export class ResendService {
       );
 
       const isPositive = params.amount > 0;
-      await this.resend.emails.send({
+      const result = await this.resend.emails.send({
         from: this.fromEmail,
         to: params.to,
         subject: isPositive ? '✨ Credits Added to Your Account' : '📉 Credits Adjusted',
         html,
       });
 
-      this.logger.log(`✅ Credit adjustment email sent to ${params.to}`);
+      this.logger.log(`✅ Credit adjustment email sent to ${params.to}`, { emailId: result.data?.id, error: result.error });
     } catch (error) {
       this.logger.error(`❌ Failed to send credit adjustment email to ${params.to}:`, error);
     }

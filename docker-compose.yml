@@ -77,7 +77,7 @@ services:
       FF_CAPTION_STYLES: "false"
       # Email Configuration (Resend for transactional emails)
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      FROM_EMAIL: ${FROM_EMAIL:-ClipForge <noreply@clipforge.ai>}
+      FROM_EMAIL: ${FROM_EMAIL:-ClipForge <onboarding@resend.dev>}
       APP_URL: ${APP_URL:-http://localhost:3001}
       # Legacy SMTP (deprecated - use Resend)
       SMTP_HOST: ${SMTP_HOST:-}
