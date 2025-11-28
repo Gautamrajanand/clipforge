@@ -75,13 +75,16 @@ services:
       ML_WORKER_URL: http://ml-workers:8000
       FF_ASPECT_RATIO: "true"
       FF_CAPTION_STYLES: "false"
-      # Email Configuration (Optional - configure for email notifications)
+      # Email Configuration (Resend for transactional emails)
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      FROM_EMAIL: ${FROM_EMAIL:-ClipForge <noreply@clipforge.ai>}
+      APP_URL: ${APP_URL:-http://localhost:3001}
+      # Legacy SMTP (deprecated - use Resend)
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-ClipForge <noreply@clipforge.ai>}
-      APP_URL: ${APP_URL:-http://localhost:3001}
       # Clerk Authentication
       CLERK_SECRET_KEY: sk_test_HDxBd9tzinwO6dNNFbVdETXaFRGEzh8V13LuluC8wu
       CLERK_PUBLISHABLE_KEY: pk_test_dW5iaWFzZWQtbW9zcXVpdG8tNjMuY2xlcmsuYWNjb3VudHMuZGV2JA
