@@ -42,9 +42,17 @@ async function bootstrap() {
     hidePoweredBy: true,
   }));
 
-  // CORS
+  // CORS - Restrict to known origins in production
+  const allowedOrigins = process.env.NODE_ENV === 'production'
+    ? [
+        'https://clipforge.ai',
+        'https://www.clipforge.ai',
+        process.env.FRONTEND_URL,
+      ].filter(Boolean)
+    : true; // Allow all in development
+
   app.enableCors({
-    origin: true, // Allow all origins for demo
+    origin: allowedOrigins,
     credentials: true,
     exposedHeaders: ['Content-Length', 'Content-Type', 'Accept-Ranges'],
   });
