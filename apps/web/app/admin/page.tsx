@@ -63,11 +63,20 @@ export default function AdminDashboard() {
         const data = await response.json();
         setStats(data);
       } else {
-        setError('Failed to load dashboard stats');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', response.status, errorData);
+        
+        if (response.status === 403) {
+          setError('Access denied. Admin privileges required.');
+        } else if (response.status === 401) {
+          setError('Authentication required. Please sign in again.');
+        } else {
+          setError(`Failed to load dashboard stats: ${errorData.message || response.statusText}`);
+        }
       }
     } catch (err) {
       console.error('Error loading dashboard:', err);
-      setError('Failed to load dashboard stats');
+      setError(`Failed to load dashboard stats: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
