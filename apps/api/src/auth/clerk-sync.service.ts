@@ -1,16 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ResendService } from '../email/resend.service';
 
 /**
  * ClerkSyncService - Syncs Clerk users with local database
  * 
  * Creates/updates User and Organization records when Clerk users sign in
+ * Triggers PLG email flows for new users
  */
 @Injectable()
 export class ClerkSyncService {
   private readonly logger = new Logger(ClerkSyncService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private resendService: ResendService,
+  ) {}
 
   /**
    * Get or create user and organization from Clerk user ID
@@ -80,6 +85,24 @@ export class ClerkSyncService {
           },
         },
       });
+
+      // PLG: Send welcome email immediately after signup (critical for activation)
+      // Industry standard: Welcome emails have 4x higher open rates when sent instantly
+      if (email && !email.includes('@clerk.local')) {
+        try {
+          await this.resendService.sendWelcomeEmail({
+            to: email,
+            userName: name,
+            userEmail: email,
+            tier: 'FREE (7-Day Trial)',
+            credits: 150,
+          });
+          this.logger.log(`✅ Welcome email sent to ${email}`);
+        } catch (error) {
+          this.logger.error(`❌ Failed to send welcome email to ${email}:`, error);
+          // Don't block user creation if email fails
+        }
+      }
     }
 
     return user;

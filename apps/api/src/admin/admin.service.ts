@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ResendService } from '../email/resend.service';
 
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private resendService: ResendService,
+  ) {}
 
   async getDashboardStats() {
     try {
@@ -348,12 +352,29 @@ export class AdminService {
   async adjustCredits(orgId: string, amount: number, reason: string) {
     this.logger.log(`Adjusting credits for org ${orgId}: ${amount} (${reason})`);
 
+    const balanceBefore = await this.prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { credits: true },
+    }).then(org => org?.credits || 0);
+
     // Update organization credits
     const org = await this.prisma.organization.update({
       where: { id: orgId },
       data: {
         credits: {
           increment: amount,
+        },
+      },
+      include: {
+        memberships: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                name: true,
+              },
+            },
+          },
         },
       },
     });
@@ -365,10 +386,33 @@ export class AdminService {
         amount,
         type: amount > 0 ? 'ADMIN_ADJUSTMENT' : 'ADMIN_DEDUCTION',
         description: reason,
-        balanceBefore: org.credits - amount,
+        balanceBefore,
         balanceAfter: org.credits,
       },
     });
+
+    // PLG: Send credit adjustment notification to all org members
+    // Industry standard: Immediate notification builds trust and transparency
+    for (const membership of org.memberships) {
+      const user = membership.user;
+      if (user.email && !user.email.includes('@clerk.local')) {
+        try {
+          await this.resendService.sendCreditAdjustmentEmail({
+            to: user.email,
+            userName: user.name,
+            amount,
+            reason,
+            balanceBefore,
+            balanceAfter: org.credits,
+            adjustedBy: 'Admin Team',
+          });
+          this.logger.log(`✅ Credit adjustment email sent to ${user.email}`);
+        } catch (error) {
+          this.logger.error(`Failed to send credit adjustment email to ${user.email}:`, error);
+          // Don't throw - email failures shouldn't block credit adjustment
+        }
+      }
+    }
 
     return {
       success: true,

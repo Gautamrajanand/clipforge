@@ -1,8 +1,9 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Tier } from '@prisma/client';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { CacheService } from '../cache/cache.service';
+import { CreditMonitorService } from './credit-monitor.service';
 
 /**
  * CreditService - Handles all credit operations (Opus Clip parity)
@@ -16,6 +17,10 @@ import { CacheService } from '../cache/cache.service';
  * - 0.5 minutes → 1 credit
  * - 4.5 minutes → 4 credits
  * - 10.2 minutes → 10 credits
+ * 
+ * PLG Integration:
+ * - Triggers low credit warnings at 20% threshold
+ * - Drives upgrade decisions through timely alerts
  */
 @Injectable()
 export class CreditsService {
@@ -25,6 +30,8 @@ export class CreditsService {
     private prisma: PrismaService,
     private analytics: AnalyticsService,
     private cache: CacheService,
+    @Inject(forwardRef(() => CreditMonitorService))
+    private creditMonitor: CreditMonitorService,
   ) {}
 
   /**
@@ -210,6 +217,14 @@ export class CreditsService {
     this.logger.log(
       `✅ Deducted ${creditsToDeduct} credits from org ${orgId} (${org.name}): ${balanceBefore} → ${balanceAfter}`,
     );
+
+    // PLG: Check for low credits and trigger warning email if needed
+    // Industry standard: Alert at 20% remaining to maximize upgrade conversion
+    // This is non-blocking - runs asynchronously to not delay the response
+    this.creditMonitor.checkCreditsAfterDeduction(orgId).catch((error) => {
+      this.logger.error(`Failed to check credits for org ${orgId}:`, error);
+      // Don't throw - email failures shouldn't block credit deduction
+    });
 
     // Track credit deduction event
     await this.analytics.trackEvent('credits_deducted', {

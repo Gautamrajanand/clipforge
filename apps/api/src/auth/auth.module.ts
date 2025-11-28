@@ -9,11 +9,13 @@ import { ApiKeyStrategy } from './strategies/api-key.strategy';
 import { ClerkAuthGuard } from './guards/clerk-auth.guard';
 import { ClerkSyncService } from './clerk-sync.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     PrismaModule,
     ConfigModule,
+    EmailModule, // For PLG welcome emails
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'dev-secret',
