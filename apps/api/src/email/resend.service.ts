@@ -40,7 +40,7 @@ export class ResendService {
     }
 
     try {
-      const html = render(
+      const html = await render(
         WelcomeEmail({
           userName: params.userName,
           userEmail: params.userEmail,
@@ -76,7 +76,7 @@ export class ResendService {
     }
 
     try {
-      const html = render(
+      const html = await render(
         CreditLowEmail({
           userName: params.userName,
           currentCredits: params.currentCredits,
@@ -114,7 +114,7 @@ export class ResendService {
     }
 
     try {
-      const html = render(
+      const html = await render(
         CreditAdjustmentEmail({
           userName: params.userName,
           amount: params.amount,
@@ -154,7 +154,7 @@ export class ResendService {
     }
 
     try {
-      const html = render(
+      const html = await render(
         PaymentConfirmationEmail({
           userName: params.userName,
           amount: params.amount,
@@ -190,7 +190,7 @@ export class ResendService {
     }
 
     try {
-      const html = render(
+      const html = await render(
         TrialExpiryEmail({
           userName: params.userName,
           daysLeft: params.daysLeft,
