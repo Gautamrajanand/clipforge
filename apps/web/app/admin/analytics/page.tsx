@@ -66,7 +66,7 @@ interface TimeSeriesData {
   revenue: number;
 }
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c'];
+const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -206,13 +206,36 @@ export default function AnalyticsPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Trend</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={timeSeries}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#8884d8" name="Revenue ($)" />
+              <LineChart data={timeSeries} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  }}
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                  formatter={(value: number) => [`$${value}`, 'Revenue']}
+                />
+                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#6366f1" 
+                  strokeWidth={3}
+                  dot={{ fill: '#6366f1', r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Revenue ($)" 
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -221,14 +244,44 @@ export default function AnalyticsPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">User Growth</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={timeSeries}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="users" stroke="#82ca9d" name="Total Users" />
-                <Line type="monotone" dataKey="paidOrgs" stroke="#ffc658" name="Paid Customers" />
+              <LineChart data={timeSeries} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  }}
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="users" 
+                  stroke="#10b981" 
+                  strokeWidth={3}
+                  dot={{ fill: '#10b981', r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Total Users" 
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="paidOrgs" 
+                  stroke="#f59e0b" 
+                  strokeWidth={3}
+                  dot={{ fill: '#f59e0b', r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Paid Customers" 
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -242,20 +295,32 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={analytics.revenueByTier}
+                  data={analytics.revenueByTier.filter(t => t.revenue > 0)}
                   dataKey="revenue"
                   nameKey="tier"
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label
+                  label={(entry: any) => `${entry.tier}: $${entry.revenue}`}
+                  labelLine={true}
                 >
-                  {analytics.revenueByTier.map((entry, index) => (
+                  {analytics.revenueByTier.filter(t => t.revenue > 0).map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip 
+                  formatter={(value: number) => `$${value}`}
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  formatter={(value) => value}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -264,13 +329,25 @@ export default function AnalyticsPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Customers by Tier</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analytics.revenueByTier}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="tier" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="#8884d8" name="Customers" />
+              <BarChart data={analytics.revenueByTier} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="tier" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                <Bar 
+                  dataKey="count" 
+                  fill="#6366f1" 
+                  name="Customers"
+                  radius={[8, 8, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
