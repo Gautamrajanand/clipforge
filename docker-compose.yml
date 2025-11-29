@@ -140,8 +140,8 @@ services:
       - ./apps/api:/app
       - /app/node_modules
     # Use cluster mode for production-like load testing
-    # command: npm run start:dev  # Single process (development)
-    command: sh -c "npm run build && npm run start:cluster"  # Multi-process (production)
+    command: npm run start:dev  # Single process (development) - TEMP: exports block in cluster mode
+    # command: sh -c "npm run build && npm run start:cluster"  # Multi-process (production)
     # System-level optimizations for high concurrency
     ulimits:
       nofile:
