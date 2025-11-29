@@ -263,19 +263,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     });
     
     try {
-      // Force token refresh by calling getClerkToken directly
-      const freshToken = await getClerkToken();
-      if (!freshToken) {
-        alert('Session expired. Please refresh the page and try again.');
-        setIsExporting(false);
-        return;
-      }
-      
-      const response = await fetch(`http://localhost:3000/v1/projects/${params.id}/export`, {
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/export`, {
         method: 'POST',
+        getToken: getClerkToken,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${freshToken}`,
         },
         body: JSON.stringify({
           momentIds: selectedClips,
