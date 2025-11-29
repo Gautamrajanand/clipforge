@@ -264,7 +264,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     
     try {
       // Force token refresh by calling getClerkToken directly
-      const freshToken = await getClerkToken({ template: 'default' });
+      const freshToken = await getClerkToken();
       if (!freshToken) {
         alert('Session expired. Please refresh the page and try again.');
         setIsExporting(false);
