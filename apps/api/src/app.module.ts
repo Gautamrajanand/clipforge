@@ -22,7 +22,7 @@ import { HealthModule } from './health/health.module';
 import { CreditsModule } from './credits/credits.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { PaymentsModule } from './payments/payments.module';
-// import { EmailModule } from './email/email.module'; // TEMPORARILY DISABLED
+import { EmailModule } from './email/email.module';
 import { AdminModule } from './admin/admin.module';
 import { TrialModule } from './trial/trial.module';
 import { CacheModule } from './cache/cache.module';
@@ -55,7 +55,7 @@ import { SentryModule } from './sentry/sentry.module';
     CreditsModule, // Credit system for billing (Opus Clip parity)
     ApiKeysModule, // API key management for external API access
     PaymentsModule, // Payment gateway integration (Stripe + Razorpay)
-    // EmailModule, // Email notifications // TEMPORARILY DISABLED
+    EmailModule, // Email notifications and cron jobs
     AuthModule,
     ProjectsModule,
     IngestionModule,

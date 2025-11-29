@@ -32,7 +32,7 @@ export class EmailSchedulerService {
    * Sends to users who signed up 24 hours ago
    * Different message if they've created a clip or not
    */
-  @Cron('0 9 * * *') // Every day at 9 AM
+  @Cron('30 3 * * *') // Every day at 9 AM IST (3:30 AM UTC)
   async sendOnboardingDay1Emails(): Promise<void> {
     this.logger.log('🚀 Running Onboarding Day 1 email job...');
 
@@ -108,7 +108,7 @@ export class EmailSchedulerService {
    * Sends to users who signed up 3 days ago
    * Includes usage stats and feature education
    */
-  @Cron('0 9 * * *') // Every day at 9 AM
+  @Cron('30 3 * * *') // Every day at 9 AM IST (3:30 AM UTC)
   async sendOnboardingDay3Emails(): Promise<void> {
     this.logger.log('🚀 Running Onboarding Day 3 email job...');
 
@@ -196,7 +196,7 @@ export class EmailSchedulerService {
    * Sends to users whose trial expires in 3 days
    * Critical for conversion (15-25% conversion rate)
    */
-  @Cron('0 9 * * *') // Every day at 9 AM
+  @Cron('30 3 * * *') // Every day at 9 AM IST (3:30 AM UTC)
   async sendTrialExpiryEmails(): Promise<void> {
     this.logger.log('🚀 Running Trial Expiry email job...');
 
@@ -261,7 +261,7 @@ export class EmailSchedulerService {
    * Sends weekly stats to all active users
    * Drives 15-20% engagement boost
    */
-  @Cron('0 9 * * 1') // Every Monday at 9 AM
+  @Cron('30 3 * * 1') // Every Monday at 9 AM IST (3:30 AM UTC)
   async sendWeeklySummaryEmails(): Promise<void> {
     this.logger.log('🚀 Running Weekly Summary email job...');
 
@@ -377,7 +377,7 @@ export class EmailSchedulerService {
    * Sends to users who haven't logged in for 7 days
    * Different message for trial vs paid users
    */
-  @Cron('0 9 * * *') // Every day at 9 AM
+  @Cron('30 3 * * *') // Every day at 9 AM IST (3:30 AM UTC)
   async sendInactivityEmails(): Promise<void> {
     this.logger.log('🚀 Running Inactivity Re-engagement email job...');
 
