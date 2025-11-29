@@ -1,0 +1,9 @@
+FROM grafana/k6:latest
+
+# Copy load test scripts
+COPY load-tests /scripts
+
+WORKDIR /scripts
+
+# Default command
+CMD ["run", "health-check-live-test.js"]

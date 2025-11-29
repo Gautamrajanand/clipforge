@@ -125,6 +125,8 @@ services:
       # Node.js optimization flags for high concurrency
       NODE_OPTIONS: --max-old-space-size=2048 --max-http-header-size=16384
       UV_THREADPOOL_SIZE: 128
+      # Cluster mode: number of worker processes (0 = use all CPUs)
+      CLUSTER_WORKERS: 4
     ports:
       - "3000:3000"
     depends_on:
@@ -137,7 +139,9 @@ services:
     volumes:
       - ./apps/api:/app
       - /app/node_modules
-    command: npm run start:dev
+    # Use cluster mode for production-like load testing
+    # command: npm run start:dev  # Single process (development)
+    command: sh -c "npm run build && npm run start:cluster"  # Multi-process (production)
     # System-level optimizations for high concurrency
     ulimits:
       nofile:
@@ -184,6 +188,23 @@ services:
       - ./workers:/app
       - /app/.venv
     command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # k6 Load Testing (optional - for internal network testing)
+  k6:
+    build:
+      context: .
+      dockerfile: Dockerfile.k6
+    container_name: clipforge-k6
+    environment:
+      AUTH_TOKEN: ${AUTH_TOKEN:-}
+    volumes:
+      - ./load-tests:/scripts
+    networks:
+      - default
+    profiles:
+      - testing
+    depends_on:
+      - api
 
   # Next.js Web App
   web:

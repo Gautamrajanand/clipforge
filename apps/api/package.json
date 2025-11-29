@@ -6,6 +6,7 @@
   "scripts": {
     "build": "nest build",
     "start": "node --expose-gc dist/main",
+    "start:cluster": "node --expose-gc dist/cluster",
     "start:dev": "node --expose-gc node_modules/.bin/nest start --watch",
     "start:debug": "node --expose-gc node_modules/.bin/nest start --debug --watch",
     "test": "jest",
