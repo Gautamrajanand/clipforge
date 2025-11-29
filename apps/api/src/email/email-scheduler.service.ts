@@ -28,11 +28,11 @@ export class EmailSchedulerService {
 
   /**
    * Onboarding Day 1 Email
-   * Runs daily at 9 AM
+   * Runs daily at 10 AM local time (best open rates: 10-11 AM)
    * Sends to users who signed up 24 hours ago
    * Different message if they've created a clip or not
    */
-  @Cron('30 3 * * *') // Every day at 9 AM IST (3:30 AM UTC)
+  @Cron('30 4 * * *') // Every day at 10 AM IST (4:30 AM UTC) - Peak engagement time
   async sendOnboardingDay1Emails(): Promise<void> {
     this.logger.log('🚀 Running Onboarding Day 1 email job...');
 
@@ -104,11 +104,11 @@ export class EmailSchedulerService {
 
   /**
    * Onboarding Day 3 Email
-   * Runs daily at 9 AM
+   * Runs daily at 10 AM local time (best open rates: 10-11 AM)
    * Sends to users who signed up 3 days ago
    * Includes usage stats and feature education
    */
-  @Cron('30 3 * * *') // Every day at 9 AM IST (3:30 AM UTC)
+  @Cron('30 4 * * *') // Every day at 10 AM IST (4:30 AM UTC) - Peak engagement time
   async sendOnboardingDay3Emails(): Promise<void> {
     this.logger.log('🚀 Running Onboarding Day 3 email job...');
 
@@ -192,11 +192,11 @@ export class EmailSchedulerService {
 
   /**
    * Trial Expiry Warning Email
-   * Runs daily at 9 AM
+   * Runs daily at 10 AM local time (urgent emails perform best mid-morning)
    * Sends to users whose trial expires in 3 days
    * Critical for conversion (15-25% conversion rate)
    */
-  @Cron('30 3 * * *') // Every day at 9 AM IST (3:30 AM UTC)
+  @Cron('30 4 * * *') // Every day at 10 AM IST (4:30 AM UTC) - Peak engagement time
   async sendTrialExpiryEmails(): Promise<void> {
     this.logger.log('🚀 Running Trial Expiry email job...');
 
@@ -257,11 +257,11 @@ export class EmailSchedulerService {
 
   /**
    * Weekly Usage Summary Email
-   * Runs every Monday at 9 AM
+   * Runs every Monday at 9 AM (start of work week, highest engagement)
    * Sends weekly stats to all active users
    * Drives 15-20% engagement boost
    */
-  @Cron('30 3 * * 1') // Every Monday at 9 AM IST (3:30 AM UTC)
+  @Cron('30 3 * * 1') // Every Monday at 9 AM IST (3:30 AM UTC) - Start of work week
   async sendWeeklySummaryEmails(): Promise<void> {
     this.logger.log('🚀 Running Weekly Summary email job...');
 
@@ -373,11 +373,11 @@ export class EmailSchedulerService {
 
   /**
    * Inactivity Re-engagement Email
-   * Runs daily at 9 AM
+   * Runs daily at 2 PM local time (afternoon re-engagement works best)
    * Sends to users who haven't logged in for 7 days
    * Different message for trial vs paid users
    */
-  @Cron('30 3 * * *') // Every day at 9 AM IST (3:30 AM UTC)
+  @Cron('30 8 * * *') // Every day at 2 PM IST (8:30 AM UTC) - Afternoon engagement
   async sendInactivityEmails(): Promise<void> {
     this.logger.log('🚀 Running Inactivity Re-engagement email job...');
 
