@@ -293,9 +293,22 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           // Poll for job completion
           const pollInterval = setInterval(async () => {
             try {
-              const statusResponse = await fetchWithAuth(
+              // Get fresh token for each poll
+              const token = await getClerkToken();
+              if (!token) {
+                console.error('No token available for polling');
+                return;
+              }
+              
+              const statusResponse = await fetch(
                 `http://localhost:3000/v1/queues/video-export/jobs/${data.jobId}`,
-                { method: 'GET', getToken: getClerkToken }
+                {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                }
               );
               
               if (statusResponse.ok) {
@@ -326,6 +339,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   clearInterval(pollInterval);
                   alert(`Export failed: ${jobStatus.failedReason || 'Unknown error'}`);
                 }
+              } else if (statusResponse.status === 401) {
+                console.error('Auth error polling job status - token may have expired');
               }
             } catch (error) {
               console.error('Error polling job status:', error);
