@@ -8,6 +8,11 @@ import Redis from 'ioredis';
 @Controller('health')
 export class HealthController {
   private redis: Redis;
+  private healthCache: {
+    data: any;
+    timestamp: number;
+  } | null = null;
+  private readonly CACHE_TTL = 5000; // 5 seconds cache
 
   constructor(
     private prisma: PrismaService,
@@ -27,12 +32,23 @@ export class HealthController {
   }
 
   /**
-   * Health check endpoint
+   * Health check endpoint with caching
    * GET /health
    */
   @Get()
   @ApiOperation({ summary: 'Health check' })
   async check() {
+    // Return cached result if available and fresh
+    const now = Date.now();
+    if (this.healthCache && (now - this.healthCache.timestamp) < this.CACHE_TTL) {
+      return {
+        ...this.healthCache.data,
+        cached: true,
+        cacheAge: now - this.healthCache.timestamp,
+      };
+    }
+
+    // Perform actual health checks
     const checks = {
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -47,10 +63,19 @@ export class HealthController {
       .filter(v => typeof v === 'object' && 'status' in v)
       .every((check: any) => check.status === 'ok');
 
-    return {
+    const result = {
       ...checks,
       status: allHealthy ? 'ok' : 'degraded',
+      cached: false,
     };
+
+    // Cache the result
+    this.healthCache = {
+      data: result,
+      timestamp: now,
+    };
+
+    return result;
   }
 
   /**
@@ -87,11 +112,17 @@ export class HealthController {
   }
 
   /**
-   * Check database connectivity
+   * Check database connectivity (optimized with timeout)
    */
   private async checkDatabase() {
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      // Use a simple query with timeout to avoid blocking
+      const result = await Promise.race([
+        this.prisma.$queryRaw`SELECT 1`,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database check timeout')), 1000)
+        ),
+      ]);
       return {
         status: 'ok',
         message: 'Database connection successful',
@@ -105,11 +136,17 @@ export class HealthController {
   }
 
   /**
-   * Check Redis connectivity
+   * Check Redis connectivity (optimized with timeout)
    */
   private async checkRedis() {
     try {
-      await this.redis.ping();
+      // Use ping with timeout to avoid blocking
+      await Promise.race([
+        this.redis.ping(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Redis check timeout')), 1000)
+        ),
+      ]);
       return {
         status: 'ok',
         message: 'Redis connection successful',
