@@ -36,17 +36,17 @@ import { CacheModule } from './cache/cache.module';
     }),
     // SentryModule, // Error tracking and monitoring - TEMPORARILY DISABLED
     CacheModule, // Redis caching for performance
-    // Rate Limiting: 100 requests per minute per user
+    // Rate Limiting: Increased for load testing and high concurrency
     ThrottlerModule.forRoot([
       {
         name: 'short',
         ttl: 60000, // 1 minute in milliseconds
-        limit: 100, // 100 requests per minute
+        limit: 10000, // 10,000 requests per minute (increased for load testing)
       },
       {
         name: 'long',
         ttl: 3600000, // 1 hour in milliseconds
-        limit: 1000, // 1000 requests per hour
+        limit: 100000, // 100,000 requests per hour (increased for load testing)
       },
     ]),
     PrismaModule,
