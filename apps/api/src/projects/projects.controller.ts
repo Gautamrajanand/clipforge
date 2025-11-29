@@ -420,9 +420,7 @@ export class ProjectsController {
     if (!orgId) {
       throw new Error('No organization found');
     }
-    
-    // Queue the export job instead of blocking
-    return this.projectsService.queueExport(id, orgId, dto);
+    return this.projectsService.exportMoments(id, orgId, dto);
   }
 
   @Get('exports/:exportId/download')

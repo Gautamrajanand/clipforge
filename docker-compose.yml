@@ -139,9 +139,8 @@ services:
     volumes:
       - ./apps/api:/app
       - /app/node_modules
-    # Use single process mode (cluster mode blocks exports)
-    command: npm run start:dev  # Single process (development)
-    # command: sh -c "npm run build && npm run start:cluster"  # Multi-process (production)
+    # Cluster mode for 4x concurrency
+    command: sh -c "npm run build && npm run start:cluster"  # Multi-process (production)
     # System-level optimizations for high concurrency
     ulimits:
       nofile:

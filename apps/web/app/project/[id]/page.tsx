@@ -285,89 +285,23 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
       if (response.ok) {
         const data = await response.json();
+        setExportedClips(data.exports);
         
-        // Check if this is a job queue response (new async behavior)
-        if (data.jobId) {
-          alert(`Export started! Processing ${selectedClips.length} clip(s). This may take 1-2 minutes...`);
-          
-          // Poll for job completion
-          const pollInterval = setInterval(async () => {
-            try {
-              // Get fresh token for each poll
-              const token = await getClerkToken();
-              if (!token) {
-                console.error('No token available for polling');
-                return;
-              }
-              
-              const statusResponse = await fetch(
-                `http://localhost:3000/v1/queues/video-export/jobs/${data.jobId}`,
-                {
-                  method: 'GET',
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                  },
-                }
-              );
-              
-              if (statusResponse.ok) {
-                const jobStatus = await statusResponse.json();
-                
-                if (jobStatus.status === 'completed') {
-                  clearInterval(pollInterval);
-                  
-                  // Get the export results
-                  const exports = jobStatus.returnvalue?.exports || [];
-                  setExportedClips(exports);
-                  
-                  const urls: Record<string, string> = {};
-                  for (const exp of exports) {
-                    const url = await loadExportVideoBlob(exp.id);
-                    if (url) urls[exp.id] = url;
-                  }
-                  setExportVideoUrls(urls);
-                  
-                  analytics.track('clip_export_success', {
-                    projectId: params.id,
-                    clipCount: exports.length,
-                    aspectRatio: options.aspectRatio,
-                  });
-                  
-                  alert(`Successfully exported ${exports.length} clips!`);
-                } else if (jobStatus.status === 'failed') {
-                  clearInterval(pollInterval);
-                  alert(`Export failed: ${jobStatus.failedReason || 'Unknown error'}`);
-                }
-              } else if (statusResponse.status === 401) {
-                console.error('Auth error polling job status - token may have expired');
-              }
-            } catch (error) {
-              console.error('Error polling job status:', error);
-            }
-          }, 3000); // Poll every 3 seconds
-          
-          // Stop polling after 5 minutes
-          setTimeout(() => clearInterval(pollInterval), 300000);
-        } else {
-          // Legacy synchronous response (fallback)
-          setExportedClips(data.exports);
-          
-          const urls: Record<string, string> = {};
-          for (const exp of data.exports) {
-            const url = await loadExportVideoBlob(exp.id);
-            if (url) urls[exp.id] = url;
-          }
-          setExportVideoUrls(urls);
-          
-          analytics.track('clip_export_success', {
-            projectId: params.id,
-            clipCount: data.exports.length,
-            aspectRatio: options.aspectRatio,
-          });
-          
-          alert(`Successfully exported ${data.exports.length} clips!`);
+        const urls: Record<string, string> = {};
+        for (const exp of data.exports) {
+          const url = await loadExportVideoBlob(exp.id);
+          if (url) urls[exp.id] = url;
         }
+        setExportVideoUrls(urls);
+        
+        // Track successful export
+        analytics.track('clip_export_success', {
+          projectId: params.id,
+          clipCount: data.exports.length,
+          aspectRatio: options.aspectRatio,
+        });
+        
+        alert(`Successfully exported ${data.exports.length} clips with ${options.aspectRatio} aspect ratio!`);
       } else {
         // Track export failure
         analytics.track('clip_export_failed', {
