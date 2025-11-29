@@ -26,7 +26,7 @@ import { EmailModule } from './email/email.module';
 import { AdminModule } from './admin/admin.module';
 import { TrialModule } from './trial/trial.module';
 import { CacheModule } from './cache/cache.module';
-import { SentryModule } from './sentry/sentry.module';
+// import { SentryModule } from './sentry/sentry.module'; // TEMPORARILY DISABLED - missing deps in Docker
 
 @Module({
   imports: [
@@ -34,7 +34,7 @@ import { SentryModule } from './sentry/sentry.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    SentryModule, // Error tracking and monitoring
+    // SentryModule, // Error tracking and monitoring - TEMPORARILY DISABLED
     CacheModule, // Redis caching for performance
     // Rate Limiting: 100 requests per minute per user
     ThrottlerModule.forRoot([
