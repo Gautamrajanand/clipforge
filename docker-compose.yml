@@ -139,8 +139,9 @@ services:
     volumes:
       - ./apps/api:/app
       - /app/node_modules
-    # Cluster mode for 4x concurrency
-    command: sh -c "npm run build && npm run start:cluster"  # Multi-process (production)
+    # Single process mode - cluster mode blocks during FFmpeg exports
+    command: npm run start:dev  # Single process (development)
+    # command: sh -c "npm run build && npm run start:cluster"  # Multi-process (blocked by exports)
     # System-level optimizations for high concurrency
     ulimits:
       nofile:
