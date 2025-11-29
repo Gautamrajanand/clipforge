@@ -311,13 +311,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         });
         
         // Better error messages based on status code
-        if (response.status === 401) {
-          alert('Session expired. Please refresh the page and try again.');
-        } else if (response.status === 402) {
+        if (response.status === 402) {
           alert('Insufficient credits. Please upgrade your plan.');
         } else {
-          const errorData = await response.json().catch(() => ({}));
-          alert(errorData.message || 'Failed to export clips. Please try again.');
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          alert(`Failed to export clips: ${errorData.message || response.statusText}`);
         }
       }
     } catch (error) {
