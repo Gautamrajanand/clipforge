@@ -30,13 +30,13 @@ export const options = {
 
 // Test configuration
 const BASE_URL = 'http://localhost:3000';
-const TEST_ORG_ID = 'test-org-123'; // Replace with actual org ID
+const AUTH_TOKEN = __ENV.AUTH_TOKEN;
 
 export default function () {
   // Test 1: Get credit balance (most frequent call)
   const balanceRes = http.get(`${BASE_URL}/v1/credits/balance`, {
     headers: {
-      'Authorization': 'Bearer test-token', // Replace with actual token
+      'Authorization': `Bearer ${AUTH_TOKEN}`,
     },
   });
 
