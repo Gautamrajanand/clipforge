@@ -65,57 +65,45 @@ export const TrialExpiryEmail = ({
               <strong>Choose a plan that fits your needs:</strong>
             </Text>
 
-            <Section style={plansContainer}>
-              <div style={planCard}>
-                <Text style={planName}>Starter</Text>
-                <Text style={planPrice}>$29<span style={planPeriod}>/month</span></Text>
-                <ul style={planFeatures}>
-                  <li>150 credits/month</li>
-                  <li>All AI tools</li>
-                  <li>Email support</li>
-                </ul>
-                <div style={planButtonContainer}>
-                  <Button style={planButton} href="http://localhost:3001/subscription?plan=STARTER">
-                    Choose Starter
-                  </Button>
-                </div>
-              </div>
-
-              <div style={planCardFeatured}>
-                <div style={popularBadge}>Most Popular</div>
-                <Text style={planName}>Pro</Text>
-                <Text style={planPrice}>$79<span style={planPeriod}>/month</span></Text>
-                <ul style={planFeatures}>
-                  <li>300 credits/month</li>
-                  <li>All AI tools</li>
-                  <li>Priority processing</li>
-                  <li>Priority support</li>
-                  <li>Advanced analytics</li>
-                </ul>
-                <div style={planButtonContainer}>
-                  <Button style={planButtonFeatured} href="http://localhost:3001/subscription?plan=PRO">
-                    Choose Pro
-                  </Button>
-                </div>
-              </div>
-
-              <div style={planCard}>
-                <Text style={planName}>Business</Text>
-                <Text style={planPrice}>$99<span style={planPeriod}>/month</span></Text>
-                <ul style={planFeatures}>
-                  <li>Unlimited credits</li>
-                  <li>All AI tools</li>
-                  <li>Team collaboration</li>
-                  <li>Phone support</li>
-                  <li>Custom branding</li>
-                </ul>
-                <div style={planButtonContainer}>
-                  <Button style={planButton} href="http://localhost:3001/subscription?plan=BUSINESS">
-                    Choose Business
-                  </Button>
-                </div>
-              </div>
-            </Section>
+            <table style={plansTable}>
+              <tr>
+                <td style={planCell}>
+                  <div style={planCard}>
+                    <Text style={planName}>Starter</Text>
+                    <Text style={planPrice}>$29<span style={planPeriod}>/month</span></Text>
+                    <ul style={planFeatures}>
+                      <li>150 credits/month</li>
+                      <li>All AI tools</li>
+                      <li>Email support</li>
+                    </ul>
+                    <div style={planButtonContainer}>
+                      <Button style={planButton} href="http://localhost:3001/subscription?plan=STARTER">
+                        Choose Starter
+                      </Button>
+                    </div>
+                  </div>
+                </td>
+                <td style={planCell}>
+                  <div style={planCardFeatured}>
+                    <div style={popularBadge}>Most Popular</div>
+                    <Text style={planName}>Pro</Text>
+                    <Text style={planPrice}>$79<span style={planPeriod}>/month</span></Text>
+                    <ul style={planFeatures}>
+                      <li>300 credits/month</li>
+                      <li>All AI tools</li>
+                      <li>Priority processing</li>
+                      <li>Priority support</li>
+                      <li>Advanced analytics</li>
+                    </ul>
+                    <div style={planButtonContainer}>
+                      <Button style={planButtonFeatured} href="http://localhost:3001/subscription?plan=PRO">
+                        Choose Pro
+                      </Button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </table>
 
             <Text style={paragraph}>
               Have questions? Our team is here to help you choose the right plan for your needs.
@@ -216,30 +204,33 @@ const listItem = {
   marginBottom: '8px',
 };
 
-const plansContainer = {
-  display: 'flex',
-  gap: '16px',
+const plansTable = {
+  width: '100%',
   margin: '24px 0',
-  flexWrap: 'wrap' as const,
+  borderCollapse: 'collapse' as const,
+};
+
+const planCell = {
+  width: '50%',
+  padding: '8px',
+  verticalAlign: 'top' as const,
 };
 
 const planCard = {
-  flex: '1',
-  minWidth: '160px',
   backgroundColor: '#f6f9fc',
   borderRadius: '12px',
   padding: '24px',
   border: '2px solid #e6ebf1',
+  width: '100%',
 };
 
 const planCardFeatured = {
-  flex: '1',
-  minWidth: '160px',
   backgroundColor: '#f6f9fc',
   borderRadius: '12px',
   padding: '24px',
   border: '3px solid #667eea',
   position: 'relative' as const,
+  width: '100%',
 };
 
 const popularBadge = {
