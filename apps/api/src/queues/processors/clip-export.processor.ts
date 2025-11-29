@@ -8,14 +8,14 @@ export interface ClipExportJobData {
   orgId: string;
   momentIds: string[];
   aspectRatio: string;
-  cropMode?: string;
-  cropPosition?: string;
+  cropMode?: 'crop' | 'pad' | 'smart';
+  cropPosition?: 'center' | 'top' | 'bottom' | { x: number; y: number };
   burnCaptions?: boolean;
   captionStyle?: string;
   primaryColor?: string;
   secondaryColor?: string;
   fontSize?: number;
-  position?: string;
+  position?: 'top' | 'center' | 'bottom';
 }
 
 @Processor('video-export', {
