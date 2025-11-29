@@ -8,7 +8,15 @@ import * as bodyParser from 'body-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false, // Disable default body parser
+    logger: ['error', 'warn', 'log'], // Enable logging
   });
+
+  // Increase max HTTP header size and connections for high concurrency
+  const server = app.getHttpServer();
+  server.maxHeadersCount = 2000; // Increase from default 2000
+  server.timeout = 30000; // 30 second timeout
+  server.keepAliveTimeout = 65000; // 65 seconds (higher than ALB default)
+  server.headersTimeout = 66000; // Slightly higher than keepAliveTimeout
 
   // Custom body parser with 5GB limit for video uploads
   app.use(bodyParser.json({ limit: '5gb' }));
@@ -145,8 +153,13 @@ async function bootstrap() {
   });
 
   const port = process.env.API_PORT || 3000;
-  await app.listen(port, process.env.API_HOST || '0.0.0.0');
-  console.log(`🚀 ClipForge API running on http://localhost:${port}`);
+  await app.listen(port, process.env.API_HOST || '0.0.0.0', () => {
+    console.log(`🚀 ClipForge API running on http://localhost:${port}`);
+    console.log(`📊 Server optimizations:`);
+    console.log(`   - Max headers: ${server.maxHeadersCount}`);
+    console.log(`   - Timeout: ${server.timeout}ms`);
+    console.log(`   - Keep-alive: ${server.keepAliveTimeout}ms`);
+  });
 }
 
 bootstrap();

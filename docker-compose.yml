@@ -138,6 +138,11 @@ services:
       - ./apps/api:/app
       - /app/node_modules
     command: npm run start:dev
+    # System-level optimizations for high concurrency
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     # Resource limits for stability
     deploy:
       resources:
