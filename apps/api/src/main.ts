@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import * as bodyParser from 'body-parser';
 
-async function bootstrap() {
+export async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false, // Disable default body parser
     logger: ['error', 'warn', 'log'], // Enable logging
@@ -162,4 +162,7 @@ async function bootstrap() {
   });
 }
 
-bootstrap();
+// Only run bootstrap if this file is executed directly (not imported by cluster.ts)
+if (require.main === module) {
+  bootstrap();
+}
