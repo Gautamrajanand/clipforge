@@ -26,6 +26,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
 import { TrialModule } from './trial/trial.module';
 import { CacheModule } from './cache/cache.module';
+import { SentryModule } from './sentry/sentry.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { CacheModule } from './cache/cache.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    SentryModule, // Error tracking and monitoring
     CacheModule, // Redis caching for performance
     // Rate Limiting: 100 requests per minute per user
     ThrottlerModule.forRoot([
