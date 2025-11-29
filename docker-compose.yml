@@ -9,6 +9,12 @@ services:
       POSTGRES_USER: clipforge
       POSTGRES_PASSWORD: clipforge
       POSTGRES_DB: clipforge_dev
+      # Increase max connections for high concurrency
+      POSTGRES_MAX_CONNECTIONS: 200
+      # Increase shared buffers for better performance
+      POSTGRES_SHARED_BUFFERS: 256MB
+      # Increase work memory for complex queries
+      POSTGRES_WORK_MEM: 16MB
     ports:
       - "5432:5432"
     volumes:
@@ -18,11 +24,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # Resource limits for stability
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
 
   # Redis Queue
   redis:
     image: redis:7-alpine
     container_name: clipforge-redis
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --maxclients 10000
     ports:
       - "6379:6379"
     volumes:
@@ -32,6 +48,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # Resource limits for stability
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   # MinIO (S3-compatible storage for local dev)
   minio:
@@ -59,7 +84,8 @@ services:
       dockerfile: Dockerfile.api
     container_name: clipforge-api
     environment:
-      DATABASE_URL: postgresql://clipforge:clipforge@postgres:5432/clipforge_dev
+      # Database URL with connection pool settings for high concurrency
+      DATABASE_URL: postgresql://clipforge:clipforge@postgres:5432/clipforge_dev?connection_limit=100&pool_timeout=20&connect_timeout=10
       REDIS_URL: redis://redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_REGION: us-east-1
@@ -96,6 +122,9 @@ services:
       STRIPE_WEBHOOK_SECRET: whsec_YOUR_WEBHOOK_SECRET_HERE
       # Frontend URL
       FRONTEND_URL: http://localhost:3001
+      # Node.js optimization flags for high concurrency
+      NODE_OPTIONS: --max-old-space-size=2048 --max-http-header-size=16384
+      UV_THREADPOOL_SIZE: 128
     ports:
       - "3000:3000"
     depends_on:
@@ -109,6 +138,15 @@ services:
       - ./apps/api:/app
       - /app/node_modules
     command: npm run start:dev
+    # Resource limits for stability
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
 
   # FastAPI ML Workers
   ml-workers:
