@@ -1600,6 +1600,13 @@ export class ProjectsService {
 
     this.logger.log(`Streaming captioned video for download: ${projectId}`);
 
+    // Sanitize filename for HTTP header (remove invalid characters)
+    const safeTitle = project.title
+      .replace(/[^a-zA-Z0-9-_\s]/g, '') // Remove special chars
+      .replace(/\s+/g, '-') // Replace spaces with dashes
+      .substring(0, 100) // Limit length
+      || 'video'; // Fallback if title is empty after sanitization
+
     // Stream the pre-generated captioned video
     const metadata = await this.storage.getFileMetadata(captionedKey);
     const stream = this.storage.getFileStream(captionedKey);
@@ -1607,7 +1614,7 @@ export class ProjectsService {
     res.set({
       'Content-Type': metadata.ContentType || 'video/mp4',
       'Content-Length': metadata.ContentLength,
-      'Content-Disposition': `attachment; filename="${project.title}-subtitles.mp4"`,
+      'Content-Disposition': `attachment; filename="${safeTitle}-subtitles.mp4"`,
     });
 
     return new Promise((resolve, reject) => {
