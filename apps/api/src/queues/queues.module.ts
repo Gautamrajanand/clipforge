@@ -7,12 +7,14 @@ import { VideoModule } from '../video/video.module';
 import { TranscriptionModule } from '../transcription/transcription.module';
 import { ClipsModule } from '../clips/clips.module';
 import { CreditsModule } from '../credits/credits.module';
+import { ProjectsModule } from '../projects/projects.module';
 
 // Processors
 import { VideoImportProcessor } from './processors/video-import.processor';
 import { TranscriptionProcessor } from './processors/transcription.processor';
 import { ClipDetectionProcessor } from './processors/clip-detection.processor';
 import { SubtitleExportProcessor } from './processors/subtitle-export.processor';
+import { ClipExportProcessor } from './processors/clip-export.processor';
 
 // Service
 import { QueuesService } from './queues.service';
@@ -29,6 +31,7 @@ import { QueuesController } from './queues.controller';
     TranscriptionModule,
     ClipsModule,
     CreditsModule,
+    ProjectsModule,
     
     // Register BullMQ with Redis connection
     BullModule.forRootAsync({
@@ -81,6 +84,7 @@ import { QueuesController } from './queues.controller';
     TranscriptionProcessor,
     ClipDetectionProcessor,
     SubtitleExportProcessor,
+    ClipExportProcessor,
   ],
   controllers: [QueuesController],
   exports: [BullModule, QueuesService],

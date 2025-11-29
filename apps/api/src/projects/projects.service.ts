@@ -755,6 +755,50 @@ export class ProjectsService {
     });
   }
 
+  /**
+   * Queue an export job (non-blocking)
+   */
+  async queueExport(
+    projectId: string,
+    orgId: string,
+    dto: {
+      momentIds: string[];
+      aspectRatio?: string;
+      cropMode?: 'crop' | 'pad' | 'smart';
+      cropPosition?: 'center' | 'top' | 'bottom' | { x: number; y: number };
+      burnCaptions?: boolean;
+      captionStyle?: string;
+      primaryColor?: string;
+      secondaryColor?: string;
+      fontSize?: number;
+      position?: 'top' | 'center' | 'bottom';
+    },
+  ) {
+    this.logger.log(`📤 Queuing export for project ${projectId}`);
+    
+    // Queue the job
+    const result = await this.queues.addClipExportJob({
+      projectId,
+      orgId,
+      momentIds: dto.momentIds,
+      aspectRatio: dto.aspectRatio || 'original',
+      cropMode: dto.cropMode as any,
+      cropPosition: dto.cropPosition as any,
+      burnCaptions: dto.burnCaptions,
+      captionStyle: dto.captionStyle,
+      primaryColor: dto.primaryColor,
+      secondaryColor: dto.secondaryColor,
+      fontSize: dto.fontSize,
+      position: dto.position as any,
+    });
+    
+    return {
+      success: true,
+      jobId: result.jobId,
+      message: 'Export job queued successfully. Poll /v1/queues/job-status/video-export/{jobId} for status.',
+    };
+  }
+
   async exportMoments(
     projectId: string,
     orgId: string,

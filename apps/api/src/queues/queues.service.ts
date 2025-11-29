@@ -5,6 +5,7 @@ import { VideoImportJobData } from './processors/video-import.processor';
 import { TranscriptionJobData } from './processors/transcription.processor';
 import { ClipDetectionJobData } from './processors/clip-detection.processor';
 import { SubtitleExportJobData } from './processors/subtitle-export.processor';
+import { ClipExportJobData } from './processors/clip-export.processor';
 
 @Injectable()
 export class QueuesService {
@@ -15,6 +16,7 @@ export class QueuesService {
     @InjectQueue('transcription') private transcriptionQueue: Queue<TranscriptionJobData>,
     @InjectQueue('clip-detection') private clipDetectionQueue: Queue<ClipDetectionJobData>,
     @InjectQueue('subtitle-export') private subtitleExportQueue: Queue<SubtitleExportJobData>,
+    @InjectQueue('video-export') private clipExportQueue: Queue<ClipExportJobData>,
   ) {}
 
   /**
@@ -99,6 +101,33 @@ export class QueuesService {
   }
 
   /**
+   * Add clip export job to queue
+   */
+  async addClipExportJob(data: ClipExportJobData) {
+    this.logger.log(`📤 Adding clip export job for project ${data.projectId} (${data.momentIds.length} clips)`);
+    
+    const job = await this.clipExportQueue.add(
+      'export-clip',
+      data,
+      {
+        jobId: `clip-export-${data.projectId}-${Date.now()}`,
+        priority: 2, // Medium priority
+        attempts: 2, // Fewer retries for long-running jobs
+        backoff: {
+          type: 'exponential',
+          delay: 5000,
+        },
+      },
+    );
+
+    return {
+      jobId: job.id,
+      projectId: data.projectId,
+      status: 'queued',
+    };
+  }
+
+  /**
    * Add subtitle export job to queue
    */
   async addSubtitleExportJob(projectId: string, orgId: string) {
@@ -143,6 +172,9 @@ export class QueuesService {
         break;
       case 'subtitle-export':
         queue = this.subtitleExportQueue;
+        break;
+      case 'video-export':
+        queue = this.clipExportQueue;
         break;
       default:
         throw new Error(`Unknown queue: ${queueName}`);
