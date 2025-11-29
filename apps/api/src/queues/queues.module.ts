@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -31,7 +31,7 @@ import { QueuesController } from './queues.controller';
     TranscriptionModule,
     ClipsModule,
     CreditsModule,
-    ProjectsModule,
+    forwardRef(() => ProjectsModule),
     
     // Register BullMQ with Redis connection
     BullModule.forRootAsync({
