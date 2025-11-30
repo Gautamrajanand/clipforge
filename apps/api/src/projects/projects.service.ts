@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger, forwardRef, Inject } from '@nestjs/common';
 import { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -10,6 +10,7 @@ import { CaptionsService } from '../captions/captions.service';
 import { QueuesService } from '../queues/queues.service';
 import { CreditsService } from '../credits/credits.service';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { ReferralsService } from '../referrals/referrals.service';
 // import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ReframeDto } from './dto/reframe.dto';
@@ -32,6 +33,7 @@ export class ProjectsService {
     private queues: QueuesService,
     private credits: CreditsService,
     private analytics: AnalyticsService,
+    private referrals: ReferralsService,
     // private email: EmailService, // TEMPORARILY DISABLED
   ) {}
 
@@ -1005,6 +1007,22 @@ export class ProjectsService {
 
     // Cleanup source temp file
     await this.video.cleanupTempFile(sourcePath);
+
+    // PLG: Complete referral if this is user's first export
+    try {
+      const existingExports = await this.prisma.export.count({
+        where: { project: { orgId } },
+      });
+      
+      if (existingExports === exports.length) {
+        // This is the first export(s) - complete referral
+        this.logger.log(`🎁 First export detected for org ${orgId} - completing referral`);
+        await this.referrals.completeReferral(orgId);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to complete referral: ${error.message}`);
+      // Don't fail export if referral tracking fails
+    }
 
     return {
       message: `Exported ${exports.length} clips successfully`,
