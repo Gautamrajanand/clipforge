@@ -438,7 +438,7 @@ export class ProjectsController {
   }
 
   @Get(':id/exports')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClerkAuthGuard)
   @ApiOperation({ summary: 'Get all exports for a project' })
   async getProjectExports(
     @Request() req: any,

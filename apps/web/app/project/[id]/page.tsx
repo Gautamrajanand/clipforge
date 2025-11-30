@@ -325,8 +325,17 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         
         // Check if export is processing in background
         if (data.status === 'processing') {
-          alert(data.message || 'Export started. Refresh the page in a few minutes to see your exported clips.');
+          alert(data.message || 'Export started. Your clip will appear below when ready (usually 2-3 minutes).');
           setIsExporting(false);
+          
+          // Start polling for new exports every 10 seconds
+          const pollInterval = setInterval(async () => {
+            await fetchExistingExports();
+          }, 10000); // Poll every 10 seconds
+          
+          // Stop polling after 5 minutes
+          setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
+          
           return;
         }
         
