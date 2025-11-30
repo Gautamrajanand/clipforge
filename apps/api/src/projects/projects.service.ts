@@ -1517,6 +1517,26 @@ export class ProjectsService {
     this.logger.log(`✅ Animated captions rendered successfully`);
   }
 
+  async getProjectExports(projectId: string, orgId: string) {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId, orgId },
+      include: {
+        exports: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            moment: true,
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    return { exports: project.exports };
+  }
+
   async downloadExport(exportId: string, orgId: string, res: Response) {
     const exportRecord = await this.prisma.export.findUnique({
       where: { id: exportId },

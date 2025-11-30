@@ -46,6 +46,32 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [resetDate, setResetDate] = useState<string>('');
   const [tier, setTier] = useState<string>('FREE');
 
+  const fetchExistingExports = async () => {
+    try {
+      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/exports`, {
+        getToken: getClerkToken,
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.exports && data.exports.length > 0) {
+          setExportedClips(data.exports);
+          
+          // Load video URLs for each export
+          const urls: Record<string, string> = {};
+          for (const exp of data.exports) {
+            const url = await loadExportVideoBlob(exp.id);
+            if (url) urls[exp.id] = url;
+          }
+          setExportVideoUrls(urls);
+          console.log(`✅ Loaded ${data.exports.length} existing exports`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch existing exports:', error);
+    }
+  };
+
   const fetchCredits = async () => {
     try {
       const response = await fetchWithAuth('http://localhost:3000/v1/credits/balance', {
@@ -105,6 +131,9 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         
         // Fetch credits data
         fetchCredits();
+        
+        // Fetch existing exports
+        fetchExistingExports();
         
         // Check if this is a subtitles or reframe project
         const isSubtitlesMode = data.clipSettings?.subtitlesMode;

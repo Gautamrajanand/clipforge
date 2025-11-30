@@ -437,6 +437,20 @@ export class ProjectsController {
     };
   }
 
+  @Get(':id/exports')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get all exports for a project' })
+  async getProjectExports(
+    @Request() req: any,
+    @Param('id') id: string,
+  ) {
+    const orgId = req.user.memberships[0]?.org?.id;
+    if (!orgId) {
+      throw new Error('No organization found');
+    }
+    return this.projectsService.getProjectExports(id, orgId);
+  }
+
   @Get('exports/:exportId/download')
   @ApiOperation({ summary: 'Download exported clip' })
   async downloadExport(
