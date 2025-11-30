@@ -85,24 +85,46 @@
 
 ---
 
-## 🚧 IN PROGRESS: Onboarding Flow (Step 2/7)
+## ✅ COMPLETED: Onboarding System Backend (Step 2/7)
 
 **Goal:** First-time user experience that drives activation
 
-**Planned Features:**
-- [ ] Welcome modal on first login
-- [ ] Interactive product tour
-- [ ] Progress checklist (upload → detect → export)
-- [ ] Contextual tooltips
-- [ ] Video tutorials
-- [ ] Quick start guide
-- [ ] Skip option with reminder
+**Backend Implementation:**
+- ✅ Database schema (OnboardingProgress model)
+- ✅ 7 tracked steps (WELCOME → UPLOAD → VIEW → CUSTOMIZE → EXPORT → SHARE → COMPLETED)
+- ✅ Time tracking per step
+- ✅ Skip functionality (individual steps + entire flow)
+- ✅ Auto-tracking based on user actions
+- ✅ Completion percentage calculation
 
-**Metrics to Track:**
-- Onboarding completion rate
-- Time to first export
-- Drop-off points
-- Feature discovery rate
+**API Endpoints:**
+- ✅ `GET /v1/onboarding/status` - Get user progress
+- ✅ `POST /v1/onboarding/complete/:step` - Mark step done
+- ✅ `POST /v1/onboarding/skip/:step` - Skip a step
+- ✅ `POST /v1/onboarding/skip-all` - Skip entire flow
+
+**Admin Controls:**
+- ✅ `GET /admin/plg/onboarding/stats` - Analytics dashboard
+- ✅ Completion rate tracking
+- ✅ Drop-off analysis per step
+- ✅ Time spent metrics
+- ✅ Configurable time periods (7d, 30d, 90d)
+
+**Metrics Tracked:**
+- ✅ Onboarding completion rate
+- ✅ Time to first export
+- ✅ Drop-off points per step
+- ✅ Skip rate
+- ✅ Average time per step
+
+**Status:** Backend complete, ready for frontend UI
+
+**Pending:**
+- [ ] Frontend: Welcome modal
+- [ ] Frontend: Progress checklist component
+- [ ] Frontend: Step-by-step guide
+- [ ] Frontend: Tooltips and hints
+- [ ] Integration: Auto-track user actions
 
 ---
 
@@ -223,7 +245,7 @@ Referral
 | Feature | Backend | Frontend | Admin | Status |
 |---------|---------|----------|-------|--------|
 | Referral Program | ✅ | ✅ | ✅ | **COMPLETE** |
-| Onboarding Flow | ⏳ | ⏳ | ⏳ | In Progress |
+| Onboarding Flow | ✅ | ⏳ | ✅ | Backend Done |
 | In-App Messaging | ❌ | ❌ | ⏳ | Pending |
 | NPS & Feedback | ❌ | ❌ | ⏳ | Pending |
 | Social Proof | ❌ | ❌ | ⏳ | Pending |
@@ -299,4 +321,5 @@ Referral
 
 ---
 
-**Status:** 1/7 Complete (14%) - On Track 🚀
+**Status:** 1.5/7 Complete (21%) - On Track 🚀  
+**Note:** Onboarding backend done, frontend pending. Safe to test when migrations run.
