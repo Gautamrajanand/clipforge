@@ -263,9 +263,17 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     });
     
     try {
+      // Get a fresh token immediately before export to avoid expiration
+      const freshToken = await getClerkToken();
+      if (!freshToken) {
+        alert('Authentication failed. Please refresh the page and try again.');
+        setIsExporting(false);
+        return;
+      }
+
       const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/export`, {
         method: 'POST',
-        getToken: getClerkToken,
+        getToken: async () => freshToken, // Use the fresh token we just got
         headers: {
           'Content-Type': 'application/json',
         },
