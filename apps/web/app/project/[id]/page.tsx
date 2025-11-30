@@ -328,12 +328,31 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           alert(data.message || 'Export started. Your clip will appear below when ready (usually 2-3 minutes).');
           setIsExporting(false);
           
+          // Track initial export count
+          const initialExportCount = exportedClips.length;
+          
           // Start polling for new exports every 10 seconds
           const pollInterval = setInterval(async () => {
-            await fetchExistingExports();
+            try {
+              const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/exports`, {
+                getToken: getClerkToken,
+              });
+              
+              if (response.ok) {
+                const pollData = await response.json();
+                // Stop polling if we have new exports
+                if (pollData.exports && pollData.exports.length > initialExportCount) {
+                  clearInterval(pollInterval);
+                  // Refresh exports one final time
+                  await fetchExistingExports();
+                }
+              }
+            } catch (error) {
+              console.error('Polling error:', error);
+            }
           }, 10000); // Poll every 10 seconds
           
-          // Stop polling after 5 minutes
+          // Stop polling after 5 minutes regardless
           setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
           
           return;
