@@ -26,6 +26,7 @@ import { EmailModule } from './email/email.module';
 import { AdminModule } from './admin/admin.module';
 import { TrialModule } from './trial/trial.module';
 import { ReferralsModule } from './referrals/referrals.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 import { CacheModule } from './cache/cache.module';
 // import { SentryModule } from './sentry/sentry.module'; // TEMPORARILY DISABLED - missing deps in Docker
 
@@ -72,6 +73,7 @@ import { CacheModule } from './cache/cache.module';
     AdminModule,
     TrialModule,
     ReferralsModule, // PLG growth engine - referral system
+    OnboardingModule, // PLG growth engine - onboarding flow
   ],
   providers: [
     // Global rate limiting guard

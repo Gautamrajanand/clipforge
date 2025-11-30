@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagg
 import { AdminGuard } from '../auth/admin.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReferralsService } from '../referrals/referrals.service';
+import { OnboardingService } from '../onboarding/onboarding.service';
 
 /**
  * Admin PLG (Product-Led Growth) Controller
@@ -16,6 +17,7 @@ export class AdminPLGController {
   constructor(
     private prisma: PrismaService,
     private referrals: ReferralsService,
+    private onboarding: OnboardingService,
   ) {}
 
   // ============ REFERRAL PROGRAM ADMIN ============
@@ -175,16 +177,9 @@ export class AdminPLGController {
 
   @Get('onboarding/stats')
   @ApiOperation({ summary: 'Get onboarding completion stats' })
-  async getOnboardingStats() {
-    // TODO: Implement when onboarding is built
-    return {
-      message: 'Onboarding stats - to be implemented',
-      stats: {
-        totalUsers: 0,
-        completedOnboarding: 0,
-        droppedAtStep: {},
-      },
-    };
+  async getOnboardingStats(@Query('days') days?: string) {
+    const daysNum = days ? parseInt(days, 10) : 30;
+    return this.onboarding.getOnboardingAnalytics(daysNum);
   }
 
   // ============ IN-APP MESSAGING ADMIN ============

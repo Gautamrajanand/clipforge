@@ -7,9 +7,10 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
 import { ReferralsModule } from '../referrals/referrals.module';
+import { OnboardingModule } from '../onboarding/onboarding.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, EmailModule, ReferralsModule],
+  imports: [PrismaModule, AuthModule, EmailModule, ReferralsModule, OnboardingModule],
   controllers: [AdminController, AdminPLGController],
   providers: [AdminService, AnalyticsService],
   exports: [AdminService, AnalyticsService],

@@ -63,6 +63,12 @@ model Organization {
   referredBy              String?  @db.VarChar(50) // Code of referrer
   referralRewardClaimed   Boolean  @default(false) // Whether signup bonus claimed
 
+  // Onboarding system (PLG activation)
+  onboardingCompleted     Boolean  @default(false)
+  onboardingCompletedAt   DateTime?
+  onboardingSkipped       Boolean  @default(false)
+  currentOnboardingStep   OnboardingStep @default(WELCOME)
+
   memberships Membership[]
   projects    Project[]
   brandKits   BrandKit[]
@@ -72,6 +78,7 @@ model Organization {
   creditTransactions CreditTransaction[]
   referralsMade   Referral[] @relation("ReferrerOrganization")
   referralsReceived Referral[] @relation("ReferredOrganization")
+  onboardingProgress OnboardingProgress[]
 
   @@index([name])
   @@index([tier])
@@ -456,4 +463,35 @@ enum ReferralStatus {
   PENDING    // Referred user signed up, but hasn't completed qualifying action
   COMPLETED  // Referred user completed qualifying action (e.g., first export)
   REWARDED   // Both parties have been rewarded
+}
+
+// ============ Onboarding System (PLG Activation) ============
+
+model OnboardingProgress {
+  id          String         @id @default(cuid())
+  orgId       String
+  step        OnboardingStep
+  completed   Boolean        @default(false)
+  skipped     Boolean        @default(false)
+  timeSpent   Int?           // seconds spent on this step
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  org         Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, step])
+  @@index([orgId])
+  @@index([step])
+  @@index([completed])
+}
+
+enum OnboardingStep {
+  WELCOME          // Welcome modal shown
+  UPLOAD_VIDEO     // First video uploaded
+  VIEW_CLIPS       // Viewed AI-detected clips
+  CUSTOMIZE_CLIP   // Customized a clip (captions, aspect ratio)
+  EXPORT_CLIP      // First export completed
+  SHARE_REFERRAL   // Viewed referral page
+  COMPLETED        // All steps done
 }
