@@ -293,6 +293,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Check if export is processing in background
+        if (data.status === 'processing') {
+          alert(data.message || 'Export started. Refresh the page in a few minutes to see your exported clips.');
+          setIsExporting(false);
+          return;
+        }
+        
         setExportedClips(data.exports);
         
         const urls: Record<string, string> = {};

@@ -420,7 +420,21 @@ export class ProjectsController {
     if (!orgId) {
       throw new Error('No organization found');
     }
-    return this.projectsService.exportMoments(id, orgId, dto);
+    
+    // Start export in background to avoid blocking HTTP response
+    setImmediate(async () => {
+      try {
+        await this.projectsService.exportMoments(id, orgId, dto);
+      } catch (error) {
+        console.error('Background export failed:', error);
+      }
+    });
+    
+    // Return immediately with accepted status
+    return {
+      status: 'processing',
+      message: 'Export started. Refresh the page in a few minutes to see your exported clips.',
+    };
   }
 
   @Get('exports/:exportId/download')
