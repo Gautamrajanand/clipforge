@@ -58,6 +58,11 @@ model Organization {
   trialEndDate    DateTime?
   trialUsed       Boolean  @default(false)
 
+  // Referral system (PLG growth)
+  referralCode            String?  @unique @db.VarChar(10) // Unique code for this org
+  referredBy              String?  @db.VarChar(50) // Code of referrer
+  referralRewardClaimed   Boolean  @default(false) // Whether signup bonus claimed
+
   memberships Membership[]
   projects    Project[]
   brandKits   BrandKit[]
@@ -65,6 +70,8 @@ model Organization {
   webhooks    Webhook[]
   usageLedger UsageLedger[]
   creditTransactions CreditTransaction[]
+  referralsMade   Referral[] @relation("ReferrerOrganization")
+  referralsReceived Referral[] @relation("ReferredOrganization")
 
   @@index([name])
   @@index([tier])
@@ -411,4 +418,42 @@ enum CreditTransactionType {
   ADDITION_MANUAL          // Admin manual addition
   ADMIN_ADJUSTMENT         // Admin credit adjustment (positive)
   ADMIN_DEDUCTION          // Admin credit deduction (negative)
+  ADDITION_REFERRAL_BONUS  // Referral reward credits
+}
+
+// ============ Referral System (PLG Growth) ============
+
+model Referral {
+  id              String          @id @default(cuid())
+  referrerOrgId   String          // Organization that referred
+  referredOrgId   String          // Organization that was referred
+  referralCode    String          @db.VarChar(10) // Code used for referral
+  status          ReferralStatus  @default(PENDING)
+  
+  // Rewards
+  referrerReward  Int             @default(30) // Credits for referrer
+  referredReward  Int             @default(30) // Credits for referred user
+  referrerRewarded Boolean        @default(false) // Has referrer been rewarded?
+  referredRewarded Boolean        @default(false) // Has referred user been rewarded?
+  
+  // Completion tracking
+  completedAt     DateTime?       // When referral was completed (referred user took action)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  referrer        Organization    @relation("ReferrerOrganization", fields: [referrerOrgId], references: [id], onDelete: Cascade)
+  referred        Organization    @relation("ReferredOrganization", fields: [referredOrgId], references: [id], onDelete: Cascade)
+
+  @@index([referrerOrgId])
+  @@index([referredOrgId])
+  @@index([referralCode])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ReferralStatus {
+  PENDING    // Referred user signed up, but hasn't completed qualifying action
+  COMPLETED  // Referred user completed qualifying action (e.g., first export)
+  REWARDED   // Both parties have been rewarded
 }

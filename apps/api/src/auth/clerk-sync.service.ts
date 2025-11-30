@@ -19,8 +19,9 @@ export class ClerkSyncService {
 
   /**
    * Get or create user and organization from Clerk user ID
+   * @param referralCode Optional referral code from signup URL
    */
-  async syncUser(clerkUserId: string, email?: string, name?: string) {
+  async syncUser(clerkUserId: string, email?: string, name?: string, referralCode?: string) {
     // Check if user exists
     let user = await this.prisma.user.findUnique({
       where: { clerkId: clerkUserId },
@@ -71,6 +72,8 @@ export class ClerkSyncService {
           trialStartDate,
           trialEndDate,
           trialUsed: false,
+          // Track referral if code provided
+          ...(referralCode && { referredBy: referralCode }),
         },
       });
 
@@ -87,6 +90,32 @@ export class ClerkSyncService {
       });
 
       this.logger.log(`🎉 New user signup! Trial activated for ${email}: ${trialStartDate.toISOString()} → ${trialEndDate.toISOString()}`);
+
+      // Track referral if code was provided
+      if (referralCode) {
+        try {
+          // Find referrer organization
+          const referrer = await this.prisma.organization.findUnique({
+            where: { referralCode },
+          });
+
+          if (referrer && referrer.id !== org.id) {
+            // Create referral record
+            await this.prisma.referral.create({
+              data: {
+                referrerOrgId: referrer.id,
+                referredOrgId: org.id,
+                referralCode,
+                status: 'PENDING',
+              },
+            });
+            this.logger.log(`🎁 Referral tracked: ${referrer.id} → ${org.id} (code: ${referralCode})`);
+          }
+        } catch (error) {
+          this.logger.error(`Failed to track referral with code ${referralCode}:`, error);
+          // Don't block signup if referral tracking fails
+        }
+      }
 
       user = await this.prisma.user.create({
         data: {
