@@ -117,8 +117,10 @@ export class ClerkSyncService {
         }
       }
 
-      user = await this.prisma.user.create({
-        data: {
+      // Use upsert to handle race conditions and duplicate emails
+      user = await this.prisma.user.upsert({
+        where: { clerkId: clerkUserId },
+        create: {
           clerkId: clerkUserId,
           email: email || `${clerkUserId}@clerk.local`,
           name: name || 'User',
@@ -128,6 +130,11 @@ export class ClerkSyncService {
               role: 'OWNER',
             },
           },
+        },
+        update: {
+          // If user exists, just update email/name if needed
+          ...(email && !email.includes('@clerk.local') && { email }),
+          ...(name && name !== 'User' && { name }),
         },
         include: {
           memberships: {

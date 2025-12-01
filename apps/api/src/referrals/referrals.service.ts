@@ -166,6 +166,14 @@ export class ReferralsService {
 
     // Reward referrer
     if (!referral.referrerRewarded) {
+      const referrerOrg = await this.prisma.organization.findUnique({
+        where: { id: referral.referrerOrgId },
+        select: { credits: true },
+      });
+
+      const balanceBefore = referrerOrg?.credits || 0;
+      const balanceAfter = balanceBefore + referral.referrerReward;
+
       await this.prisma.organization.update({
         where: { id: referral.referrerOrgId },
         data: {
@@ -179,6 +187,8 @@ export class ReferralsService {
           orgId: referral.referrerOrgId,
           type: 'ADDITION_REFERRAL_BONUS',
           amount: referral.referrerReward,
+          balanceBefore,
+          balanceAfter,
           description: `Referral bonus: ${referral.referred.name} signed up`,
         },
       });
@@ -188,6 +198,14 @@ export class ReferralsService {
 
     // Reward referred user (signup bonus)
     if (!referral.referredRewarded && !referral.referred.referralRewardClaimed) {
+      const referredOrg = await this.prisma.organization.findUnique({
+        where: { id: referral.referredOrgId },
+        select: { credits: true },
+      });
+
+      const balanceBefore = referredOrg?.credits || 0;
+      const balanceAfter = balanceBefore + referral.referredReward;
+
       await this.prisma.organization.update({
         where: { id: referral.referredOrgId },
         data: {
@@ -202,6 +220,8 @@ export class ReferralsService {
           orgId: referral.referredOrgId,
           type: 'ADDITION_REFERRAL_BONUS',
           amount: referral.referredReward,
+          balanceBefore,
+          balanceAfter,
           description: `Welcome bonus for using referral code ${referral.referralCode}`,
         },
       });
