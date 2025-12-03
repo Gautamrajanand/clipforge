@@ -35,7 +35,7 @@ export default function TrialBanner({ isActive, daysLeft, onDismiss }: TrialBann
   };
 
   return (
-    <div className={`${getColorClasses()} text-white shadow-lg`}>
+    <div className={`${getColorClasses()} text-white shadow-lg fixed top-0 left-64 right-0 z-50`}>
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1">
@@ -43,15 +43,15 @@ export default function TrialBanner({ isActive, daysLeft, onDismiss }: TrialBann
             <div className="flex-1">
               <p className="font-semibold text-sm lg:text-base">
                 {daysLeft === 1 ? (
-                  <>🔥 Last day of your free trial!</>
+                  <>🔥 Last day of your FREE TRIAL!</>
                 ) : daysLeft <= 3 ? (
-                  <>⏰ Only {daysLeft} days left in your free trial</>
+                  <>⏰ Only {daysLeft} days left in your FREE TRIAL</>
                 ) : (
-                  <>🎉 You're on a 7-day free trial with STARTER features ({daysLeft} days left)</>
+                  <>🎉 You're on a 7-day FREE TRIAL ({daysLeft} days left)</>
                 )}
               </p>
-              <p className="text-xs lg:text-sm opacity-90 mt-0.5">
-                Enjoying ClipForge? Upgrade now to keep your 150 credits and unlock all features.
+              <p className="text-xs lg:text-sm opacity-90 mt-0.5 hidden sm:block">
+                Enjoying ClipForge? Upgrade to keep all features.
               </p>
             </div>
           </div>

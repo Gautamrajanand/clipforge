@@ -270,6 +270,10 @@ export const AnalyticsEvents = {
   HELP_CLICKED: 'help_clicked',
   UPGRADE_PROMPT_SHOWN: 'upgrade_prompt_shown',
   UPGRADE_PROMPT_CLICKED: 'upgrade_prompt_clicked',
+  
+  // Social Sharing
+  CLIP_SHARED: 'clip_shared',
+  REFERRAL_LINK_SHARED: 'referral_link_shared',
 } as const;
 
 // Helper functions for common tracking patterns

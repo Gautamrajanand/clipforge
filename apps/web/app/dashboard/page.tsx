@@ -3,20 +3,31 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
-import { Video, Mic2, Scissors, Sparkles, Type, Wand2, FileVideo, Coins } from 'lucide-react';
+import { Video, Mic2, Scissors, Type, Maximize, FileText, User, Coins } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import FeatureCard from '@/components/cards/FeatureCard';
-import AIToolCard from '@/components/cards/AIToolCard';
 import ProjectCard from '@/components/cards/ProjectCard';
 import NewProjectCard from '@/components/cards/NewProjectCard';
 import UploadModal from '@/components/modals/UploadModal';
 import ReframeModal from '@/components/modals/ReframeModal';
 import SubtitlesModal from '@/components/modals/SubtitlesModal';
 import TrialBanner from '@/components/trial/TrialBanner';
+import NPSWidget from '@/components/NPSWidget';
+import MultiStepOnboarding from '@/components/onboarding/MultiStepOnboarding';
+import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+import EmptyProjects from '@/components/empty-states/EmptyProjects';
+import DynamicPopup from '@/components/popups/DynamicPopup';
+import { UpgradeModal } from '@/components/upgrade-nudges';
+import { useUpgradeTriggers } from '@/hooks/useUpgradeTriggers';
 import { fetchWithAuth } from '@/lib/api';
 import { useAnalytics, usePageTracking } from '@/hooks/useAnalytics';
 import { AnalyticsEvents } from '@/lib/analytics';
+import ProgressStats from '@/components/dashboard/ProgressStats';
+import CelebrationToast from '@/components/celebrations/CelebrationToast';
+import WelcomeModal from '@/components/onboarding/WelcomeModal';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -47,10 +58,26 @@ export default function Dashboard() {
     eta: '',
     error: '',
   });
+  
+  // PLG Components State
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [celebrationToast, setCelebrationToast] = useState<{
+    type: 'first_clip' | 'first_export' | 'first_share' | 'milestone_10' | 'milestone_50';
+    isOpen: boolean;
+  } | null>(null);
 
   const PROJECTS_PER_PAGE = 11; // 11 projects + 1 "New Project" card = 12 total (3x4 grid)
 
   const { getToken: getClerkToken, isLoaded, isSignedIn } = useAuth();
+  
+  // Upgrade triggers
+  const { activeTriger, markAsShown, hasActiveTrigger } = useUpgradeTriggers({
+    credits: credits || 0,
+    tier: tier as 'FREE' | 'STARTER' | 'PRO' | 'BUSINESS',
+    monthlyAllocation: creditsAllocation,
+    exportCount: projects.length, // Using projects as proxy for exports
+    daysActive: 7, // Default value
+  });
 
   useEffect(() => {
     const initAuth = async () => {
@@ -78,9 +105,63 @@ export default function Dashboard() {
     initAuth();
   }, [isLoaded, isSignedIn, getClerkToken, router]);
 
+  // Welcome Modal Logic - Show on first visit
+  useEffect(() => {
+    if (projects.length === 0 && isAuthReady) {
+      const hasVisited = localStorage.getItem('hasVisitedDashboard');
+      if (!hasVisited) {
+        setShowWelcomeModal(true);
+        localStorage.setItem('hasVisitedDashboard', 'true');
+      }
+    }
+  }, [projects, isAuthReady]);
+
+  // Sample Video Event Handler
+  useEffect(() => {
+    const handleSampleVideo = () => {
+      setShowWelcomeModal(false);
+      setShowUploadModal(true);
+      track(AnalyticsEvents.DASHBOARD_VIEWED, { action: 'sample_video_clicked' });
+    };
+    
+    window.addEventListener('try-sample-video', handleSampleVideo);
+    return () => window.removeEventListener('try-sample-video', handleSampleVideo);
+  }, [track]);
+
+  // Celebration Toast Logic - Track milestones
+  useEffect(() => {
+    if (projects.length === 0) return;
+
+    const totalClips = projects.reduce((sum, p) => sum + (p.moments?.length || 0), 0);
+    
+    // First clip celebration
+    const hasFirstClip = localStorage.getItem('celebrated_first_clip');
+    if (totalClips >= 1 && !hasFirstClip) {
+      setCelebrationToast({ type: 'first_clip', isOpen: true });
+      localStorage.setItem('celebrated_first_clip', 'true');
+      track(AnalyticsEvents.DASHBOARD_VIEWED, { milestone: 'first_clip' });
+    }
+    
+    // 10 clips milestone
+    const hasTenClips = localStorage.getItem('celebrated_10_clips');
+    if (totalClips >= 10 && !hasTenClips) {
+      setCelebrationToast({ type: 'milestone_10', isOpen: true });
+      localStorage.setItem('celebrated_10_clips', 'true');
+      track(AnalyticsEvents.DASHBOARD_VIEWED, { milestone: '10_clips' });
+    }
+    
+    // 50 clips milestone
+    const hasFiftyClips = localStorage.getItem('celebrated_50_clips');
+    if (totalClips >= 50 && !hasFiftyClips) {
+      setCelebrationToast({ type: 'milestone_50', isOpen: true });
+      localStorage.setItem('celebrated_50_clips', 'true');
+      track(AnalyticsEvents.DASHBOARD_VIEWED, { milestone: '50_clips' });
+    }
+  }, [projects, track]);
+
   const fetchProjects = async () => {
     try {
-      const response = await fetchWithAuth('http://localhost:3000/v1/projects?take=1000', {
+      const response = await fetchWithAuth(`${API_URL}/v1/projects?take=1000`, {
         getToken: getClerkToken,
       });
       if (response.ok) {
@@ -100,7 +181,7 @@ export default function Dashboard() {
 
   const fetchCredits = async () => {
     try {
-      const response = await fetchWithAuth('http://localhost:3000/v1/credits/balance', {
+      const response = await fetchWithAuth(`${API_URL}/v1/credits/balance`, {
         getToken: getClerkToken,
       });
       if (response.ok) {
@@ -112,8 +193,10 @@ export default function Dashboard() {
         setTier(data.tier || 'FREE');
         setTrialInfo(data.trial || null);
         
-        // Show low credits warning if < 10
-        if (data.balance < 10 && data.balance > 0) {
+        // Show low credits warning if below 20% of allocation
+        const allocation = data.allocation || 60;
+        const lowCreditThreshold = allocation * 0.2; // 20% of allocation
+        if (data.balance < lowCreditThreshold && data.balance > 0) {
           setShowLowCreditsWarning(true);
         }
       } else {
@@ -130,7 +213,7 @@ export default function Dashboard() {
 
     while (attempts < maxAttempts) {
       try {
-        const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${projectId}`, {
+        const response = await fetchWithAuth(`${API_URL}/v1/projects/${projectId}`, {
           getToken: getClerkToken,
         });
 
@@ -230,7 +313,7 @@ export default function Dashboard() {
       // Create project with clip settings
       // Use temporary title - will be updated with video title after import
       console.log('📥 Creating project for URL:', url);
-      const createResponse = await fetchWithAuth('http://localhost:3000/v1/projects', {
+      const createResponse = await fetchWithAuth(`${API_URL}/v1/projects`, {
         method: 'POST',
         getToken: getClerkToken,
         headers: {
@@ -268,7 +351,7 @@ export default function Dashboard() {
       });
 
       console.log('📥 Calling import-url endpoint...');
-      const importResponse = await fetchWithAuth(`http://localhost:3000/v1/projects/${project.id}/import-url`, {
+      const importResponse = await fetchWithAuth(`${API_URL}/v1/projects/${project.id}/import-url`, {
         method: 'POST',
         getToken: getClerkToken,
         headers: {
@@ -341,7 +424,7 @@ export default function Dashboard() {
     try {
       // Create project with clip settings
       console.log('📤 Sending clip settings:', clipSettings);
-      const createResponse = await fetchWithAuth('http://localhost:3000/v1/projects', {
+      const createResponse = await fetchWithAuth(`${API_URL}/v1/projects`, {
         method: 'POST',
         getToken: getClerkToken,
         headers: {
@@ -416,7 +499,7 @@ export default function Dashboard() {
 
         xhr.addEventListener('error', () => reject(new Error('Network error. Please check your connection.')));
 
-        xhr.open('POST', `http://localhost:3000/v1/projects/${project.id}/upload`);
+        xhr.open('POST', `${API_URL}/v1/projects/${project.id}/upload`);
         xhr.setRequestHeader('Authorization', `Bearer ${uploadToken}`);
         xhr.send(formData);
       });
@@ -474,7 +557,7 @@ export default function Dashboard() {
     if (!token) return;
     
     try {
-      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${id}`, {
+      const response = await fetchWithAuth(`${API_URL}/v1/projects/${id}`, {
         method: 'PATCH',
         getToken: getClerkToken,
         headers: {
@@ -499,7 +582,7 @@ export default function Dashboard() {
     if (!token) return;
     
     try {
-      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${id}`, {
+      const response = await fetchWithAuth(`${API_URL}/v1/projects/${id}`, {
         method: 'DELETE',
         getToken: getClerkToken,
       });
@@ -515,7 +598,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       <Sidebar 
         credits={credits} 
         creditsAllocation={creditsAllocation} 
@@ -536,8 +619,40 @@ export default function Dashboard() {
       
       <main className="lg:ml-64 pt-16">
         <div className="p-4 lg:p-8">
+          {/* Onboarding Checklist */}
+          <section className="mb-4">
+            <OnboardingChecklist />
+          </section>
+
+          {/* Progress Stats - Collapsed by default */}
+          {projects.length > 0 && (
+            <details className="mb-4">
+              <summary className="cursor-pointer flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-2xl">📊</span>
+                  <span className="text-lg font-semibold text-gray-900">Your Progress</span>
+                </div>
+                <span className="text-sm text-gray-500">0 of 5 completed</span>
+                <span className="text-gray-400">0%</span>
+              </summary>
+              <div className="mt-2">
+                <ProgressStats
+                  totalClips={projects.reduce((sum, p) => sum + (p.moments?.length || 0), 0)}
+                  totalVideos={projects.length}
+                  totalExports={projects.reduce((sum, p) => sum + (p.exports?.length || 0), 0)}
+                  weeklyClips={projects.filter(p => {
+                    const projectDate = new Date(p.updatedAt);
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return projectDate > weekAgo;
+                  }).reduce((sum, p) => sum + (p.moments?.length || 0), 0)}
+                />
+              </div>
+            </details>
+          )}
+
           {/* Let's start with section */}
-          <section className="mb-12">
+          <section className="mb-8">
             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">Let's start with</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
               <FeatureCard
@@ -562,49 +677,43 @@ export default function Dashboard() {
           </section>
 
           {/* AI Tools section */}
-          <section className="mb-12">
+          <section className="mb-8">
             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">AI Tools</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-              <AIToolCard
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              <FeatureCard
                 title="AI Clips"
-                icon={Sparkles}
-                gradientFrom="from-purple-400"
-                gradientTo="to-purple-600"
+                icon={Scissors}
+                color="purple"
                 onClick={handleOpenUploadModal}
               />
-              <AIToolCard
+              <FeatureCard
                 title="AI Text to Speech"
                 icon={Type}
-                gradientFrom="from-blue-400"
-                gradientTo="to-blue-600"
+                color="blue"
                 soon
               />
-              <AIToolCard
+              <FeatureCard
                 title="AI Transcription"
-                icon={FileVideo}
-                gradientFrom="from-green-400"
-                gradientTo="to-green-600"
+                icon={FileText}
+                color="mint"
                 soon
               />
-              <AIToolCard
+              <FeatureCard
                 title="AI Subtitles"
                 icon={Type}
-                gradientFrom="from-purple-400"
-                gradientTo="to-purple-600"
+                color="yellow"
                 onClick={() => setShowSubtitlesModal(true)}
               />
-              <AIToolCard
+              <FeatureCard
                 title="AI Reframe"
-                icon={Wand2}
-                gradientFrom="from-yellow-400"
-                gradientTo="to-yellow-600"
+                icon={Maximize}
+                color="pink"
                 onClick={() => setShowReframeModal(true)}
               />
-              <AIToolCard
+              <FeatureCard
                 title="AI Avatar"
-                icon={Video}
-                gradientFrom="from-pink-400"
-                gradientTo="to-pink-600"
+                icon={User}
+                color="mint"
                 soon
               />
             </div>
@@ -612,33 +721,44 @@ export default function Dashboard() {
 
           {/* Recent Projects section */}
           <section>
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Recent</h2>
-              {projects.length > PROJECTS_PER_PAGE && (
-                <div className="hidden sm:block text-sm text-gray-600">
-                  Showing {Math.min((currentPage - 1) * PROJECTS_PER_PAGE + 1, projects.length)}-{Math.min(currentPage * PROJECTS_PER_PAGE, projects.length)} of {projects.length} projects
+            {projects.length === 0 ? (
+              /* Empty State */
+              <EmptyProjects onUploadClick={() => setShowUploadModal(true)} />
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
+                  <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Recent</h2>
+                  {projects.length > PROJECTS_PER_PAGE && (
+                    <div className="hidden sm:block text-sm text-gray-600">
+                      Showing {Math.min((currentPage - 1) * PROJECTS_PER_PAGE + 1, projects.length)}-{Math.min(currentPage * PROJECTS_PER_PAGE, projects.length)} of {projects.length} projects
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-              <NewProjectCard onClick={() => setShowUploadModal(true)} />
-              {projects
-                .slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE)
-                .map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    id={project.id}
-                    title={project.title}
-                    updatedAt={formatTimeAgo(project.updatedAt)}
-                    videoUrl={project.sourceUrl ? `http://localhost:3000/v1/projects/${project.id}/video` : undefined}
-                    isEmpty={!project.sourceUrl}
-                    settings={project.clipSettings}
-                    expiresAt={project.expiresAt}
-                    onEdit={handleEditProject}
-                    onDelete={handleDeleteProject}
-                  />
-                ))}
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                  <NewProjectCard onClick={() => setShowUploadModal(true)} />
+                  {projects
+                    .slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE)
+                    .map((project) => (
+                      <ProjectCard
+                        key={project.id}
+                        id={project.id}
+                        title={project.title}
+                        updatedAt={formatTimeAgo(project.updatedAt)}
+                        videoUrl={project.sourceUrl ? `${API_URL}/v1/projects/${project.id}/video` : undefined}
+                        isEmpty={!project.sourceUrl}
+                        settings={project.clipSettings}
+                        expiresAt={project.expiresAt}
+                        clipsCount={project.moments?.length || 0}
+                        hasSubtitles={project.hasSubtitles || false}
+                        reframeCount={project.hasReframed ? 1 : 0}
+                        exportCount={project.exports?.length || 0}
+                        onEdit={handleEditProject}
+                        onDelete={handleDeleteProject}
+                      />
+                    ))}
+                </div>
+              </>
+            )}
 
             {/* Pagination */}
             {projects.length > PROJECTS_PER_PAGE && (
@@ -872,6 +992,44 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Multi-Step Onboarding for New Users */}
+      <MultiStepOnboarding />
+
+      {/* Dynamic Popups */}
+      <DynamicPopup />
+
+      {/* NPS Widget */}
+      <NPSWidget />
+
+      {/* Upgrade Nudges */}
+      {hasActiveTrigger && activeTriger && (
+        <UpgradeModal
+          isOpen={true}
+          trigger={activeTriger.type}
+          currentTier={tier as 'FREE' | 'STARTER' | 'PRO'}
+          creditsRemaining={credits || 0}
+          onClose={() => markAsShown(activeTriger.type)}
+        />
+      )}
+
+      {/* Welcome Modal */}
+      {showWelcomeModal && (
+        <WelcomeModal
+          isOpen={showWelcomeModal}
+          onClose={() => setShowWelcomeModal(false)}
+          userName={undefined}
+        />
+      )}
+
+      {/* Celebration Toast */}
+      {celebrationToast && (
+        <CelebrationToast
+          type={celebrationToast.type}
+          isOpen={celebrationToast.isOpen}
+          onClose={() => setCelebrationToast(null)}
+        />
       )}
     </div>
   );

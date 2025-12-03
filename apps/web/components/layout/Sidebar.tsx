@@ -18,7 +18,8 @@ import {
   Zap,
   Key,
   X,
-  Shield
+  Shield,
+  Gift
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -53,6 +54,7 @@ const postItems: NavItem[] = [
 ];
 
 const bottomItems: NavItem[] = [
+  { name: 'Refer & Earn', href: '/referrals', icon: Gift },
   { name: 'API Keys', href: '/api-keys', icon: Key },
   { name: 'Subscription', href: '/subscription', icon: CreditCard },
   { name: 'Learning center', href: '/learning', icon: GraduationCap },

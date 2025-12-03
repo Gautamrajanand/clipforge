@@ -5,6 +5,8 @@ import { useAuth } from '@clerk/nextjs';
 import { fetchWithAuth } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 interface DashboardStats {
   users: {
     total: number;
@@ -54,7 +56,7 @@ export default function AdminDashboard() {
   const loadDashboardStats = async () => {
     try {
       setLoading(true);
-      const response = await fetchWithAuth('http://localhost:3000/admin/dashboard', {
+      const response = await fetchWithAuth(`${API_URL}/admin/dashboard`, {
         method: 'GET',
         getToken: getClerkToken,
       });

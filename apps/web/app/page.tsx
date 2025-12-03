@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Sparkles, Video, Scissors, Zap, Star } from 'lucide-react';
+import { ArrowRight, Sparkles, Scissors, Type, Maximize, Video, ChevronDown } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -35,202 +35,222 @@ export default function Home() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-8">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 mb-8">
-            AI-Powered Video Clip Detection
-          </div>
-
           {/* Hero Text */}
-          <h1 className="text-6xl font-bold mb-6 leading-tight">
-            <span className="text-gray-300">Turn long videos into</span>{' '}
-            <span className="text-gray-900">viral clips instantly</span>
+          <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight text-gray-900">
+            What will you create?
           </h1>
 
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            AI-powered clip detection finds the best moments in your videos automatically. 
-            Upload once, export multiple clips, and share everywhere.
+          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+            ClipForge is designed to let content creators do what they do best, from viral clips to multi-format videos to AI-powered captions.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex items-center justify-center gap-4 mb-6">
+          {/* Use Case Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+            <span className="px-6 py-3 bg-card-yellow rounded-full text-gray-900 font-medium">Social Media Clips</span>
+            <span className="px-6 py-3 bg-card-mint rounded-full text-gray-900 font-medium">Explainer Videos</span>
+            <span className="px-6 py-3 bg-gray-100 rounded-full text-gray-900 font-medium">Onboarding</span>
+            <span className="px-6 py-3 bg-card-yellow rounded-full text-gray-900 font-medium">Training Videos</span>
+            <span className="px-6 py-3 bg-card-mint rounded-full text-gray-900 font-medium">Webinars</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+            <span className="px-6 py-3 bg-gray-100 rounded-full text-gray-900 font-medium">Video Essays</span>
+            <span className="px-6 py-3 bg-card-mint rounded-full text-gray-900 font-medium">Internal Comms</span>
+            <span className="px-6 py-3 bg-card-yellow rounded-full text-gray-900 font-medium">Voiceovers</span>
+            <span className="px-6 py-3 bg-gray-100 rounded-full text-gray-900 font-medium">Text to Speech</span>
+            <span className="px-6 py-3 bg-card-mint rounded-full text-gray-900 font-medium">Voice Cloning</span>
+          </div>
+
+          {/* CTA Button */}
+          <Link
+            href="/signup"
+            className="inline-block px-8 py-4 bg-gray-900 hover:bg-gray-800 text-lime-cta font-medium rounded-full transition-colors"
+          >
+            Get Started Free
+          </Link>
+        </div>
+      </section>
+
+      {/* Trust Section */}
+      <section className="py-16 px-8 bg-gray-900 rounded-3xl mx-8">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-white mb-12">
+            Trusted by content creators across the world
+          </h2>
+          <div className="flex flex-wrap items-center justify-center gap-8 opacity-60">
+            <span className="text-white text-2xl font-bold">SiriusXM</span>
+            <span className="text-white text-2xl font-bold">WSJ</span>
+            <span className="text-white text-2xl font-bold">Netflix</span>
+            <span className="text-white text-2xl font-bold">Disney</span>
+            <span className="text-white text-2xl font-bold">BBC</span>
+            <span className="text-white text-2xl font-bold">Discovery</span>
+            <span className="text-white text-2xl font-bold">Google</span>
+            <span className="text-white text-2xl font-bold">ESPN</span>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Features Section */}
+      <section className="py-20 px-8 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              The power of AI at your fingertips
+            </h2>
+            <p className="text-xl text-gray-600">
+              ClipForge's AI Assistant is packed with tools that let you move faster and create better content.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div className="bg-card-mint rounded-3xl p-8 hover:shadow-lg transition-shadow">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                AI Clips <ChevronDown className="w-6 h-6 rotate-[-90deg]" />
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Find viral moments and create engaging clips optimized for TikTok, Shorts, and Reels.
+              </p>
+            </div>
+
+            <div className="bg-card-peach rounded-3xl p-8 hover:shadow-lg transition-shadow">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                AI Reframe <ChevronDown className="w-6 h-6 rotate-[-90deg]" />
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Convert videos to any aspect ratio with smart tracking for every platform.
+              </p>
+            </div>
+
+            <div className="bg-card-yellow rounded-3xl p-8 hover:shadow-lg transition-shadow">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                AI Subtitles <ChevronDown className="w-6 h-6 rotate-[-90deg]" />
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Automatically generate customized captions for your videos with AI in 20+ languages.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-card-purple rounded-3xl p-8 hover:shadow-lg transition-shadow">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                Filler Word Removal <ChevronDown className="w-6 h-6 rotate-[-90deg]" />
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Remove umms, ahhs and other filler words from audio automatically.
+              </p>
+            </div>
+
+            <div className="bg-card-yellow rounded-3xl p-8 hover:shadow-lg transition-shadow">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                Smart Editing <ChevronDown className="w-6 h-6 rotate-[-90deg]" />
+              </h3>
+              <p className="text-gray-700 mb-6">
+                AI-powered scene detection and automatic transitions for professional results.
+              </p>
+            </div>
+
+            <div className="bg-card-blue rounded-3xl p-8 hover:shadow-lg transition-shadow">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                Transcription <ChevronDown className="w-6 h-6 rotate-[-90deg]" />
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Convert any audio into text to repurpose and improve accessibility.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Showcase */}
+      <section className="py-20 px-8 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Create amazing content from start to finish
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Recording Studio */}
+            <div className="bg-card-mint rounded-3xl p-8 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-4 right-4 px-3 py-1 bg-gray-900 text-white text-xs font-bold rounded-full">
+                NEW
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Recording Studio
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Record video effortlessly
+              </p>
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Video className="w-12 h-12 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Video Editor */}
+            <div className="bg-card-yellow rounded-3xl p-8 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-4 right-4 px-3 py-1 bg-gray-900 text-white text-xs font-bold rounded-full">
+                NEW
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Video Editor
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Edit videos at lightning speed
+              </p>
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Scissors className="w-12 h-12 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* AI Voices */}
+            <div className="bg-card-peach rounded-3xl p-8 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                AI Voices
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Create audio just by typing
+              </p>
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Type className="w-12 h-12 text-gray-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
             <Link
               href="/signup"
-              className="px-8 py-4 bg-gray-900 hover:bg-gray-800 text-lime-cta font-medium rounded-full inline-flex items-center gap-2 transition-colors shadow-lg"
+              className="inline-block px-8 py-4 bg-gray-900 hover:bg-gray-800 text-lime-cta font-medium rounded-full transition-colors"
             >
               Get Started Free
-              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
 
-          {/* Rating */}
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className="w-5 h-5 text-orange-500 fill-orange-500" />
-              ))}
-            </div>
-            <span className="font-semibold text-gray-900">4.9/5</span>
-            <span className="text-gray-500">from 1000+ creators</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Use Cases */}
-      <section className="py-16 px-8 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Perfect for every content type
-            </h2>
-            <p className="text-xl text-gray-600">
-              Transform your long-form videos into engaging clips for any platform
+          {/* Bottom Message */}
+          <div className="text-center mt-12 p-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl">
+            <p className="text-2xl font-bold text-gray-900 mb-2">
+              The only platform you need post-recording
             </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            {[
-              'YouTube Shorts',
-              'Instagram Reels',
-              'TikTok Videos',
-              'Podcast Highlights',
-              'Webinar Clips',
-              'Tutorial Snippets',
-              'Product Demos',
-              'Event Highlights',
-              'Interview Moments',
-            ].map((useCase) => (
-              <div
-                key={useCase}
-                className="px-6 py-3 bg-card-mint rounded-full text-gray-800 font-medium hover:scale-105 transition-transform cursor-pointer"
-              >
-                {useCase}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-20 px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              How ClipForge works
-            </h2>
-            <p className="text-xl text-gray-600">
-              Three simple steps to create viral clips from your videos
+            <p className="text-lg text-gray-600 mb-6">
+              From clips to captions to scheduling — all in one place
             </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Upload */}
-            <div className="bg-card-blue rounded-2xl p-8 hover:shadow-xl transition-all">
-              <div className="w-16 h-16 bg-blue-200 rounded-xl flex items-center justify-center mb-6">
-                <Video className="w-8 h-8 text-blue-600" />
-              </div>
-              <div className="text-4xl font-bold text-blue-600 mb-3">1</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Upload Your Video
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Upload any long-form video - podcasts, webinars, tutorials, or interviews
-              </p>
-            </div>
-
-            {/* AI Detection */}
-            <div className="bg-card-mint rounded-2xl p-8 hover:shadow-xl transition-all">
-              <div className="w-16 h-16 bg-green-200 rounded-xl flex items-center justify-center mb-6">
-                <Sparkles className="w-8 h-8 text-green-600" />
-              </div>
-              <div className="text-4xl font-bold text-green-600 mb-3">2</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                AI Finds Best Moments
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Our AI analyzes your video and automatically detects the most engaging clips
-              </p>
-            </div>
-
-            {/* Export */}
-            <div className="bg-card-purple rounded-2xl p-8 hover:shadow-xl transition-all">
-              <div className="w-16 h-16 bg-purple-200 rounded-xl flex items-center justify-center mb-6">
-                <Scissors className="w-8 h-8 text-purple-600" />
-              </div>
-              <div className="text-4xl font-bold text-purple-600 mb-3">3</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Export & Share
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Select your favorite clips, export them, and share across all platforms
-              </p>
-            </div>
+            <Link
+              href="/signup"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all"
+            >
+              Start Free Trial
+              <ArrowRight className="w-5 h-5" />
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* AI Tools */}
-      <section className="py-20 px-8 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Powered by advanced AI
-            </h2>
-            <p className="text-xl text-gray-600">
-              Our AI analyzes multiple factors to find the most engaging moments in your videos
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'Hook Detection',
-                description: 'Identifies clips that grab attention in the first few seconds',
-                color: 'from-purple-400 to-purple-600',
-              },
-              {
-                title: 'Emotion Analysis',
-                description: 'Finds emotionally engaging moments that resonate with viewers',
-                color: 'from-pink-400 to-pink-600',
-              },
-              {
-                title: 'Structure Analysis',
-                description: 'Detects well-structured narratives with clear beginning and end',
-                color: 'from-blue-400 to-blue-600',
-              },
-              {
-                title: 'Novelty Detection',
-                description: 'Highlights unique insights and surprising information',
-                color: 'from-yellow-400 to-yellow-600',
-              },
-              {
-                title: 'Clarity Scoring',
-                description: 'Ensures clips are clear, concise, and easy to understand',
-                color: 'from-green-400 to-green-600',
-              },
-              {
-                title: 'Visual Focus',
-                description: 'Analyzes visual composition and on-screen activity',
-                color: 'from-orange-400 to-orange-600',
-              },
-            ].map((tool) => (
-              <div
-                key={tool.title}
-                className="bg-white rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border border-gray-200"
-              >
-                <div className={`w-12 h-12 bg-gradient-to-br ${tool.color} rounded-lg flex items-center justify-center mb-4`}>
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  {tool.title}
-                </h4>
-                <p className="text-sm text-gray-600">
-                  {tool.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Testimonials */}
       <section className="py-20 px-8">
@@ -244,16 +264,16 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                quote: "ClipForge has been a game changer for me as a new podcast.",
-                author: "Melissa",
+                quote: "ClipForge saved me 20 hours per week. Absolute game changer for my content workflow!",
+                author: "Sarah Chen",
               },
               {
-                quote: "ClipForge is such a user-friendly way to start a podcast.",
-                author: "Pam",
+                quote: "The AI is incredibly accurate. My audience engagement is up 300% since I started using ClipForge.",
+                author: "Mike Rodriguez",
               },
               {
-                quote: "ClipForge has saved me countless hours while editing my podcast.",
-                author: "Vanessa",
+                quote: "We repurpose our webinars into 50+ clips per month. ClipForge pays for itself 20x over.",
+                author: "Emily Watson",
               },
             ].map((testimonial, i) => (
               <div
@@ -261,7 +281,7 @@ export default function Home() {
                 className="bg-card-yellow rounded-2xl p-8 hover:shadow-lg transition-all"
               >
                 <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-white font-bold">G</span>
+                  <span className="text-white font-bold">{testimonial.author[0]}</span>
                 </div>
                 <p className="text-lg text-gray-800 mb-6 italic">
                   "{testimonial.quote}"

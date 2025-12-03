@@ -253,8 +253,8 @@ export default function ProjectCard({
           </form>
         ) : (
           <Link href={`/project/${id}`}>
-            <h4 className="font-semibold text-gray-800 mb-1 truncate">{title}</h4>
-            <p className="text-sm text-gray-500">{updatedAt}</p>
+            <h4 className="font-semibold text-gray-800 mb-2 truncate">{title}</h4>
+            <p className="text-xs text-gray-500">{updatedAt}</p>
           </Link>
         )}
       </div>

@@ -48,7 +48,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const fetchExistingExports = async () => {
     try {
-      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/exports`, {
+      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/exports`, {
         getToken: getClerkToken,
       });
       
@@ -74,7 +74,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const fetchCredits = async () => {
     try {
-      const response = await fetchWithAuth('http://localhost:3000/v1/credits/balance', {
+      const response = await fetchWithAuth('http://localhost:3001/v1/credits/balance', {
         getToken: getClerkToken,
       });
       if (response.ok) {
@@ -115,7 +115,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const fetchProjectData = async (silent = false) => {
     try {
-      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}`, {
+      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}`, {
         getToken: getClerkToken,
       });
       if (response.ok) {
@@ -197,7 +197,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   
   const generateSmartClipsInBackground = async () => {
     try {
-      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/clips/pro`, {
+      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/clips/pro`, {
         method: 'POST',
         getToken: getClerkToken,
         headers: {
@@ -234,7 +234,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       // Add cache-busting parameter to force fresh fetch
       const cacheBuster = Date.now();
       console.log(`📥 Fetching video with cache buster: ${cacheBuster}`);
-      const resp = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/video?t=${cacheBuster}`, {
+      const resp = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/video?t=${cacheBuster}`, {
         getToken: getClerkToken,
       });
       if (!resp.ok) {
@@ -252,7 +252,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const loadExportVideoBlob = async (exportId: string) => {
     try {
-      const resp = await fetchWithAuth(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
+      const resp = await fetchWithAuth(`http://localhost:3001/v1/projects/exports/${exportId}/download`, {
         getToken: getClerkToken,
       });
       if (!resp.ok) return null;
@@ -300,7 +300,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         return;
       }
 
-      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/export`, {
+      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/export`, {
         method: 'POST',
         getToken: async () => freshToken, // Use the fresh token we just got
         headers: {
@@ -334,7 +334,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           // Start polling for new exports every 10 seconds
           const pollInterval = setInterval(async () => {
             try {
-              const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/exports`, {
+              const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/exports`, {
                 getToken: getClerkToken,
               });
               
@@ -406,7 +406,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const handleDetectClips = async () => {
     setIsDetecting(true);
     try {
-      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/detect`, {
+      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/detect`, {
         method: 'POST',
         getToken: getClerkToken,
         headers: {
@@ -450,7 +450,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       }
 
       // Fallback: fetch from API if for some reason we don't have the blob URL cached
-      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/exports/${exportId}/download`, {
+      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/exports/${exportId}/download`, {
         getToken: getClerkToken,
       });
       if (!response.ok) {
@@ -571,7 +571,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       setExportedClips([exportItem]);
                       
                       // Load the captioned video as a blob
-                      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/download-captioned`, {
+                      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/download-captioned`, {
                         getToken: getClerkToken,
                       });
                       
@@ -614,7 +614,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       console.log('📐 Starting AI Reframe download...');
                       
                       // Fetch the reframed video from the API
-                      const response = await fetchWithAuth(`http://localhost:3000/v1/projects/${params.id}/video`, {
+                      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/video`, {
                         getToken: getClerkToken,
                       });
                       

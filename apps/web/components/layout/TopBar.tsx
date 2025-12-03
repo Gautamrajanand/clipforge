@@ -1,9 +1,10 @@
 'use client';
 
-import { Bell, HelpCircle, User, Menu } from 'lucide-react';
+import { Bell, HelpCircle, User, Menu, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface TopBarProps {
   onMenuClick?: () => void;
@@ -19,6 +20,12 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
     await signOut();
     router.push('/sign-in');
   };
+
+  // Check if user is admin
+  const isAdmin = user?.emailAddresses?.some(email => 
+    email.emailAddress === 'gautam@hubhopper.com' || 
+    email.emailAddress.includes('gautamrajanand')
+  );
 
   return (
     <div className="h-16 bg-white border-b border-gray-200 fixed top-0 right-0 left-0 lg:left-64 z-10 flex items-center justify-between px-4 lg:px-8">
@@ -100,6 +107,17 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
               <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 Press
               </a>
+              {isAdmin && (
+                <div className="border-t border-gray-100 mt-2 pt-2">
+                  <Link
+                    href="/admin"
+                    className="block px-4 py-2 text-sm text-primary-600 hover:bg-gray-50 font-medium flex items-center gap-2"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Admin Panel
+                  </Link>
+                </div>
+              )}
               <div className="border-t border-gray-100 mt-2 pt-2">
                 <button 
                   onClick={handleSignOut}

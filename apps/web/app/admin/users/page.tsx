@@ -5,6 +5,8 @@ import { useAuth } from '@clerk/nextjs';
 import { fetchWithAuth } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 interface User {
   id: string;
   email: string;
@@ -47,8 +49,8 @@ export default function AdminUsersPage() {
     try {
       setLoading(true);
       const endpoint = query
-        ? `http://localhost:3000/admin/users/search?q=${encodeURIComponent(query)}`
-        : 'http://localhost:3000/admin/users/recent?limit=50';
+        ? `${API_URL}/admin/users/search?q=${encodeURIComponent(query)}`
+        : `${API_URL}/admin/users/recent?limit=50`;
 
       const response = await fetchWithAuth(endpoint, {
         method: 'GET',
@@ -90,7 +92,7 @@ export default function AdminUsersPage() {
       setAdjusting(true);
       console.log('Adjusting credits:', { orgId, ...creditAdjustment });
       const response = await fetchWithAuth(
-        `http://localhost:3000/admin/organizations/${orgId}/credits/adjust`,
+        `${API_URL}/admin/organizations/${orgId}/credits/adjust`,
         {
           method: 'POST',
           getToken: getClerkToken,
@@ -123,7 +125,7 @@ export default function AdminUsersPage() {
 
     try {
       const response = await fetchWithAuth(
-        `http://localhost:3000/admin/users/${userId}/admin`,
+        `${API_URL}/admin/users/${userId}/admin`,
         {
           method: 'PATCH',
           getToken: getClerkToken,
@@ -146,7 +148,7 @@ export default function AdminUsersPage() {
   const handleChangeTier = async (orgId: string, newTier: string) => {
     try {
       const response = await fetchWithAuth(
-        `http://localhost:3000/admin/organizations/${orgId}/tier`,
+        `${API_URL}/admin/organizations/${orgId}/tier`,
         {
           method: 'PATCH',
           getToken: getClerkToken,
@@ -175,7 +177,7 @@ export default function AdminUsersPage() {
 
     try {
       const response = await fetchWithAuth(
-        `http://localhost:3000/admin/users/${userId}`,
+        `${API_URL}/admin/users/${userId}`,
         {
           method: 'DELETE',
           getToken: getClerkToken,

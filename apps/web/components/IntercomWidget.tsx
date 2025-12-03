@@ -20,10 +20,15 @@ export default function IntercomWidget() {
 
   useEffect(() => {
     // Only load Intercom if user is signed in
-    if (!isSignedIn || !user) return;
+    if (!isSignedIn || !user) {
+      console.log('Intercom: User not signed in yet');
+      return;
+    }
 
     // Intercom App ID (set in environment variable)
     const appId = process.env.NEXT_PUBLIC_INTERCOM_APP_ID;
+    
+    console.log('Intercom: Initializing with APP_ID:', appId);
     
     if (!appId) {
       console.warn('Intercom App ID not configured');
@@ -82,6 +87,9 @@ export default function IntercomWidget() {
 
     if (w.Intercom) {
       w.Intercom('boot', w.intercomSettings);
+      console.log('Intercom: Successfully booted with settings:', w.intercomSettings);
+    } else {
+      console.error('Intercom: Failed to load - window.Intercom not found');
     }
 
     // Cleanup on unmount

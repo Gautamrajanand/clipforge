@@ -6,7 +6,7 @@ import { Download, Loader2, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface ExportBuilderProps {
   clipId: string;

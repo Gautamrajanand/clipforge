@@ -49,10 +49,19 @@ export default function AdminPLGDashboard() {
       setLoading(true);
       setError(null);
 
-      const [referralData, onboardingData] = await Promise.all([
-        fetchWithAuth('/admin/plg/referrals/overview', getToken),
-        fetchWithAuth('/admin/plg/onboarding/stats', getToken),
+      const [referralResponse, onboardingResponse] = await Promise.all([
+        fetchWithAuth('http://localhost:3000/admin/plg/referrals/overview', {
+          method: 'GET',
+          getToken: getToken,
+        }),
+        fetchWithAuth('http://localhost:3000/admin/plg/onboarding/stats', {
+          method: 'GET',
+          getToken: getToken,
+        }),
       ]);
+
+      const referralData = referralResponse.ok ? await referralResponse.json() : {};
+      const onboardingData = onboardingResponse.ok ? await onboardingResponse.json() : {};
 
       setStats({
         referrals: {
@@ -309,11 +318,14 @@ export default function AdminPLGDashboard() {
             <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="font-semibold text-gray-900 mb-2">NPS & Feedback</h3>
               <p className="text-sm text-gray-600 mb-3">
-                Delighted surveys for user satisfaction
+                Custom NPS surveys and user feedback
               </p>
-              <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                Needs Configuration
-              </span>
+              <Link
+                href="/admin/plg/nps"
+                className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded hover:bg-green-200"
+              >
+                View Dashboard →
+              </Link>
             </div>
             <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="font-semibold text-gray-900 mb-2">Analytics</h3>

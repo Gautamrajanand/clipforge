@@ -117,6 +117,11 @@ export class ClerkSyncService {
         }
       }
 
+      // Check if user should be admin based on email
+      const isAdmin = email === 'gautam@hubhopper.com' || 
+                      email?.includes('gautamrajanand') ||
+                      email?.endsWith('@hubhopper.com');
+
       // Use upsert to handle race conditions and duplicate emails
       user = await this.prisma.user.upsert({
         where: { clerkId: clerkUserId },
@@ -124,6 +129,7 @@ export class ClerkSyncService {
           clerkId: clerkUserId,
           email: email || `${clerkUserId}@clerk.local`,
           name: name || 'User',
+          isAdmin: isAdmin || false,
           memberships: {
             create: {
               orgId: org.id,
@@ -132,9 +138,10 @@ export class ClerkSyncService {
           },
         },
         update: {
-          // If user exists, just update email/name if needed
+          // If user exists, just update email/name/admin if needed
           ...(email && !email.includes('@clerk.local') && { email }),
           ...(name && name !== 'User' && { name }),
+          ...(isAdmin !== undefined && { isAdmin }),
         },
         include: {
           memberships: {

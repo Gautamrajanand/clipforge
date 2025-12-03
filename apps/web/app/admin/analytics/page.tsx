@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { fetchWithAuth } from '@/lib/api';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 import { useRouter } from 'next/navigation';
 import {
   LineChart,
@@ -90,11 +92,11 @@ export default function AnalyticsPage() {
     try {
       setLoading(true);
       const [analyticsRes, timeSeriesRes] = await Promise.all([
-        fetchWithAuth('http://localhost:3000/admin/analytics', {
+        fetchWithAuth(`${API_URL}/admin/analytics`, {
           method: 'GET',
           getToken: getClerkToken,
         }),
-        fetchWithAuth(`http://localhost:3000/admin/analytics/timeseries?days=${timeRange}`, {
+        fetchWithAuth(`${API_URL}/admin/analytics/timeseries?days=${timeRange}`, {
           method: 'GET',
           getToken: getClerkToken,
         }),

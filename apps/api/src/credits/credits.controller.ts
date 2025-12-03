@@ -72,8 +72,6 @@ export class CreditsController {
       },
     });
 
-    const allocation = this.credits.getCreditAllocation(org.tier);
-
     // Check if in trial
     const now = new Date();
     const isInTrial = org.trialStartDate && org.trialEndDate && 
@@ -81,6 +79,9 @@ export class CreditsController {
                       !org.trialUsed;
     const trialDaysLeft = isInTrial ? 
       Math.ceil((org.trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+    // During trial, allocation is STARTER credits (150), otherwise use tier allocation
+    const allocation = isInTrial ? 150 : this.credits.getCreditAllocation(org.tier);
 
     return {
       balance,

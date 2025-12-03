@@ -4,6 +4,7 @@ import { AdminGuard } from '../auth/admin.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReferralsService } from '../referrals/referrals.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
+import { NPSService } from '../nps/nps.service';
 
 /**
  * Admin PLG (Product-Led Growth) Controller
@@ -18,6 +19,7 @@ export class AdminPLGController {
     private prisma: PrismaService,
     private referrals: ReferralsService,
     private onboarding: OnboardingService,
+    private nps: NPSService,
   ) {}
 
   // ============ REFERRAL PROGRAM ADMIN ============
@@ -198,24 +200,6 @@ export class AdminPLGController {
     };
   }
 
-  // ============ NPS & FEEDBACK ADMIN ============
-
-  @Get('nps/overview')
-  @ApiOperation({ summary: 'Get NPS scores and feedback overview' })
-  async getNPSOverview() {
-    // TODO: Implement when NPS is built
-    return {
-      message: 'NPS overview - to be implemented',
-      stats: {
-        averageScore: 0,
-        promoters: 0,
-        passives: 0,
-        detractors: 0,
-        npsScore: 0,
-      },
-    };
-  }
-
   // ============ SOCIAL PROOF ADMIN ============
 
   @Get('social-proof/testimonials')
@@ -324,5 +308,36 @@ export class AdminPLGController {
         conversionRate: newUsers > 0 ? ((conversions / newUsers) * 100).toFixed(2) : 0,
       },
     };
+  }
+
+  // ============ NPS & FEEDBACK ADMIN ============
+
+  @Get('nps/overview')
+  @ApiOperation({ summary: 'Get NPS overview and stats' })
+  async getNPSOverview(@Query('orgId') orgId?: string) {
+    return this.nps.getNPSStats(orgId);
+  }
+
+  @Get('feedback/list')
+  @ApiOperation({ summary: 'Get feedback list with filters' })
+  async getFeedbackList(
+    @Query('type') type?: string,
+    @Query('resolved') resolved?: string,
+    @Query('orgId') orgId?: string,
+  ) {
+    return this.nps.getFeedbackList({
+      type,
+      resolved: resolved === 'true' ? true : resolved === 'false' ? false : undefined,
+      orgId,
+    });
+  }
+
+  @Put('feedback/:id/resolve')
+  @ApiOperation({ summary: 'Mark feedback as resolved' })
+  async resolveFeedback(
+    @Param('id') id: string,
+    @Body() body: { adminUserId: string },
+  ) {
+    return this.nps.resolveFeedback(id, body.adminUserId);
   }
 }

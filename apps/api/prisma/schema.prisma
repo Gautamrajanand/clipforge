@@ -29,6 +29,8 @@ model User {
   memberships Membership[]
   apiKeys     ApiKey[]
   webhooks    Webhook[]
+  npsResponses NPSResponse[]
+  feedback     Feedback[]
 
   @@index([email])
   @@index([clerkId])
@@ -79,6 +81,8 @@ model Organization {
   referralsMade   Referral[] @relation("ReferrerOrganization")
   referralsReceived Referral[] @relation("ReferredOrganization")
   onboardingProgress OnboardingProgress[]
+  npsResponses NPSResponse[]
+  feedback     Feedback[]
 
   @@index([name])
   @@index([tier])
@@ -494,4 +498,118 @@ enum OnboardingStep {
   EXPORT_CLIP      // First export completed
   SHARE_REFERRAL   // Viewed referral page
   COMPLETED        // All steps done
+}
+
+// ============ NPS & Feedback System (PLG Growth) ============
+
+model NPSResponse {
+  id          String   @id @default(cuid())
+  userId      String
+  orgId       String
+  score       Int      // 0-10 NPS score
+  feedback    String?  @db.Text // Optional feedback text
+  category    NPSCategory // Detractor, Passive, Promoter
+  context     String?  // Where was the survey shown (dashboard, after_export, etc.)
+  createdAt   DateTime @default(now())
+  
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([orgId])
+  @@index([score])
+  @@index([category])
+  @@index([createdAt])
+}
+
+enum NPSCategory {
+  DETRACTOR  // 0-6
+  PASSIVE    // 7-8
+  PROMOTER   // 9-10
+}
+
+model Feedback {
+  id          String       @id @default(cuid())
+  userId      String
+  orgId       String
+  type        FeedbackType
+  message     String       @db.Text
+  rating      Int?         // Optional 1-5 star rating
+  page        String?      // Which page was user on
+  resolved    Boolean      @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?      // Admin user ID
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([orgId])
+  @@index([type])
+  @@index([resolved])
+  @@index([createdAt])
+}
+
+enum FeedbackType {
+  BUG
+  FEATURE_REQUEST
+  IMPROVEMENT
+  COMPLAINT
+  PRAISE
+  OTHER
+}
+
+// ============ PLG Content Management (Admin Controlled) ============
+
+model OnboardingContent {
+  id          String   @id @default(cuid())
+  step        Int      // Step number (1, 2, 3, etc.)
+  title       String
+  subtitle    String?
+  description String   @db.Text
+  icon        String?  // Icon name or emoji
+  imageUrl    String?  // Optional image
+  ctaText     String   @default("Next")
+  ctaUrl      String?  // Optional URL for CTA
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([order])
+}
+
+model PopupContent {
+  id          String      @id @default(cuid())
+  name        String      // Internal name for admin
+  type        PopupType
+  title       String
+  subtitle    String?
+  content     String      @db.Text
+  ctaText     String
+  ctaUrl      String?
+  imageUrl    String?
+  isActive    Boolean     @default(true)
+  showAfter   Int?        // Show after X days
+  showOnPages String[]    // Which pages to show on
+  frequency   String      @default("once") // once, daily, weekly
+  priority    Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  @@index([isActive])
+  @@index([type])
+  @@index([priority])
+}
+
+enum PopupType {
+  WELCOME
+  FEATURE_ANNOUNCEMENT
+  UPGRADE_NUDGE
+  SURVEY
+  FEEDBACK
+  CUSTOM
 }
