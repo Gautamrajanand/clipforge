@@ -62,9 +62,8 @@ export default function OnboardingChecklist() {
       icon: <Upload className="w-5 h-5" />,
       actionText: 'Upload Video',
       action: () => {
-        // Trigger upload modal
-        const uploadBtn = document.querySelector('[data-upload-trigger]') as HTMLButtonElement;
-        uploadBtn?.click();
+        // Trigger upload modal via custom event
+        window.dispatchEvent(new CustomEvent('open-upload-modal'));
       },
     },
     {

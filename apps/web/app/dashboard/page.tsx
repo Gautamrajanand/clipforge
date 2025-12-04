@@ -16,7 +16,6 @@ import TrialBanner from '@/components/trial/TrialBanner';
 import NPSWidget from '@/components/NPSWidget';
 import MultiStepOnboarding from '@/components/onboarding/MultiStepOnboarding';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
-import EmptyProjects from '@/components/empty-states/EmptyProjects';
 import DynamicPopup from '@/components/popups/DynamicPopup';
 import { UpgradeModal } from '@/components/upgrade-nudges';
 import { useUpgradeTriggers } from '@/hooks/useUpgradeTriggers';
@@ -105,16 +104,21 @@ export default function Dashboard() {
     initAuth();
   }, [isLoaded, isSignedIn, getClerkToken, router]);
 
-  // Welcome Modal Logic - Show on first visit
+  // Welcome Modal Logic - Show on first visit with delay to prevent flash
   useEffect(() => {
-    if (projects.length === 0 && isAuthReady) {
-      const hasVisited = localStorage.getItem('hasVisitedDashboard');
-      if (!hasVisited) {
+    if (!isAuthReady) return;
+    
+    const hasVisited = localStorage.getItem('hasVisitedDashboard');
+    if (!hasVisited) {
+      // Add delay to prevent flash and ensure smooth render
+      const timer = setTimeout(() => {
         setShowWelcomeModal(true);
         localStorage.setItem('hasVisitedDashboard', 'true');
-      }
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
-  }, [projects, isAuthReady]);
+  }, [isAuthReady]);
 
   // Sample Video Event Handler
   useEffect(() => {
@@ -124,8 +128,18 @@ export default function Dashboard() {
       track(AnalyticsEvents.DASHBOARD_VIEWED, { action: 'sample_video_clicked' });
     };
     
+    const handleOpenUpload = () => {
+      setShowUploadModal(true);
+      track(AnalyticsEvents.DASHBOARD_VIEWED, { action: 'onboarding_upload_clicked' });
+    };
+    
     window.addEventListener('try-sample-video', handleSampleVideo);
-    return () => window.removeEventListener('try-sample-video', handleSampleVideo);
+    window.addEventListener('open-upload-modal', handleOpenUpload);
+    
+    return () => {
+      window.removeEventListener('try-sample-video', handleSampleVideo);
+      window.removeEventListener('open-upload-modal', handleOpenUpload);
+    };
   }, [track]);
 
   // Celebration Toast Logic - Track milestones
@@ -604,6 +618,7 @@ export default function Dashboard() {
         creditsAllocation={creditsAllocation} 
         resetDate={creditsResetDate || undefined}
         tier={tier}
+        trialInfo={trialInfo}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
@@ -721,10 +736,12 @@ export default function Dashboard() {
 
           {/* Recent Projects section */}
           <section>
-            {projects.length === 0 ? (
-              /* Empty State */
-              <EmptyProjects onUploadClick={() => setShowUploadModal(true)} />
-            ) : (
+            {projects.length === 0 && !showWelcomeModal ? (
+              /* Empty State - Only show if welcome modal is not active */
+              <div className="text-center py-8 text-gray-500">
+                <p>Your projects will appear here after you upload your first video.</p>
+              </div>
+            ) : projects.length > 0 ? (
               <>
                 <div className="flex items-center justify-between mb-4 lg:mb-6">
                   <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Recent</h2>
@@ -748,17 +765,13 @@ export default function Dashboard() {
                         isEmpty={!project.sourceUrl}
                         settings={project.clipSettings}
                         expiresAt={project.expiresAt}
-                        clipsCount={project.moments?.length || 0}
-                        hasSubtitles={project.hasSubtitles || false}
-                        reframeCount={project.hasReframed ? 1 : 0}
-                        exportCount={project.exports?.length || 0}
                         onEdit={handleEditProject}
                         onDelete={handleDeleteProject}
                       />
                     ))}
                 </div>
               </>
-            )}
+            ) : null}
 
             {/* Pagination */}
             {projects.length > PROJECTS_PER_PAGE && (

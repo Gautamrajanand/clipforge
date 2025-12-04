@@ -29,6 +29,7 @@ interface SidebarProps {
   creditsAllocation?: number;
   resetDate?: string;
   tier?: string;
+  trialInfo?: any;
   isOpen?: boolean;
   onClose?: () => void;
 }
@@ -61,7 +62,7 @@ const bottomItems: NavItem[] = [
   { name: 'Help center', href: '/help', icon: HelpCircle },
 ];
 
-export default function Sidebar({ credits, creditsAllocation = 60, resetDate, tier = 'FREE', isOpen = true, onClose }: SidebarProps) {
+export default function Sidebar({ credits, creditsAllocation = 60, resetDate, tier = 'FREE', trialInfo, isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
@@ -223,7 +224,7 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate, ti
           tier === 'PRO' ? 'bg-purple-100 text-purple-700' :
           'bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700'
         }`}>
-          {tier} Plan
+          {tier === 'FREE' && trialInfo?.isActive ? 'FREE TRIAL' : `${tier} Plan`}
         </div>
       </div>
 
