@@ -25,6 +25,7 @@ import { AnalyticsEvents } from '@/lib/analytics';
 import ProgressStats from '@/components/dashboard/ProgressStats';
 import CelebrationToast from '@/components/celebrations/CelebrationToast';
 import WelcomeModal from '@/components/onboarding/WelcomeModal';
+import OnboardingSurvey, { OnboardingData } from '@/components/onboarding/OnboardingSurvey';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -59,7 +60,9 @@ export default function Dashboard() {
   });
   
   // PLG Components State
+  const [showOnboardingSurvey, setShowOnboardingSurvey] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [celebrationToast, setCelebrationToast] = useState<{
     type: 'first_clip' | 'first_export' | 'first_share' | 'milestone_10' | 'milestone_50';
     isOpen: boolean;
@@ -105,34 +108,74 @@ export default function Dashboard() {
     initAuth();
   }, [isLoaded, isSignedIn, getClerkToken, router]);
 
-  // Welcome Modal Logic - Show for users with no projects (new users)
+  // Onboarding Flow Logic - Show survey first, then welcome modal
   useEffect(() => {
     if (!isAuthReady) return;
     
-    // Show welcome modal if:
+    // Show onboarding survey if:
     // 1. User has no projects (new user)
-    // 2. Haven't shown modal in this session
-    const hasShownThisSession = sessionStorage.getItem('welcomeModalShown');
-    const shouldShow = projects.length === 0 && !hasShownThisSession;
+    // 2. Haven't completed survey in this session
+    const hasSurveyCompleted = sessionStorage.getItem('onboardingSurveyCompleted');
+    const shouldShowSurvey = projects.length === 0 && !hasSurveyCompleted;
     
-    console.log('🎯 Welcome Modal Check:', {
+    console.log('🎯 Onboarding Check:', {
       projectsCount: projects.length,
-      hasShownThisSession,
-      shouldShow,
+      hasSurveyCompleted,
+      shouldShowSurvey,
     });
     
-    if (shouldShow) {
-      console.log('✅ Showing welcome modal in 500ms...');
+    if (shouldShowSurvey) {
+      console.log('✅ Showing onboarding survey in 500ms...');
       // Add delay to prevent flash and ensure smooth render
       const timer = setTimeout(() => {
-        console.log('🎉 Welcome modal triggered!');
-        setShowWelcomeModal(true);
-        sessionStorage.setItem('welcomeModalShown', 'true');
+        console.log('🎉 Onboarding survey triggered!');
+        setShowOnboardingSurvey(true);
       }, 500);
       
       return () => clearTimeout(timer);
     }
   }, [isAuthReady, projects]);
+
+  // Handle survey completion
+  const handleSurveyComplete = async (data: OnboardingData) => {
+    console.log('📊 Onboarding data collected:', data);
+    setOnboardingData(data);
+    setShowOnboardingSurvey(false);
+    sessionStorage.setItem('onboardingSurveyCompleted', 'true');
+    
+    // Track onboarding completion
+    track(AnalyticsEvents.DASHBOARD_VIEWED, {
+      action: 'onboarding_survey_completed',
+      role: data.role,
+      goal: data.goal,
+      platforms: data.platforms?.join(','),
+    });
+    
+    // Show welcome modal after survey
+    setTimeout(() => {
+      setShowWelcomeModal(true);
+    }, 300);
+    
+    // TODO: Save to backend
+    // await saveOnboardingData(data);
+  };
+
+  // Handle survey skip
+  const handleSurveySkip = () => {
+    console.log('⏭️ Onboarding survey skipped');
+    setShowOnboardingSurvey(false);
+    sessionStorage.setItem('onboardingSurveyCompleted', 'true');
+    
+    // Track skip
+    track(AnalyticsEvents.DASHBOARD_VIEWED, {
+      action: 'onboarding_survey_skipped',
+    });
+    
+    // Show welcome modal anyway
+    setTimeout(() => {
+      setShowWelcomeModal(true);
+    }, 300);
+  };
 
   // Sample Video Event Handler
   useEffect(() => {
@@ -1024,6 +1067,22 @@ export default function Dashboard() {
       {/* Multi-Step Onboarding for New Users */}
       <MultiStepOnboarding />
 
+      {/* Onboarding Survey - Shows first for new users */}
+      <OnboardingSurvey
+        isOpen={showOnboardingSurvey}
+        onComplete={handleSurveyComplete}
+        onSkip={handleSurveySkip}
+      />
+
+      {/* Welcome Modal - Shows after survey */}
+      {showWelcomeModal && (
+        <WelcomeModal
+          isOpen={showWelcomeModal}
+          onClose={() => setShowWelcomeModal(false)}
+          userName={undefined}
+        />
+      )}
+
       {/* Dynamic Popups */}
       <DynamicPopup />
 
@@ -1038,15 +1097,6 @@ export default function Dashboard() {
           currentTier={tier as 'FREE' | 'STARTER' | 'PRO'}
           creditsRemaining={credits || 0}
           onClose={() => markAsShown(activeTriger.type)}
-        />
-      )}
-
-      {/* Welcome Modal */}
-      {showWelcomeModal && (
-        <WelcomeModal
-          isOpen={showWelcomeModal}
-          onClose={() => setShowWelcomeModal(false)}
-          userName={undefined}
         />
       )}
 
