@@ -105,35 +105,34 @@ export default function Dashboard() {
     initAuth();
   }, [isLoaded, isSignedIn, getClerkToken, router]);
 
-  // Welcome Modal Logic - Show for new users (created within last 5 minutes)
+  // Welcome Modal Logic - Show for users with no projects (new users)
   useEffect(() => {
-    if (!isAuthReady || !user) return;
+    if (!isAuthReady) return;
     
-    // Check if user was created recently (within 5 minutes)
-    // Clerk's user.createdAt is in milliseconds
-    const userCreatedAt = typeof user.createdAt === 'number' ? user.createdAt : 0;
-    const now = Date.now();
-    const fiveMinutes = 5 * 60 * 1000;
-    const isNewUser = userCreatedAt > 0 && (now - userCreatedAt) < fiveMinutes;
+    // Show welcome modal if:
+    // 1. User has no projects (new user)
+    // 2. Haven't shown modal in this session
+    const hasShownThisSession = sessionStorage.getItem('welcomeModalShown');
+    const shouldShow = projects.length === 0 && !hasShownThisSession;
     
     console.log('🎯 Welcome Modal Check:', {
-      userCreatedAt: new Date(userCreatedAt),
-      isNewUser,
-      hasVisited: localStorage.getItem('hasVisitedDashboard'),
+      projectsCount: projects.length,
+      hasShownThisSession,
+      shouldShow,
     });
     
-    // Show welcome modal for new users OR first-time visitors
-    const hasVisited = localStorage.getItem('hasVisitedDashboard');
-    if (isNewUser || !hasVisited) {
+    if (shouldShow) {
+      console.log('✅ Showing welcome modal in 500ms...');
       // Add delay to prevent flash and ensure smooth render
       const timer = setTimeout(() => {
+        console.log('🎉 Welcome modal triggered!');
         setShowWelcomeModal(true);
-        localStorage.setItem('hasVisitedDashboard', 'true');
+        sessionStorage.setItem('welcomeModalShown', 'true');
       }, 500);
       
       return () => clearTimeout(timer);
     }
-  }, [isAuthReady, user]);
+  }, [isAuthReady, projects]);
 
   // Sample Video Event Handler
   useEffect(() => {
