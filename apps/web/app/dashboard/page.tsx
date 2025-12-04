@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { Video, Mic2, Scissors, Type, Maximize, FileText, User, Coins } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
@@ -68,6 +68,7 @@ export default function Dashboard() {
   const PROJECTS_PER_PAGE = 11; // 11 projects + 1 "New Project" card = 12 total (3x4 grid)
 
   const { getToken: getClerkToken, isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
   
   // Upgrade triggers
   const { activeTriger, markAsShown, hasActiveTrigger } = useUpgradeTriggers({
@@ -104,12 +105,26 @@ export default function Dashboard() {
     initAuth();
   }, [isLoaded, isSignedIn, getClerkToken, router]);
 
-  // Welcome Modal Logic - Show on first visit with delay to prevent flash
+  // Welcome Modal Logic - Show for new users (created within last 5 minutes)
   useEffect(() => {
-    if (!isAuthReady) return;
+    if (!isAuthReady || !user) return;
     
+    // Check if user was created recently (within 5 minutes)
+    // Clerk's user.createdAt is in milliseconds
+    const userCreatedAt = typeof user.createdAt === 'number' ? user.createdAt : 0;
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+    const isNewUser = userCreatedAt > 0 && (now - userCreatedAt) < fiveMinutes;
+    
+    console.log('🎯 Welcome Modal Check:', {
+      userCreatedAt: new Date(userCreatedAt),
+      isNewUser,
+      hasVisited: localStorage.getItem('hasVisitedDashboard'),
+    });
+    
+    // Show welcome modal for new users OR first-time visitors
     const hasVisited = localStorage.getItem('hasVisitedDashboard');
-    if (!hasVisited) {
+    if (isNewUser || !hasVisited) {
       // Add delay to prevent flash and ensure smooth render
       const timer = setTimeout(() => {
         setShowWelcomeModal(true);
@@ -118,7 +133,7 @@ export default function Dashboard() {
       
       return () => clearTimeout(timer);
     }
-  }, [isAuthReady]);
+  }, [isAuthReady, user]);
 
   // Sample Video Event Handler
   useEffect(() => {
