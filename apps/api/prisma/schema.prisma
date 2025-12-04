@@ -31,6 +31,7 @@ model User {
   webhooks    Webhook[]
   npsResponses NPSResponse[]
   feedback     Feedback[]
+  onboardingProgress OnboardingProgress?
 
   @@index([email])
   @@index([clerkId])
@@ -69,7 +70,7 @@ model Organization {
   onboardingCompleted     Boolean  @default(false)
   onboardingCompletedAt   DateTime?
   onboardingSkipped       Boolean  @default(false)
-  currentOnboardingStep   OnboardingStep @default(WELCOME)
+  currentOnboardingStep   String   @default("WELCOME")
 
   memberships Membership[]
   projects    Project[]
@@ -80,7 +81,6 @@ model Organization {
   creditTransactions CreditTransaction[]
   referralsMade   Referral[] @relation("ReferrerOrganization")
   referralsReceived Referral[] @relation("ReferredOrganization")
-  onboardingProgress OnboardingProgress[]
   npsResponses NPSResponse[]
   feedback     Feedback[]
 
@@ -472,32 +472,19 @@ enum ReferralStatus {
 // ============ Onboarding System (PLG Activation) ============
 
 model OnboardingProgress {
-  id          String         @id @default(cuid())
-  orgId       String
-  step        OnboardingStep
-  completed   Boolean        @default(false)
-  skipped     Boolean        @default(false)
-  timeSpent   Int?           // seconds spent on this step
-  completedAt DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  currentStep    String    @default("WELCOME")
+  completedSteps String[]  @default([])
+  skippedSteps   String[]  @default([])
+  isCompleted    Boolean   @default(false)
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
 
-  org         Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([orgId, step])
-  @@index([orgId])
-  @@index([step])
-  @@index([completed])
-}
-
-enum OnboardingStep {
-  WELCOME          // Welcome modal shown
-  UPLOAD_VIDEO     // First video uploaded
-  VIEW_CLIPS       // Viewed AI-detected clips
-  CUSTOMIZE_CLIP   // Customized a clip (captions, aspect ratio)
-  EXPORT_CLIP      // First export completed
-  SHARE_REFERRAL   // Viewed referral page
-  COMPLETED        // All steps done
+  @@index([userId])
 }
 
 // ============ NPS & Feedback System (PLG Growth) ============

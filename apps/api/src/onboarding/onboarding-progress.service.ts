@@ -21,12 +21,10 @@ export class OnboardingProgressService {
       progress = await this.prisma.onboardingProgress.create({
         data: {
           userId,
-          hasUploadedVideo: false,
-          hasCreatedClip: false,
-          hasAddedSubtitles: false,
-          hasReframedVideo: false,
-          hasShared: false,
-          completedAt: null,
+          currentStep: 'WELCOME',
+          completedSteps: [],
+          skippedSteps: [],
+          isCompleted: false,
         },
       });
     }
@@ -68,21 +66,25 @@ export class OnboardingProgressService {
 
       // Update progress if changed
       const needsUpdate = 
-        progress.hasUploadedVideo !== hasUploadedVideo ||
-        progress.hasCreatedClip !== hasCreatedClip ||
-        progress.hasAddedSubtitles !== hasAddedSubtitles ||
-        progress.hasReframedVideo !== hasReframedVideo ||
-        progress.hasShared !== hasShared;
+        progress.completedSteps.includes('UPLOAD_VIDEO') !== hasUploadedVideo ||
+        progress.completedSteps.includes('VIEW_CLIPS') !== hasCreatedClip ||
+        progress.completedSteps.includes('CUSTOMIZE_CLIP') !== hasAddedSubtitles ||
+        progress.completedSteps.includes('CUSTOMIZE_CLIP') !== hasReframedVideo ||
+        progress.completedSteps.includes('SHARE_REFERRAL') !== hasShared;
 
       if (needsUpdate) {
         progress = await this.prisma.onboardingProgress.update({
           where: { userId },
           data: {
-            hasUploadedVideo,
-            hasCreatedClip,
-            hasAddedSubtitles,
-            hasReframedVideo,
-            hasShared,
+            completedSteps: {
+              push: [
+                hasUploadedVideo ? 'UPLOAD_VIDEO' : undefined,
+                hasCreatedClip ? 'VIEW_CLIPS' : undefined,
+                hasAddedSubtitles ? 'CUSTOMIZE_CLIP' : undefined,
+                hasReframedVideo ? 'CUSTOMIZE_CLIP' : undefined,
+                hasShared ? 'SHARE_REFERRAL' : undefined,
+              ].filter(Boolean),
+            },
           },
         });
 
@@ -102,40 +104,40 @@ export class OnboardingProgressService {
       }
     }
 
+    // Return progress in expected format
     return {
-      hasUploadedVideo: progress.hasUploadedVideo,
-      hasCreatedClip: progress.hasCreatedClip,
-      hasAddedSubtitles: progress.hasAddedSubtitles,
-      hasReframedVideo: progress.hasReframedVideo,
-      hasShared: progress.hasShared,
+      hasUploadedVideo: progress.completedSteps.includes('UPLOAD_VIDEO'),
+      hasCreatedClip: progress.completedSteps.includes('VIEW_CLIPS'),
+      hasAddedSubtitles: progress.completedSteps.includes('CUSTOMIZE_CLIP'),
+      hasReframedVideo: progress.completedSteps.includes('CUSTOMIZE_CLIP'),
+      hasShared: progress.completedSteps.includes('SHARE_REFERRAL'),
       completedAt: progress.completedAt,
       completionPercentage: this.calculateCompletionPercentage(progress),
     };
   }
 
   /**
-   * Update onboarding progress manually
+   * Mark a step as completed
    */
-  async updateProgress(
-    userId: string,
-    data: {
-      hasUploadedVideo?: boolean;
-      hasCreatedClip?: boolean;
-      hasExportedClip?: boolean;
-      hasInvitedMember?: boolean;
-      hasCompletedProfile?: boolean;
-    },
-  ) {
+  async completeStep(userId: string, step: string) {
     const progress = await this.prisma.onboardingProgress.upsert({
       where: { userId },
       create: {
         userId,
-        ...data,
+        currentStep: step,
+        completedSteps: [step],
+        skippedSteps: [],
+        isCompleted: false,
       },
-      update: data,
+      update: {
+        completedSteps: {
+          push: step,
+        },
+        currentStep: step,
+      },
     });
 
-    this.logger.log(`✅ Manually updated progress for user ${userId}`);
+    this.logger.log(`✅ User ${userId} completed step: ${step}`);
 
     return progress;
   }
@@ -147,13 +149,13 @@ export class OnboardingProgressService {
     const progress = await this.prisma.onboardingProgress.update({
       where: { userId },
       data: {
+        isCompleted: true,
         completedAt: new Date(),
+        currentStep: 'COMPLETED',
       },
     });
 
     this.logger.log(`🎉 User ${userId} completed onboarding!`);
-
-    // TODO: Trigger celebration email or notification
 
     return progress;
   }
@@ -162,15 +164,8 @@ export class OnboardingProgressService {
    * Calculate completion percentage
    */
   private calculateCompletionPercentage(progress: any): number {
-    const steps = [
-      progress.hasUploadedVideo,
-      progress.hasCreatedClip,
-      progress.hasExportedClip,
-      progress.hasInvitedMember,
-      progress.hasCompletedProfile,
-    ];
-
-    const completed = steps.filter(Boolean).length;
-    return Math.round((completed / steps.length) * 100);
+    const totalSteps = 5; // UPLOAD_VIDEO, VIEW_CLIPS, CUSTOMIZE_CLIP, EXPORT_CLIP, SHARE_REFERRAL
+    const completed = progress.completedSteps.length;
+    return Math.round((completed / totalSteps) * 100);
   }
 }
