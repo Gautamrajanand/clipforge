@@ -181,7 +181,7 @@ export class AdminPLGController {
   @ApiOperation({ summary: 'Get onboarding completion stats' })
   async getOnboardingStats(@Query('days') days?: string) {
     const daysNum = days ? parseInt(days, 10) : 30;
-    return this.onboarding.getOnboardingAnalytics(daysNum);
+    return this.onboarding.getOnboardingMetrics();
   }
 
   // ============ IN-APP MESSAGING ADMIN ============

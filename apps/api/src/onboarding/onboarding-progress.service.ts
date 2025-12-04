@@ -29,7 +29,23 @@ export class OnboardingProgressService {
       });
     }
 
-    // Check actual progress from database
+    // Return progress in expected format
+    return {
+      hasUploadedVideo: progress.completedSteps.includes('UPLOAD_VIDEO'),
+      hasCreatedClip: progress.completedSteps.includes('VIEW_CLIPS'),
+      hasAddedSubtitles: progress.completedSteps.includes('CUSTOMIZE_CLIP'),
+      hasReframedVideo: progress.completedSteps.includes('CUSTOMIZE_CLIP'),
+      hasShared: progress.completedSteps.includes('SHARE_REFERRAL'),
+      completedAt: progress.completedAt,
+      completionPercentage: this.calculateCompletionPercentage(progress),
+    };
+  }
+
+  /**
+   * DISABLED: Auto-update based on actual data
+   * TODO: Re-enable when we have proper org/project tracking
+   */
+  private async _autoUpdateProgress_DISABLED(userId: string, progress: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -43,7 +59,6 @@ export class OnboardingProgressService {
                     exports: true,
                   },
                 },
-                members: true,
               },
             },
           },
@@ -60,8 +75,8 @@ export class OnboardingProgressService {
     if (org) {
       const hasUploadedVideo = org.projects.length > 0;
       const hasCreatedClip = org.projects.some(p => p.moments && p.moments.length > 0);
-      const hasAddedSubtitles = org.projects.some(p => p.hasSubtitles === true);
-      const hasReframedVideo = org.projects.some(p => p.hasReframed === true);
+      const hasAddedSubtitles = false; // TODO: Add hasSubtitles field to Project model
+      const hasReframedVideo = false; // TODO: Add hasReframed field to Project model
       const hasShared = org.projects.some(p => p.exports && p.exports.length > 0);
 
       // Update progress if changed

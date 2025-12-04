@@ -17,19 +17,13 @@ export class OnboardingProgressController {
     return this.progressService.getProgress(user.id);
   }
 
-  @Post('progress')
-  @ApiOperation({ summary: 'Update onboarding progress' })
-  async updateProgress(
+  @Post('progress/step/:step')
+  @ApiOperation({ summary: 'Complete an onboarding step' })
+  async completeStep(
     @CurrentUser() user: any,
-    @Body() data: {
-      hasUploadedVideo?: boolean;
-      hasCreatedClip?: boolean;
-      hasExportedClip?: boolean;
-      hasInvitedMember?: boolean;
-      hasCompletedProfile?: boolean;
-    },
+    @Body() body: { step: string },
   ) {
-    return this.progressService.updateProgress(user.id, data);
+    return this.progressService.completeStep(user.id, body.step);
   }
 
   @Post('progress/complete')
