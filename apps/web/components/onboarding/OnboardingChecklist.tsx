@@ -118,7 +118,7 @@ export default function OnboardingChecklist() {
               {isComplete ? '🎉 You\'re a Platform Pro!' : 'Discover the Content OS'}
             </h3>
             <p className="text-sm text-gray-600">
-              {isComplete ? 'All 3 services unlocked!' : `${completedCount} of ${totalCount} completed`}
+              {isComplete ? 'All AI features explored!' : `${completedCount} of ${totalCount} features tried`}
             </p>
           </div>
         </div>
