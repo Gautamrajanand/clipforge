@@ -112,6 +112,20 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isAuthReady) return;
     
+    // Check if user is admin (skip onboarding for admins)
+    const userEmails = user?.emailAddresses?.map(e => e.emailAddress) || [];
+    const isAdmin = userEmails.some(email => 
+      email === 'gautam@hubhopper.com' || 
+      email.includes('gautamrajanand') ||
+      email.endsWith('@hubhopper.com')
+    ) || user?.publicMetadata?.isAdmin;
+    
+    // Skip onboarding for admin users
+    if (isAdmin) {
+      console.log('🔐 Admin user detected, skipping onboarding');
+      return;
+    }
+    
     // Show onboarding survey if:
     // 1. User has no projects (new user)
     // 2. Haven't completed survey for THIS user
@@ -276,9 +290,17 @@ export default function Dashboard() {
         }
       } else {
         console.error('❌ Failed to fetch credits:', response.status);
+        // Set default values for admin or when API fails
+        setCredits(150);
+        setCreditsAllocation(150);
+        setTier('FREE');
       }
     } catch (error) {
       console.error('❌ Error fetching credits:', error);
+      // Set default values on error
+      setCredits(150);
+      setCreditsAllocation(150);
+      setTier('FREE');
     }
   };
 
