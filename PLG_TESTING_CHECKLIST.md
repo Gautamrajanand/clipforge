@@ -15,8 +15,10 @@
 - **Trial Banner** - Prominent 7-day trial display
 - **Dashboard Spacing** - Optimized layout and visual hierarchy
 - **Analytics Tracking** - Full event tracking for all onboarding actions
+- **Success Celebration** - Confetti animation on first clip creation (aha moment)
+- **Expired Project Blocking** - 48-hour expiration for FREE tier with blur + upgrade modal
 
-See `PLG_ONBOARDING_COMPLETE.md` for detailed documentation.
+See `PLG_ONBOARDING_COMPLETE.md` and `PLG_IMPLEMENTATION_PROGRESS.md` for detailed documentation.
 
 ---
 
@@ -54,52 +56,55 @@ docker-compose ps
 
 #### Steps:
 1. [ ] **Sign Up**
-   - Navigate to `/sign-up`
-   - Create new account (use test email)
-   - Check redirect to dashboard
+   - Navigate to `/sign-up` ✅
+   - Create new account (use test email) ✅
+   - Check redirect to dashboard ✅
 
 2. [ ] **Onboarding Survey** (NEW)
-   - Verify survey appears after 500ms delay
-   - **Step 1:** Select role (4 options)
-   - **Step 2:** Select goal (4 options)
-   - **Step 3:** Select platforms (multi-select, 6 options)
-   - Verify progress bar updates (1/3, 2/3, 3/3)
-   - Test "Back" button navigation
-   - Test "Skip for now" option
-   - Verify "Next" button only enabled when selection made
-   - Check smooth animations between steps
+   - Verify survey appears after 500ms delay ✅
+   - **Step 1:** Select role (4 options) ✅
+   - **Step 2:** Select goal (4 options) ✅
+   - **Step 3:** Select platforms (multi-select, 6 options) ✅
+   - Verify progress bar updates (1/3, 2/3, 3/3) ✅
+   - Test "Back" button navigation ✅
+   - Test "Skip for now" option ✅
+   - Verify "Next" button only enabled when selection made ✅
+   - Check smooth animations between steps ✅
 
 3. [ ] **Welcome Modal**
-   - Verify modal appears after survey completion/skip
-   - Check modal shows:
-     - Welcome message
-     - 3 key features (Upload, AI Magic, Free Trial)
-     - Credit information (150 credits)
-     - "Try with Sample Video" button
-     - "Upload My Own Video" button
-   - Test both CTA buttons
-   - Verify modal can be closed
+   - Verify modal appears after survey completion/skip ✅
+   - Check modal shows: ✅
+     - Welcome message - pop up came after survey completion ✅
+     - 3 key features (Upload, AI Magic, Free Trial) - I didnt read the information but main subtitle implroved
+     - Credit information (150 credits) ✅
+     - "Try with Sample Video" button - now this is not present which is good
+     - "Upload My Own Video" button - same as above, only one CTA
+   - Test both CTA buttons - not applicable anymore
+   - Verify modal can be closed - ✅ it did close
 
 3. [ ] **Onboarding Checklist**
-   - Check checklist appears on dashboard
+   - Check checklist appears on dashboard ✅
    - Verify 5 steps are visible:
-     - [ ] Upload your first video
-     - [ ] Create AI clips
-     - [ ] Add captions
-     - [ ] Reframe video
-     - [ ] Export and share
-   - Test step completion tracking
+     - [ ] Upload your first video - this has been removed
+     - [ ] Create AI clips ✅
+     - [ ] Add captions ✅
+     - [ ] Reframe video ✅
+     - [ ] Export and share ✅
+   - Test step completion tracking - dont think this has happened yet
 
 4. [ ] **Multi-Step Onboarding**
-   - If implemented, test step-by-step guide
-   - Verify tooltips and highlights
-   - Test skip/next functionality
+   - If implemented, test step-by-step guide - dont know what this means
+   - Verify tooltips and highlights - not yet - can provide option under help and support in drop down 
+   - Test skip/next functionality 
 
 **Expected Results:**
-- ✅ Smooth signup flow
-- ✅ Welcome modal shows once
-- ✅ Checklist visible and interactive
-- ✅ Progress tracked correctly
+- ✅ Smooth signup flow - ✅ yes but i thinkk i can see a pop up blinking when i click different pages or options, maybe just in my head
+- ✅ Welcome modal shows once - ✅ yes, logged out and in and i did not see it again
+- ✅ Checklist visible and interactive - not interactive, does not update on completing tasks
+- ✅ Progress tracked correctly - yes but only mentioned clips, should just mention services used instead as this will not make sense if users dont use clips.
+- ✅ Intercom working - no blank
+
+####################################################
 
 **Analytics Events to Check:**
 - `user_signed_up`
@@ -108,7 +113,7 @@ docker-compose ps
 
 ---
 
-## 2️⃣ TRIAL EXPERIENCE
+## 2️⃣ TRIAL EXPERIENCE & EXPIRED PROJECTS ⭐ NEW
 
 ### Test: FREE Tier Trial Banner
 **Goal:** Verify trial messaging and upgrade prompts
@@ -126,20 +131,59 @@ docker-compose ps
    - Test watermark on exports
    - Check feature gating (if any)
 
-3. [ ] **Upgrade Prompts**
+3. [ ] **Expired Project Blocking** ⭐ NEW
+   - Create a project (or use existing)
+   - Wait 48 hours OR manually set `createdAt` in DB to 3 days ago
+   - Check dashboard shows:
+     - ✅ Blurred thumbnail
+     - ✅ Red "Expired" badge
+     - ✅ Subtle dark overlay (no text)
+   - Click on expired project card
+   - Verify:
+     - ✅ Navigation blocked (doesn't go to project page)
+     - ✅ ExpiredProjectModal appears
+     - ✅ Modal shows project title and expiration date
+     - ✅ "Upgrade to Keep Your Projects" CTA visible
+     - ✅ Can close modal and return to dashboard
+   - Try accessing expired project via direct URL (`/project/[id]`)
+   - Verify:
+     - ✅ Video player blurred
+     - ✅ Timeline hidden
+     - ✅ Clips section hidden
+     - ✅ Upgrade modal appears
+
+4. [ ] **Premium User - No Expiration**
+   - Upgrade to STARTER/PRO/BUSINESS tier
+   - Verify old projects (>48h) are NOT expired
+   - Check no expiry badge shown
+   - Confirm full access to all projects
+
+5. [ ] **Upgrade Prompts**
    - Test contextual upgrade messages
    - Verify upgrade CTA placement
    - Check pricing page link works
 
 **Expected Results:**
 - ✅ Trial banner visible and accurate
-- ✅ Limitations enforced correctly
+- ✅ 48-hour expiration enforced for FREE tier
+- ✅ Expired projects blocked with clear upgrade path
+- ✅ Premium users unaffected by expiration
 - ✅ Upgrade prompts clear and compelling
 
 **Analytics Events:**
 - `trial_banner_viewed`
 - `upgrade_clicked`
 - `pricing_page_viewed`
+- `upgrade_prompt_shown` (expired project modal)
+- `upgrade_prompt_clicked`
+
+**Database Check:**
+```sql
+-- Manually expire a project for testing
+UPDATE projects 
+SET "createdAt" = NOW() - INTERVAL '3 days'
+WHERE id = 'your-project-id';
+```
 
 ---
 
@@ -253,7 +297,62 @@ Intercom: Successfully booted with settings
 
 ---
 
-## 6️⃣ REFERRAL PROGRAM
+## 6️⃣ SUCCESS CELEBRATION (AHA MOMENT) ⭐ NEW
+
+### Test: First Clip Creation Celebration
+**Goal:** Verify confetti animation triggers on first clip
+
+#### Steps:
+1. [ ] **Create New Account**
+   - Sign up with fresh account
+   - Complete onboarding
+   - Upload first video
+
+2. [ ] **Generate First Clip**
+   - Click "Detect Highlights" or "Create AI Clips"
+   - Wait for clip generation to complete
+   - Verify celebration triggers:
+     - ✅ Confetti animation appears
+     - ✅ Success modal shows:
+       - Title: "Your First AI Clip! 🎉"
+       - Message: "You just created your first viral clip..."
+     - ✅ Modal auto-dismisses after 5 seconds
+     - ✅ Can manually close modal
+
+3. [ ] **Subsequent Clips**
+   - Create more clips in same or different project
+   - Verify:
+     - ✅ No celebration (only first time)
+     - ✅ Regular toast notification instead
+     - ✅ "Clips detected successfully!" message
+
+4. [ ] **Analytics Tracking**
+   - Open browser console
+   - Check for analytics events:
+     - ✅ `AHA_MOMENT` event fired
+     - ✅ `FIRST_CLIP_CREATED` event fired
+     - ✅ Events include projectId and clipCount
+   - Verify in PostHog/Mixpanel dashboard
+
+**Expected Results:**
+- ✅ Celebration only on first clip
+- ✅ Smooth animation and UX
+- ✅ Analytics tracked correctly
+- ✅ Subsequent clips show normal feedback
+
+**Console Check:**
+```
+🎉 First clip created - Aha moment!
+Analytics: AHA_MOMENT tracked
+```
+
+**Known Limitation:**
+- Checklist won't auto-update yet (backend tracking pending)
+- User must manually refresh to see checklist progress
+
+---
+
+## 7️⃣ REFERRAL PROGRAM
 
 ### Test: Referral System
 **Goal:** Verify referral tracking and rewards
@@ -287,7 +386,7 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
 
 ---
 
-## 7️⃣ DYNAMIC POPUPS
+## 8️⃣ DYNAMIC POPUPS
 
 ### Test: Contextual Messaging
 **Goal:** Verify popups appear at right moments
@@ -315,7 +414,7 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
 
 ---
 
-## 8️⃣ ADMIN PLG DASHBOARD
+## 9️⃣ ADMIN PLG DASHBOARD
 
 ### Test: Admin Monitoring Tools
 **Goal:** Verify admin can monitor PLG metrics
@@ -358,7 +457,7 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
 
 ---
 
-## 9️⃣ SOCIAL SHARING
+## 🔟 SOCIAL SHARING
 
 ### Test: Viral Growth Features
 **Goal:** Verify social sharing drives growth
@@ -392,7 +491,7 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
 
 ---
 
-## 🔟 UPGRADE FLOW
+## 1️⃣1️⃣ UPGRADE FLOW
 
 ### Test: Conversion Funnel
 **Goal:** Verify smooth upgrade to paid tier
@@ -458,6 +557,9 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
 - [ ] Missing analytics events
 - [ ] UI glitches
 - [ ] Slow loading
+- [ ] Success celebration not triggering (check console for errors)
+- [ ] Expired projects still accessible (check tier and createdAt)
+- [ ] Blur effect not showing on expired projects
 
 ### Backend
 - [ ] API errors (500s)

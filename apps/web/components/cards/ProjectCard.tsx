@@ -1,6 +1,6 @@
 'use client';
 
-import { Play, Video, Edit2, Trash2, MoreVertical, Clock, AlertTriangle, Lock } from 'lucide-react';
+import { Play, Video, Edit2, Trash2, MoreVertical, Clock, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
@@ -191,13 +191,9 @@ export default function ProjectCard({
             </div>
           )}
           
-          {/* Expired Overlay */}
+          {/* Expired Overlay - subtle, badge is self-explanatory */}
           {isExpired && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20">
-              <Lock className="w-12 h-12 text-white mb-2" />
-              <p className="text-white font-semibold text-sm">Project Expired</p>
-              <p className="text-white/80 text-xs mt-1">Click to upgrade</p>
-            </div>
+            <div className="absolute inset-0 bg-black/20 z-20" />
           )}
           
           {/* Badge */}
