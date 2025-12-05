@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
+import Intercom from '@intercom/messenger-js-sdk';
 
 /**
  * Intercom Widget Component
@@ -35,70 +36,36 @@ export default function IntercomWidget() {
       return;
     }
 
-    // Load Intercom script
-    (function() {
-      const w = window as any;
-      const ic = w.Intercom;
+    try {
+      // Initialize Intercom with official SDK
+      Intercom({
+        app_id: appId,
+        user_id: user.id,
+        name: user.fullName || user.firstName || 'User',
+        email: user.primaryEmailAddress?.emailAddress || '',
+        created_at: user.createdAt 
+          ? Math.floor(new Date(user.createdAt).getTime() / 1000) 
+          : Math.floor(Date.now() / 1000),
+      });
       
-      if (typeof ic === 'function') {
-        ic('reattach_activator');
-        ic('update', w.intercomSettings);
-      } else {
-        const d = document;
-        const i = function() {
-          (i as any).c(arguments);
-        };
-        (i as any).q = [];
-        (i as any).c = function(args: any) {
-          (i as any).q.push(args);
-        };
-        w.Intercom = i;
-        
-        const l = function() {
-          const s = d.createElement('script');
-          s.type = 'text/javascript';
-          s.async = true;
-          s.src = `https://widget.intercom.io/widget/${appId}`;
-          const x = d.getElementsByTagName('script')[0];
-          x.parentNode?.insertBefore(s, x);
-        };
-        
-        if (document.readyState === 'complete') {
-          l();
-        } else if (w.attachEvent) {
-          w.attachEvent('onload', l);
-        } else {
-          w.addEventListener('load', l, false);
-        }
-      }
-    })();
-
-    // Boot Intercom with user data
-    const w = window as any;
-    w.intercomSettings = {
-      app_id: appId,
-      user_id: user.id,
-      name: user.fullName || user.firstName || 'User',
-      email: user.primaryEmailAddress?.emailAddress,
-      created_at: user.createdAt ? Math.floor(new Date(user.createdAt).getTime() / 1000) : Math.floor(Date.now() / 1000),
-      // Custom attributes for segmentation
-      custom_launcher_selector: '#intercom-launcher',
-    };
-
-    if (w.Intercom) {
-      w.Intercom('boot', w.intercomSettings);
-      console.log('Intercom: Successfully booted with settings:', w.intercomSettings);
-    } else {
-      console.error('Intercom: Failed to load - window.Intercom not found');
+      console.log('✅ Intercom: Successfully initialized with user:', {
+        id: user.id,
+        name: user.fullName || user.firstName,
+        email: user.primaryEmailAddress?.emailAddress,
+      });
+    } catch (error) {
+      console.error('❌ Intercom: Failed to initialize:', error);
     }
 
     // Cleanup on unmount
     return () => {
+      const w = window as any;
       if (w.Intercom) {
         w.Intercom('shutdown');
+        console.log('Intercom: Shutdown');
       }
     };
   }, [isSignedIn, user]);
 
-  return null; // Widget is injected by Intercom script
+  return null; // Widget is injected by Intercom SDK
 }

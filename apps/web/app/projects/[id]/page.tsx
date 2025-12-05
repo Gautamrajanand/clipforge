@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from 'react-query';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
@@ -10,14 +10,17 @@ import { VideoPlayer } from '@/components/video/video-player';
 import { Timeline } from '@/components/video/timeline';
 import { Play, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ExpiredProjectModal from '@/components/ExpiredProjectModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export default function ProjectPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.id as string;
   const [selectedClip, setSelectedClip] = useState<any>(null);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   // Fetch project
   const { data: project, isLoading: projectLoading } = useQuery(
@@ -32,6 +35,29 @@ export default function ProjectPage() {
     () => axios.get(`${API_URL}/v1/projects/${projectId}/clips`),
     { select: (res) => res.data }
   );
+
+  // Check if project is expired (PLG: Free tier projects expire after 30 days)
+  useEffect(() => {
+    if (project) {
+      const createdAt = new Date(project.createdAt);
+      const now = new Date();
+      const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Check if project is expired (30 days for free tier)
+      // Premium users have unlimited storage
+      const isExpired = project.tier === 'FREE' && daysSinceCreation > 30;
+      
+      if (isExpired) {
+        console.log('🔒 Project expired:', {
+          projectId,
+          createdAt,
+          daysSinceCreation,
+          tier: project.tier,
+        });
+        setShowExpiredModal(true);
+      }
+    }
+  }, [project, projectId]);
 
   // Start detection
   const handleDetect = async () => {
@@ -59,8 +85,27 @@ export default function ProjectPage() {
     return <div className="container py-8">Loading...</div>;
   }
 
+  // Calculate if project is expired
+  const isProjectExpired = project && project.tier === 'FREE' && (() => {
+    const createdAt = new Date(project.createdAt);
+    const now = new Date();
+    const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+    return daysSinceCreation > 30;
+  })();
+
   return (
     <div className="container py-8">
+      {/* Expired Project Modal */}
+      <ExpiredProjectModal
+        isOpen={showExpiredModal}
+        onClose={() => {
+          setShowExpiredModal(false);
+          router.push('/dashboard');
+        }}
+        projectTitle={project?.title}
+        expirationDate={project?.createdAt}
+      />
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">{project?.title}</h1>
@@ -69,9 +114,22 @@ export default function ProjectPage() {
         </p>
       </div>
 
-      {/* Video Player */}
+      {/* Video Player - Blur if expired */}
       {project?.assets?.[0] && (
-        <div className="mb-8">
+        <div className={`mb-8 relative ${isProjectExpired ? 'pointer-events-none' : ''}`}>
+          {isProjectExpired && (
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-md z-10 flex items-center justify-center rounded-lg">
+              <div className="text-center text-white">
+                <p className="text-xl font-semibold mb-2">Project Expired</p>
+                <button
+                  onClick={() => setShowExpiredModal(true)}
+                  className="px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Upgrade to Access
+                </button>
+              </div>
+            </div>
+          )}
           <VideoPlayer
             src={project.assets[0].url}
             clips={clips || []}
