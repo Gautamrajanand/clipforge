@@ -1,19 +1,34 @@
 # PLG Growth Functionality - Systematic Testing Guide
 
-**Date:** December 3, 2025  
+**Date:** December 5, 2025 (Updated)  
+**Status:** ✅ Onboarding Flow Complete - Ready for Testing  
 **Purpose:** Test all PLG features end-to-end to ensure growth engine is working
+
+---
+
+## 🎉 Recent Updates (Dec 5, 2025)
+
+### ✅ Completed Features
+- **Onboarding Survey** - 3-step user profiling (role, goal, platforms)
+- **Welcome Modal** - Feature overview with CTAs
+- **Onboarding Checklist** - 5-step guided journey
+- **Trial Banner** - Prominent 7-day trial display
+- **Dashboard Spacing** - Optimized layout and visual hierarchy
+- **Analytics Tracking** - Full event tracking for all onboarding actions
+
+See `PLG_ONBOARDING_COMPLETE.md` for detailed documentation.
 
 ---
 
 ## Pre-Testing Setup
 
 ### ✅ Prerequisites
-- [ ] All Docker services running (`docker-compose up -d`)
-- [ ] Frontend running on `localhost:3001`
-- [ ] Backend API running on `localhost:3000`
-- [ ] Database accessible
-- [ ] Redis running
-- [ ] Test user account ready
+- [x] Backend API running on `localhost:3001`
+- [x] Frontend running on `localhost:3000`
+- [x] Database accessible (PostgreSQL)
+- [x] Clerk authentication configured
+- [ ] Clear browser session storage for fresh test
+- [ ] Test user account ready (or create new one)
 
 ### ✅ Environment Check
 ```bash
@@ -31,23 +46,39 @@ docker-compose ps
 
 ---
 
-## 1️⃣ ONBOARDING FLOW
+## 1️⃣ ONBOARDING FLOW ✅ COMPLETE
 
 ### Test: New User Onboarding
-**Goal:** Verify smooth first-time user experience
+**Goal:** Verify smooth first-time user experience  
+**Status:** ✅ Ready for Testing
 
 #### Steps:
 1. [ ] **Sign Up**
    - Navigate to `/sign-up`
    - Create new account (use test email)
-   - Verify email confirmation (if enabled)
    - Check redirect to dashboard
 
-2. [ ] **Welcome Modal**
-   - Verify welcome modal appears on first login
-   - Check modal content is clear and engaging
-   - Test "Get Started" button
-   - Verify modal doesn't show on subsequent logins
+2. [ ] **Onboarding Survey** (NEW)
+   - Verify survey appears after 500ms delay
+   - **Step 1:** Select role (4 options)
+   - **Step 2:** Select goal (4 options)
+   - **Step 3:** Select platforms (multi-select, 6 options)
+   - Verify progress bar updates (1/3, 2/3, 3/3)
+   - Test "Back" button navigation
+   - Test "Skip for now" option
+   - Verify "Next" button only enabled when selection made
+   - Check smooth animations between steps
+
+3. [ ] **Welcome Modal**
+   - Verify modal appears after survey completion/skip
+   - Check modal shows:
+     - Welcome message
+     - 3 key features (Upload, AI Magic, Free Trial)
+     - Credit information (150 credits)
+     - "Try with Sample Video" button
+     - "Upload My Own Video" button
+   - Test both CTA buttons
+   - Verify modal can be closed
 
 3. [ ] **Onboarding Checklist**
    - Check checklist appears on dashboard
