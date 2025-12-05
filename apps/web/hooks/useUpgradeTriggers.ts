@@ -47,13 +47,15 @@ export function useUpgradeTriggers({
     if (tier === 'BUSINESS') return;
 
     // Don't show if credits haven't loaded yet (monthlyAllocation is 0 on initial load)
-    if (monthlyAllocation === 0) return;
+    // Also don't show if credits is exactly 0 but monthlyAllocation is also 0 (loading state)
+    if (monthlyAllocation === 0 || (credits === 0 && monthlyAllocation === 0)) return;
 
     const now = Date.now();
     const newTriggers: UpgradeTrigger[] = [];
 
     // Trigger 1: Credits Depleted (CRITICAL)
-    if (credits === 0 && tier === 'FREE') {
+    // Only show if we have a valid monthlyAllocation (data is loaded)
+    if (credits === 0 && tier === 'FREE' && monthlyAllocation > 0) {
       const lastShownTime = lastShown['credits_depleted'] || 0;
       const hoursSinceLastShown = (now - lastShownTime) / (1000 * 60 * 60);
       
