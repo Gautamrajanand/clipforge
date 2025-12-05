@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { Video, Mic2, Scissors, Type, Maximize, FileText, User, Coins } from 'lucide-react';
@@ -108,49 +108,50 @@ export default function Dashboard() {
     initAuth();
   }, [isLoaded, isSignedIn, getClerkToken, router]);
 
-  // Onboarding Flow Logic - Show survey first, then welcome modal
-  useEffect(() => {
-    if (!isAuthReady) return;
-    
-    // Check if user is admin (skip onboarding for admins)
-    const userEmails = user?.emailAddresses?.map(e => e.emailAddress) || [];
-    const isAdmin = userEmails.some(email => 
+  // Memoized admin check to prevent re-computation
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    const userEmails = user.emailAddresses?.map(e => e.emailAddress) || [];
+    return userEmails.some(email => 
       email === 'gautam@hubhopper.com' || 
       email.includes('gautamrajanand') ||
       email.endsWith('@hubhopper.com')
-    ) || user?.publicMetadata?.isAdmin;
+    ) || user.publicMetadata?.isAdmin;
+  }, [user]);
+
+  // Memoized onboarding survey check
+  const shouldShowSurvey = useMemo(() => {
+    if (!isAuthReady || !user?.id || isAdmin) return false;
     
-    // Skip onboarding for admin users
-    if (isAdmin) {
-      console.log('🔐 Admin user detected, skipping onboarding');
-      return;
-    }
-    
-    // Show onboarding survey if:
-    // 1. User has no projects (new user)
-    // 2. Haven't completed survey for THIS user
-    const surveyKey = `onboardingSurvey_${user?.id}`;
+    const surveyKey = `onboardingSurvey_${user.id}`;
     const hasSurveyCompleted = localStorage.getItem(surveyKey);
-    const shouldShowSurvey = projects.length === 0 && !hasSurveyCompleted;
+    const shouldShow = projects.length === 0 && !hasSurveyCompleted;
     
-    console.log('🎯 Onboarding Check:', {
-      userId: user?.id,
-      projectsCount: projects.length,
-      hasSurveyCompleted,
-      shouldShowSurvey,
-    });
-    
-    if (shouldShowSurvey) {
-      console.log('✅ Showing onboarding survey in 500ms...');
-      // Add delay to prevent flash and ensure smooth render
-      const timer = setTimeout(() => {
-        console.log('🎉 Onboarding survey triggered!');
-        setShowOnboardingSurvey(true);
-      }, 500);
-      
-      return () => clearTimeout(timer);
+    if (shouldShow) {
+      console.log('🎯 Onboarding Check:', {
+        userId: user.id,
+        projectsCount: projects.length,
+        hasSurveyCompleted,
+        shouldShow,
+      });
     }
-  }, [isAuthReady, projects]);
+    
+    return shouldShow;
+  }, [isAuthReady, user?.id, isAdmin, projects.length]);
+
+  // Onboarding Flow Logic - Show survey first, then welcome modal
+  useEffect(() => {
+    if (!shouldShowSurvey) return;
+    
+    console.log('✅ Showing onboarding survey in 500ms...');
+    // Add delay to prevent flash and ensure smooth render
+    const timer = setTimeout(() => {
+      console.log('🎉 Onboarding survey triggered!');
+      setShowOnboardingSurvey(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [shouldShowSurvey]);
 
   // Handle survey completion
   const handleSurveyComplete = async (data: OnboardingData) => {
@@ -217,36 +218,43 @@ export default function Dashboard() {
     };
   }, [track]);
 
-  // Celebration Toast Logic - Track milestones
-  useEffect(() => {
-    if (projects.length === 0) return;
-
+  // Memoized milestone checks to prevent localStorage reads on every render
+  const milestones = useMemo(() => {
+    if (projects.length === 0) return null;
+    
     const totalClips = projects.reduce((sum, p) => sum + (p.moments?.length || 0), 0);
     
+    return {
+      totalClips,
+      firstClip: totalClips >= 1 && !localStorage.getItem('celebrated_first_clip'),
+      tenClips: totalClips >= 10 && !localStorage.getItem('celebrated_10_clips'),
+      fiftyClips: totalClips >= 50 && !localStorage.getItem('celebrated_50_clips'),
+    };
+  }, [projects]);
+
+  // Celebration Toast Logic - Track milestones (optimized)
+  useEffect(() => {
+    if (!milestones) return;
+    
     // First clip celebration
-    const hasFirstClip = localStorage.getItem('celebrated_first_clip');
-    if (totalClips >= 1 && !hasFirstClip) {
+    if (milestones.firstClip) {
       setCelebrationToast({ type: 'first_clip', isOpen: true });
       localStorage.setItem('celebrated_first_clip', 'true');
       track(AnalyticsEvents.DASHBOARD_VIEWED, { milestone: 'first_clip' });
     }
-    
     // 10 clips milestone
-    const hasTenClips = localStorage.getItem('celebrated_10_clips');
-    if (totalClips >= 10 && !hasTenClips) {
+    else if (milestones.tenClips) {
       setCelebrationToast({ type: 'milestone_10', isOpen: true });
       localStorage.setItem('celebrated_10_clips', 'true');
       track(AnalyticsEvents.DASHBOARD_VIEWED, { milestone: '10_clips' });
     }
-    
     // 50 clips milestone
-    const hasFiftyClips = localStorage.getItem('celebrated_50_clips');
-    if (totalClips >= 50 && !hasFiftyClips) {
+    else if (milestones.fiftyClips) {
       setCelebrationToast({ type: 'milestone_50', isOpen: true });
       localStorage.setItem('celebrated_50_clips', 'true');
       track(AnalyticsEvents.DASHBOARD_VIEWED, { milestone: '50_clips' });
     }
-  }, [projects, track]);
+  }, [milestones, track]);
 
   const fetchProjects = async () => {
     try {

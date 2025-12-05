@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Sparkles, Video, Zap, Gift } from 'lucide-react';
 
 interface WelcomeModalProps {
@@ -10,11 +10,39 @@ interface WelcomeModalProps {
 }
 
 export default function WelcomeModal({ isOpen, onClose, userName }: WelcomeModalProps) {
-  if (!isOpen) return null;
+  const [isMounted, setIsMounted] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsMounted(true);
+      // Trigger animation after mount
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    } else {
+      setIsVisible(false);
+      // Unmount after animation completes
+      const timer = setTimeout(() => {
+        setIsMounted(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!isMounted) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 relative animate-in fade-in zoom-in duration-300">
+    <div 
+      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      <div 
+        className={`bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 relative transition-all duration-300 ${
+          isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+        }`}
+      >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
