@@ -20,7 +20,7 @@
 - **Navigation Performance** - Fixed blinking/flashing with optimized renders (60-70% improvement)
 
 ### 🐛 Known Issues to Test
-- ⚠️ Credits not updating when tier changes (FREE → PRO)
+- ✅ **FIXED:** Credits not updating when tier changes (Commit: 78a4f5a)
 - ⚠️ Checklist progress not auto-updating (backend tracking pending)
 
 See `PLG_ONBOARDING_COMPLETE.md` and `PLG_IMPLEMENTATION_PROGRESS.md` for detailed documentation.
@@ -127,14 +127,14 @@ docker-compose ps
 1. [ ] **Trial Banner Display**
    - Check banner appears at top of dashboard ✅
    - Verify countdown shows correct days left ✅
-   - Test "Upgrade Now" button
-   - Verify banner styling matches design
+   - Test "Upgrade Now" button ✅
+   - Verify banner styling matches design ✅
 
 2. [ ] **Trial Limitations**
-   - Check credit allocation (60 credits for FREE)
-   - Verify project expiry (48 hours)
-   - Test watermark on exports
-   - Check feature gating (if any)
+   - Check credit allocation (60 credits for FREE) - have been given 150 credits due to trial period im assuming.
+   - Verify project expiry (48 hours) ✅
+   - Test watermark on exports ✅
+   - Check feature gating (if any) ✅ - i cannot access pages that have been 
 
 3. [ ] **Expired Project Blocking** ⭐ NEW
    - Create a project (or use existing)
@@ -545,22 +545,25 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
      WHERE id = 'org_xxx';
      ```
 
-4. [ ] **Admin Manual Upgrade Test** ⭐ NEW
+4. [ ] **Admin Manual Upgrade Test** ⭐ FIXED
    - Go to `/admin/users`
    - Find test user
    - Change tier from FREE to PRO
    - **Expected:**
      - ✅ Tier updates immediately
-     - ✅ Credits should update to 300
-     - ⚠️ **KNOWN BUG:** Credits may not update
-   - **Workaround:** Manually update credits in database
-   - **Fix Needed:** Backend webhook/admin update logic
+     - ✅ Credits update to 300 automatically
+     - ✅ monthlyCreditsAllocation updates
+   - **Verify:**
+     - Check `/credits` page shows 300
+     - Check sidebar shows 300 / 300
+     - Check database confirms update
+   - ✅ **FIX APPLIED:** Credits now update automatically (Commit: 78a4f5a)
 
 **Expected Results:**
 - ✅ Pricing clear and compelling
 - ✅ Checkout smooth and secure
 - ✅ Upgrade reflected immediately
-- ⚠️ Credits update (may need manual fix)
+- ✅ Credits update automatically (FIXED)
 - ✅ Features unlocked correctly
 
 **Test Cards (Stripe):**
@@ -611,14 +614,19 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
 - [ ] Memory leaks
 - [ ] **Credits not updating on tier change** ⚠️ CRITICAL
 
-### Credits Not Updating Issue
+### Credits Not Updating Issue ✅ FIXED
 **Symptom:** User upgraded from FREE to PRO, but credits still show 60 instead of 300
 
-**Root Cause:** Admin panel update doesn't trigger credit allocation update
+**Root Cause:** Admin panel update didn't trigger credit allocation update
 
-**Temporary Fix:**
+**Fix Applied (Commit: 78a4f5a):**
+- Updated `admin.service.ts` updateTier() method
+- Now updates tier + credits + monthlyCreditsAllocation
+- Credit allocations: FREE=60, STARTER=150, PRO=300, BUSINESS=1000
+
+**If Still Having Issues:**
 ```sql
--- Manual credit update
+-- Manual credit update (shouldn't be needed now)
 UPDATE organizations 
 SET 
   credits = 300,
@@ -626,15 +634,8 @@ SET
 WHERE id = 'org_xxx';
 ```
 
-**Proper Fix Needed:**
-1. Admin panel should call credit update service
-2. Webhook should handle tier changes
-3. Credit allocation should auto-update on tier change
-
-**Files to Check:**
-- `apps/api/src/admin/admin.service.ts` - Admin update logic
-- `apps/api/src/credits/credits.service.ts` - Credit allocation
-- `apps/api/src/payments/payments.service.ts` - Webhook handler
+**Files Fixed:**
+- ✅ `apps/api/src/admin/admin.service.ts` - Now updates credits on tier change
 
 ### Analytics
 - [ ] Events not firing
