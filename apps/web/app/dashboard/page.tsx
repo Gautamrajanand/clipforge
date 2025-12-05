@@ -690,9 +690,9 @@ export default function Dashboard() {
       )}
       
       <main className="lg:ml-64 pt-16">
-        <div className="p-4 lg:p-8">
+        <div className="pt-4 px-4 lg:pt-4 lg:px-8 pb-8">
           {/* Onboarding Checklist */}
-          <section className="mb-4">
+          <section className="mb-8">
             <OnboardingChecklist />
           </section>
 
