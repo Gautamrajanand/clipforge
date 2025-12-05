@@ -890,6 +890,8 @@ export default function Dashboard() {
                         isEmpty={!project.sourceUrl}
                         settings={project.clipSettings}
                         expiresAt={project.expiresAt}
+                        createdAt={project.createdAt}
+                        tier={tier}
                         onEdit={handleEditProject}
                         onDelete={handleDeleteProject}
                       />

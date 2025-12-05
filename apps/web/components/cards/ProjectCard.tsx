@@ -1,10 +1,12 @@
 'use client';
 
-import { Play, Video, Edit2, Trash2, MoreVertical, Clock, AlertTriangle } from 'lucide-react';
+import { Play, Video, Edit2, Trash2, MoreVertical, Clock, AlertTriangle, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { fetchWithAuth } from '@/lib/api';
+import ExpiredProjectModal from '@/components/ExpiredProjectModal';
+import { useRouter } from 'next/navigation';
 
 interface ProjectCardProps {
   id: string;
@@ -15,6 +17,8 @@ interface ProjectCardProps {
   isEmpty?: boolean;
   settings?: any;
   expiresAt?: string | null;
+  createdAt?: string;
+  tier?: string;
   onEdit?: (id: string, newTitle: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -28,14 +32,18 @@ export default function ProjectCard({
   isEmpty,
   settings,
   expiresAt,
+  createdAt,
+  tier,
   onEdit,
   onDelete 
 }: ProjectCardProps) {
+  const router = useRouter();
   const { getToken: getClerkToken } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
   const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   // Load video blob with authentication
   useEffect(() => {
@@ -75,22 +83,43 @@ export default function ProjectCard({
     return 'Clips';
   };
 
-  // Calculate time until expiry
+  // Calculate time until expiry (48 hours for FREE tier)
   const getExpiryInfo = () => {
-    if (!expiresAt) return null;
+    // Premium users never expire
+    if (tier && tier !== 'FREE') return null;
+    
+    // Use createdAt if available, otherwise fall back to expiresAt
+    let expiry: Date;
+    if (createdAt) {
+      const created = new Date(createdAt);
+      expiry = new Date(created.getTime() + (48 * 60 * 60 * 1000)); // 48 hours
+    } else if (expiresAt) {
+      expiry = new Date(expiresAt);
+    } else {
+      return null;
+    }
     
     const now = new Date();
-    const expiry = new Date(expiresAt);
     const hoursLeft = Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60));
     const daysLeft = Math.floor(hoursLeft / 24);
     
-    if (hoursLeft < 0) return { text: 'Expired', color: 'bg-red-500', urgent: true };
-    if (hoursLeft < 24) return { text: `${hoursLeft}h left`, color: 'bg-orange-500', urgent: true };
-    if (daysLeft < 7) return { text: `${daysLeft}d left`, color: 'bg-yellow-500', urgent: false };
-    return { text: `${daysLeft}d left`, color: 'bg-gray-500', urgent: false };
+    if (hoursLeft < 0) return { text: 'Expired', color: 'bg-red-500', urgent: true, expired: true };
+    if (hoursLeft < 24) return { text: `${hoursLeft}h left`, color: 'bg-orange-500', urgent: true, expired: false };
+    if (daysLeft < 7) return { text: `${daysLeft}d left`, color: 'bg-yellow-500', urgent: false, expired: false };
+    return { text: `${daysLeft}d left`, color: 'bg-gray-500', urgent: false, expired: false };
   };
 
   const expiryInfo = getExpiryInfo();
+  const isExpired = expiryInfo?.expired || false;
+
+  // Handle click on expired project
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isExpired) {
+      e.preventDefault();
+      e.stopPropagation();
+      setShowExpiredModal(true);
+    }
+  };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -125,12 +154,24 @@ export default function ProjectCard({
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all border border-gray-200 relative group">
-      <Link href={`/project/${id}`}>
-        <div className="aspect-video bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 relative overflow-hidden">
+    <>
+      {/* Expired Project Modal */}
+      <ExpiredProjectModal
+        isOpen={showExpiredModal}
+        onClose={() => {
+          setShowExpiredModal(false);
+          router.push('/dashboard');
+        }}
+        projectTitle={title}
+        expirationDate={expiresAt || undefined}
+      />
+      
+      <div className="bg-white rounded-lg overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all border border-gray-200 relative group">
+        <Link href={`/project/${id}`} onClick={handleCardClick}>
+          <div className={`aspect-video bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 relative overflow-hidden ${isExpired ? 'cursor-not-allowed' : ''}`}>
           {/* Video Thumbnail - using img with video poster */}
           {videoBlobUrl && !isEmpty && (
-            <div className="absolute inset-0">
+            <div className={`absolute inset-0 ${isExpired ? 'blur-md' : ''}`}>
               <video
                 className="w-full h-full object-cover"
                 src={videoBlobUrl}
@@ -147,6 +188,15 @@ export default function ProjectCard({
                   video.style.display = 'none';
                 }}
               />
+            </div>
+          )}
+          
+          {/* Expired Overlay */}
+          {isExpired && (
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20">
+              <Lock className="w-12 h-12 text-white mb-2" />
+              <p className="text-white font-semibold text-sm">Project Expired</p>
+              <p className="text-white/80 text-xs mt-1">Click to upgrade</p>
             </div>
           )}
           
@@ -259,5 +309,6 @@ export default function ProjectCard({
         )}
       </div>
     </div>
+    </>
   );
 }
