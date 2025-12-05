@@ -482,9 +482,22 @@ model OnboardingProgress {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt
 
+  // Feature completion tracking (PLG activation)
+  hasCreatedClip      Boolean   @default(false)
+  hasAddedSubtitles   Boolean   @default(false)
+  hasReframedVideo    Boolean   @default(false)
+  hasShared           Boolean   @default(false)
+  firstClipAt         DateTime?
+  firstSubtitleAt     DateTime?
+  firstReframeAt      DateTime?
+  firstShareAt        DateTime?
+  exportCount         Int       @default(0)
+  lastExportAt        DateTime?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([hasCreatedClip])
 }
 
 // ============ NPS & Feedback System (PLG Growth) ============

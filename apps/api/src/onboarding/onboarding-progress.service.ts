@@ -29,15 +29,31 @@ export class OnboardingProgressService {
       });
     }
 
+    // Calculate completion percentage based on feature tracking
+    const features = [
+      progress.hasCreatedClip,
+      progress.hasAddedSubtitles,
+      progress.hasReframedVideo,
+      progress.hasShared,
+    ];
+    const completedCount = features.filter(Boolean).length;
+    const completionPercentage = Math.round((completedCount / features.length) * 100);
+
     // Return progress in expected format
     return {
-      hasUploadedVideo: progress.completedSteps.includes('UPLOAD_VIDEO'),
-      hasCreatedClip: progress.completedSteps.includes('VIEW_CLIPS'),
-      hasAddedSubtitles: progress.completedSteps.includes('CUSTOMIZE_CLIP'),
-      hasReframedVideo: progress.completedSteps.includes('CUSTOMIZE_CLIP'),
-      hasShared: progress.completedSteps.includes('SHARE_REFERRAL'),
+      userId: progress.userId,
+      hasCreatedClip: progress.hasCreatedClip,
+      hasAddedSubtitles: progress.hasAddedSubtitles,
+      hasReframedVideo: progress.hasReframedVideo,
+      hasShared: progress.hasShared,
+      firstClipAt: progress.firstClipAt,
+      firstSubtitleAt: progress.firstSubtitleAt,
+      firstReframeAt: progress.firstReframeAt,
+      firstShareAt: progress.firstShareAt,
+      exportCount: progress.exportCount,
+      lastExportAt: progress.lastExportAt,
       completedAt: progress.completedAt,
-      completionPercentage: this.calculateCompletionPercentage(progress),
+      completionPercentage,
     };
   }
 
@@ -132,7 +148,7 @@ export class OnboardingProgressService {
   }
 
   /**
-   * Mark a step as completed
+   * Mark a step as completed (legacy - for backwards compatibility)
    */
   async completeStep(userId: string, step: string) {
     const progress = await this.prisma.onboardingProgress.upsert({
@@ -153,6 +169,15 @@ export class OnboardingProgressService {
     });
 
     this.logger.log(`✅ User ${userId} completed step: ${step}`);
+
+    // Also update feature tracking based on step
+    if (step === 'VIEW_CLIPS') {
+      await this.updateFeatureProgress(userId, 'clip');
+    } else if (step === 'CUSTOMIZE_CLIP') {
+      await this.updateFeatureProgress(userId, 'subtitle');
+    } else if (step === 'EXPORT_CLIP') {
+      await this.updateFeatureProgress(userId, 'export');
+    }
 
     return progress;
   }
@@ -182,5 +207,78 @@ export class OnboardingProgressService {
     const totalSteps = 5; // UPLOAD_VIDEO, VIEW_CLIPS, CUSTOMIZE_CLIP, EXPORT_CLIP, SHARE_REFERRAL
     const completed = progress.completedSteps.length;
     return Math.round((completed / totalSteps) * 100);
+  }
+
+  /**
+   * Update progress when user completes a feature
+   */
+  async updateFeatureProgress(
+    userId: string,
+    feature: 'clip' | 'subtitle' | 'reframe' | 'export'
+  ) {
+    this.logger.log(`Updating feature progress for user ${userId}: ${feature}`);
+
+    const now = new Date();
+    
+    // Get or create progress
+    let progress = await this.prisma.onboardingProgress.findUnique({
+      where: { userId },
+    });
+
+    if (!progress) {
+      progress = await this.prisma.onboardingProgress.create({
+        data: { userId },
+      });
+    }
+
+    const updateData: any = {};
+
+    switch (feature) {
+      case 'clip':
+        if (!progress.hasCreatedClip) {
+          updateData.hasCreatedClip = true;
+          updateData.firstClipAt = now;
+          this.logger.log(`🎉 First clip created for user ${userId}`);
+        }
+        break;
+
+      case 'subtitle':
+        if (!progress.hasAddedSubtitles) {
+          updateData.hasAddedSubtitles = true;
+          updateData.firstSubtitleAt = now;
+          this.logger.log(`📝 First subtitles added for user ${userId}`);
+        }
+        break;
+
+      case 'reframe':
+        if (!progress.hasReframedVideo) {
+          updateData.hasReframedVideo = true;
+          updateData.firstReframeAt = now;
+          this.logger.log(`🎬 First reframe for user ${userId}`);
+        }
+        break;
+
+      case 'export':
+        updateData.exportCount = { increment: 1 };
+        updateData.lastExportAt = now;
+        if (!progress.hasShared && progress.exportCount === 0) {
+          updateData.hasShared = true;
+          updateData.firstShareAt = now;
+          this.logger.log(`🚀 First export for user ${userId}`);
+        }
+        break;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      const updated = await this.prisma.onboardingProgress.update({
+        where: { userId },
+        data: updateData,
+      });
+
+      this.logger.log(`✅ Feature progress updated for user ${userId}`);
+      return updated;
+    }
+
+    return progress;
   }
 }
