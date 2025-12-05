@@ -442,7 +442,6 @@ export class AdminService {
       data: {
         tier: tier as any,
         credits: newCredits,
-        monthlyCreditsAllocation: newCredits,
       },
       include: {
         memberships: {

@@ -16,6 +16,7 @@ import { QueuesModule } from '../queues/queues.module';
 import { CreditsModule } from '../credits/credits.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { ReferralsModule } from '../referrals/referrals.module';
+import { OnboardingModule } from '../onboarding/onboarding.module';
 import * as path from 'path';
 import * as fs from 'fs';
 // import { EmailModule } from '../email/email.module'; // TEMPORARILY DISABLED
@@ -33,6 +34,7 @@ import * as fs from 'fs';
     CreditsModule, 
     AnalyticsModule,
     ReferralsModule,
+    OnboardingModule,
     // Configure Multer for streaming uploads (disk storage)
     MulterModule.register({
       storage: diskStorage({
