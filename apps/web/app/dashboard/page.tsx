@@ -1167,16 +1167,20 @@ export default function Dashboard() {
       {/* NPS Widget */}
       <NPSWidget />
 
-      {/* Upgrade Nudges */}
-      {hasActiveTrigger && activeTriger && (
+      {/* Upgrade Nudges - TEMPORARILY DISABLED due to loading state issues */}
+      {/* {hasActiveTrigger && activeTriger && (
         <UpgradeModal
           isOpen={true}
           trigger={activeTriger.type}
           currentTier={tier as 'FREE' | 'STARTER' | 'PRO'}
           creditsRemaining={credits || 0}
-          onClose={() => markAsShown(activeTriger.type)}
+          onClose={() => {
+            if (activeTriger) {
+              markAsShown(activeTriger.type);
+            }
+          }}
         />
-      )}
+      )} */}
 
       {/* Celebration Toast */}
       {celebrationToast && (

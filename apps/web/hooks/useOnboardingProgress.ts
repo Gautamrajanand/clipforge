@@ -52,14 +52,18 @@ export function useOnboardingProgress() {
       return response as unknown as OnboardingProgress;
     },
     {
-      // Refetch every 5 seconds to catch updates
-      refetchInterval: 5000,
+      // Refetch every 10 seconds to catch updates (reduced from 5s to prevent blinking)
+      refetchInterval: 10000,
       // Keep previous data while refetching
       keepPreviousData: true,
       // Retry on failure
-      retry: 2,
+      retry: 1,
       // Don't refetch on window focus (too aggressive)
       refetchOnWindowFocus: false,
+      // Stale time to prevent unnecessary refetches
+      staleTime: 5000,
+      // Only refetch if data is stale
+      refetchOnMount: false,
     }
   );
 
