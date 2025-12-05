@@ -57,12 +57,12 @@ export default function ExpiredProjectModal({
         <div className="p-6">
           <div className="mb-6">
             <p className="text-gray-700 mb-2">
-              <strong>{projectTitle}</strong> has expired and is no longer accessible on the free plan.
+              <strong>{projectTitle}</strong> has expired after 48 hours and is no longer accessible on the free plan.
             </p>
             {expirationDate && (
               <p className="text-sm text-gray-500 flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                Expired on {new Date(expirationDate).toLocaleDateString()}
+                Created on {new Date(expirationDate).toLocaleDateString()} • Expired after 48 hours
               </p>
             )}
           </div>

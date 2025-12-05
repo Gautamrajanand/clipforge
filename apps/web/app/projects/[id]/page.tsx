@@ -36,22 +36,22 @@ export default function ProjectPage() {
     { select: (res) => res.data }
   );
 
-  // Check if project is expired (PLG: Free tier projects expire after 30 days)
+  // Check if project is expired (PLG: Free tier projects expire after 48 hours - OpusClip parity)
   useEffect(() => {
     if (project) {
       const createdAt = new Date(project.createdAt);
       const now = new Date();
-      const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+      const hoursSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60));
       
-      // Check if project is expired (30 days for free tier)
+      // Check if project is expired (48 hours for free tier - OpusClip parity)
       // Premium users have unlimited storage
-      const isExpired = project.tier === 'FREE' && daysSinceCreation > 30;
+      const isExpired = project.tier === 'FREE' && hoursSinceCreation > 48;
       
       if (isExpired) {
         console.log('🔒 Project expired:', {
           projectId,
           createdAt,
-          daysSinceCreation,
+          hoursSinceCreation,
           tier: project.tier,
         });
         setShowExpiredModal(true);
@@ -85,12 +85,12 @@ export default function ProjectPage() {
     return <div className="container py-8">Loading...</div>;
   }
 
-  // Calculate if project is expired
+  // Calculate if project is expired (48 hours for free tier)
   const isProjectExpired = project && project.tier === 'FREE' && (() => {
     const createdAt = new Date(project.createdAt);
     const now = new Date();
-    const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
-    return daysSinceCreation > 30;
+    const hoursSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60));
+    return hoursSinceCreation > 48;
   })();
 
   return (
@@ -139,36 +139,37 @@ export default function ProjectPage() {
         </div>
       )}
 
-      {/* Timeline */}
-      {clips && clips.length > 0 && (
+      {/* Timeline - Block if expired */}
+      {!isProjectExpired && clips && clips.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Timeline</h2>
           <Timeline clips={clips} selectedClip={selectedClip} onSelectClip={setSelectedClip} />
         </div>
       )}
 
-      {/* Clips Section */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Ranked Clips</h2>
-          <Button
-            onClick={handleDetect}
-            disabled={isDetecting}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isDetecting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Detecting...
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 mr-2" />
-                Detect Highlights
-              </>
-            )}
-          </Button>
-        </div>
+      {/* Clips Section - Block if expired */}
+      {!isProjectExpired && (
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Ranked Clips</h2>
+            <Button
+              onClick={handleDetect}
+              disabled={isDetecting}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isDetecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Detecting...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  Detect Highlights
+                </>
+              )}
+            </Button>
+          </div>
 
         {clipsLoading ? (
           <div className="text-center py-12">
@@ -194,7 +195,8 @@ export default function ProjectPage() {
             </Button>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
