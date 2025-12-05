@@ -114,11 +114,13 @@ export default function Dashboard() {
     
     // Show onboarding survey if:
     // 1. User has no projects (new user)
-    // 2. Haven't completed survey in this session
-    const hasSurveyCompleted = sessionStorage.getItem('onboardingSurveyCompleted');
+    // 2. Haven't completed survey for THIS user
+    const surveyKey = `onboardingSurvey_${user?.id}`;
+    const hasSurveyCompleted = localStorage.getItem(surveyKey);
     const shouldShowSurvey = projects.length === 0 && !hasSurveyCompleted;
     
     console.log('🎯 Onboarding Check:', {
+      userId: user?.id,
       projectsCount: projects.length,
       hasSurveyCompleted,
       shouldShowSurvey,
@@ -141,7 +143,8 @@ export default function Dashboard() {
     console.log('📊 Onboarding data collected:', data);
     setOnboardingData(data);
     setShowOnboardingSurvey(false);
-    sessionStorage.setItem('onboardingSurveyCompleted', 'true');
+    const surveyKey = `onboardingSurvey_${user?.id}`;
+    localStorage.setItem(surveyKey, 'true');
     
     // Track onboarding completion
     track(AnalyticsEvents.DASHBOARD_VIEWED, {
@@ -164,7 +167,8 @@ export default function Dashboard() {
   const handleSurveySkip = () => {
     console.log('⏭️ Onboarding survey skipped');
     setShowOnboardingSurvey(false);
-    sessionStorage.setItem('onboardingSurveyCompleted', 'true');
+    const surveyKey = `onboardingSurvey_${user?.id}`;
+    localStorage.setItem(surveyKey, 'true');
     
     // Track skip
     track(AnalyticsEvents.DASHBOARD_VIEWED, {
