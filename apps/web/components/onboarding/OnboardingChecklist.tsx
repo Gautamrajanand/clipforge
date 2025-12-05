@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, Sparkles, Upload, Scissors, Type, Maximize, Share2, X } from 'lucide-react';
-import { fetchWithAuth } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
+import { fetchWithAuth } from '@/lib/api';
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, Sparkles, Scissors, Type, Maximize, Share2, X } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -77,18 +77,6 @@ export default function OnboardingChecklist() {
       completed: progress.hasReframedVideo,
       icon: <Maximize className="w-5 h-5" />,
       actionText: 'Reframe Video',
-    },
-    {
-      id: 'upload',
-      title: 'Upload your own video',
-      description: 'Try ClipForge with your own content',
-      completed: progress.hasUploadedVideo,
-      icon: <Upload className="w-5 h-5" />,
-      actionText: 'Upload Video',
-      action: () => {
-        // Trigger upload modal via custom event
-        window.dispatchEvent(new CustomEvent('open-upload-modal'));
-      },
     },
     {
       id: 'share',
