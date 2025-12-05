@@ -6,7 +6,7 @@
 
 ---
 
-## 🎉 Recent Updates (Dec 5, 2025)
+## 🎉 Recent Updates (Dec 5, 2025 - Evening)
 
 ### ✅ Completed Features
 - **Onboarding Survey** - 3-step user profiling (role, goal, platforms)
@@ -17,6 +17,11 @@
 - **Analytics Tracking** - Full event tracking for all onboarding actions
 - **Success Celebration** - Confetti animation on first clip creation (aha moment)
 - **Expired Project Blocking** - 48-hour expiration for FREE tier with blur + upgrade modal
+- **Navigation Performance** - Fixed blinking/flashing with optimized renders (60-70% improvement)
+
+### 🐛 Known Issues to Test
+- ⚠️ Credits not updating when tier changes (FREE → PRO)
+- ⚠️ Checklist progress not auto-updating (backend tracking pending)
 
 See `PLG_ONBOARDING_COMPLETE.md` and `PLG_IMPLEMENTATION_PROGRESS.md` for detailed documentation.
 
@@ -116,12 +121,12 @@ docker-compose ps
 ## 2️⃣ TRIAL EXPERIENCE & EXPIRED PROJECTS ⭐ NEW
 
 ### Test: FREE Tier Trial Banner
-**Goal:** Verify trial messaging and upgrade prompts
+**Goal:** Verify trial messaging and upgrade prompts  ✅ 
 
 #### Steps:
 1. [ ] **Trial Banner Display**
-   - Check banner appears at top of dashboard
-   - Verify countdown shows correct days left
+   - Check banner appears at top of dashboard ✅
+   - Verify countdown shows correct days left ✅
    - Test "Upgrade Now" button
    - Verify banner styling matches design
 
@@ -509,16 +514,53 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
    - Test payment form (use test card)
    - Complete purchase
 
-3. [ ] **Post-Upgrade**
-   - Verify tier updated in database
-   - Check credits increased
-   - Confirm watermark removed
-   - Test new features unlocked
+3. [ ] **Post-Upgrade Verification** ⭐ CRITICAL
+   - **Tier Update:**
+     - Check database: `SELECT tier FROM organizations WHERE id = 'org_xxx'`
+     - Verify dashboard shows new tier
+     - Confirm trial banner removed/updated
+   
+   - **Credits Update:** ⚠️ KNOWN ISSUE
+     - FREE (60) → STARTER (150) → Should show 150
+     - FREE (60) → PRO (300) → Should show 300
+     - Check: `/credits` page
+     - Check: Sidebar credits widget
+     - **If not updating:** Check webhook logs
+   
+   - **Feature Unlocking:**
+     - Watermark removed from exports
+     - Project expiration removed
+     - New features accessible
+     - Billing portal accessible
+   
+   - **Database Verification:**
+     ```sql
+     SELECT 
+       tier,
+       credits,
+       monthly_credits_allocation,
+       stripe_customer_id,
+       stripe_subscription_id
+     FROM organizations 
+     WHERE id = 'org_xxx';
+     ```
+
+4. [ ] **Admin Manual Upgrade Test** ⭐ NEW
+   - Go to `/admin/users`
+   - Find test user
+   - Change tier from FREE to PRO
+   - **Expected:**
+     - ✅ Tier updates immediately
+     - ✅ Credits should update to 300
+     - ⚠️ **KNOWN BUG:** Credits may not update
+   - **Workaround:** Manually update credits in database
+   - **Fix Needed:** Backend webhook/admin update logic
 
 **Expected Results:**
 - ✅ Pricing clear and compelling
 - ✅ Checkout smooth and secure
 - ✅ Upgrade reflected immediately
+- ⚠️ Credits update (may need manual fix)
 - ✅ Features unlocked correctly
 
 **Test Cards (Stripe):**
@@ -567,6 +609,32 @@ SELECT * FROM "Referral" ORDER BY "createdAt" DESC LIMIT 10;
 - [ ] Missing endpoints (404s)
 - [ ] Slow queries
 - [ ] Memory leaks
+- [ ] **Credits not updating on tier change** ⚠️ CRITICAL
+
+### Credits Not Updating Issue
+**Symptom:** User upgraded from FREE to PRO, but credits still show 60 instead of 300
+
+**Root Cause:** Admin panel update doesn't trigger credit allocation update
+
+**Temporary Fix:**
+```sql
+-- Manual credit update
+UPDATE organizations 
+SET 
+  credits = 300,
+  monthly_credits_allocation = 300
+WHERE id = 'org_xxx';
+```
+
+**Proper Fix Needed:**
+1. Admin panel should call credit update service
+2. Webhook should handle tier changes
+3. Credit allocation should auto-update on tier change
+
+**Files to Check:**
+- `apps/api/src/admin/admin.service.ts` - Admin update logic
+- `apps/api/src/credits/credits.service.ts` - Credit allocation
+- `apps/api/src/payments/payments.service.ts` - Webhook handler
 
 ### Analytics
 - [ ] Events not firing

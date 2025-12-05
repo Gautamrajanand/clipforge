@@ -425,10 +425,24 @@ export class AdminService {
   async updateTier(orgId: string, tier: string) {
     this.logger.log(`Updating tier for org ${orgId} to ${tier}`);
 
+    // Define credit allocations by tier
+    const creditAllocations = {
+      FREE: 60,
+      STARTER: 150,
+      PRO: 300,
+      BUSINESS: 1000, // or unlimited
+    };
+
+    const newCredits = creditAllocations[tier] || 60;
+
+    this.logger.log(`Updating credits to ${newCredits} for tier ${tier}`);
+
     const org = await this.prisma.organization.update({
       where: { id: orgId },
       data: {
         tier: tier as any,
+        credits: newCredits,
+        monthlyCreditsAllocation: newCredits,
       },
       include: {
         memberships: {
@@ -444,9 +458,12 @@ export class AdminService {
       },
     });
 
+    this.logger.log(`✅ Tier and credits updated successfully for org ${orgId}`);
+
     return {
       success: true,
       organization: org,
+      message: `Tier updated to ${tier} with ${newCredits} credits`,
     };
   }
 
