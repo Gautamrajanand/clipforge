@@ -55,24 +55,12 @@ export default function OnboardingChecklist() {
 
   const items: ChecklistItem[] = [
     {
-      id: 'upload',
-      title: 'Upload your first video',
-      description: 'Get started by uploading a video or pasting a URL',
-      completed: progress.hasUploadedVideo,
-      icon: <Upload className="w-5 h-5" />,
-      actionText: 'Upload Video',
-      action: () => {
-        // Trigger upload modal via custom event
-        window.dispatchEvent(new CustomEvent('open-upload-modal'));
-      },
-    },
-    {
       id: 'clips',
       title: 'Try AI Clips',
       description: 'Create viral short clips from your video',
       completed: progress.hasCreatedClip,
       icon: <Scissors className="w-5 h-5" />,
-      actionText: 'Create Clips',
+      actionText: 'Try AI Clips',
     },
     {
       id: 'subtitles',
@@ -89,6 +77,18 @@ export default function OnboardingChecklist() {
       completed: progress.hasReframedVideo,
       icon: <Maximize className="w-5 h-5" />,
       actionText: 'Reframe Video',
+    },
+    {
+      id: 'upload',
+      title: 'Upload your own video',
+      description: 'Try ClipForge with your own content',
+      completed: progress.hasUploadedVideo,
+      icon: <Upload className="w-5 h-5" />,
+      actionText: 'Upload Video',
+      action: () => {
+        // Trigger upload modal via custom event
+        window.dispatchEvent(new CustomEvent('open-upload-modal'));
+      },
     },
     {
       id: 'share',

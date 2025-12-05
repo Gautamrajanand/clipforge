@@ -91,23 +91,15 @@ export default function WelcomeModal({ isOpen, onClose, userName }: WelcomeModal
         {/* CTA */}
         <div className="space-y-3">
           <button
-            onClick={() => {
-              onClose();
-              // Trigger sample video flow
-              const event = new CustomEvent('try-sample-video');
-              window.dispatchEvent(event);
-            }}
+            onClick={onClose}
             className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
             <Sparkles className="w-5 h-5" />
-            Try with Sample Video (30 seconds)
+            Get Started
           </button>
-          <button
-            onClick={onClose}
-            className="w-full px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
-          >
-            Upload My Own Video
-          </button>
+          <p className="text-xs text-gray-500 text-center mt-2">
+            Upload your video and try AI Clips to get started
+          </p>
         </div>
 
         {/* Quick Tips */}
