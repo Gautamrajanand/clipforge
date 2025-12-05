@@ -698,16 +698,58 @@ export default function Dashboard() {
 
           {/* Progress Stats - Collapsed by default */}
           {projects.length > 0 && (
-            <details className="mb-4">
-              <summary className="cursor-pointer flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors">
-                <div className="flex items-center gap-2 flex-1">
-                  <span className="text-2xl">📊</span>
-                  <span className="text-lg font-semibold text-gray-900">Your Progress</span>
+            <details className="mb-8">
+              <summary className="cursor-pointer flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors list-none">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Your Progress</h3>
+                    <p className="text-sm text-gray-600">0 of 5 completed</p>
+                  </div>
                 </div>
-                <span className="text-sm text-gray-500">0 of 5 completed</span>
-                <span className="text-gray-400">0%</span>
+                
+                <div className="flex items-center gap-3">
+                  {/* Progress Circle */}
+                  <div className="relative w-12 h-12">
+                    <svg className="w-12 h-12 transform -rotate-90">
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                        className="text-gray-200"
+                      />
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 20}`}
+                        strokeDashoffset={`${2 * Math.PI * 20}`}
+                        className="text-green-600 transition-all duration-500"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-semibold text-gray-700">0%</span>
+                    </div>
+                  </div>
+                  
+                  {/* Chevron */}
+                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </summary>
-              <div className="mt-2">
+              <div className="p-4 border-t border-gray-100">
                 <ProgressStats
                   totalClips={projects.reduce((sum, p) => sum + (p.moments?.length || 0), 0)}
                   totalVideos={projects.length}
