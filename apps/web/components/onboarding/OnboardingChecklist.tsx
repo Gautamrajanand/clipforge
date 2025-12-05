@@ -1,11 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
-import { fetchWithAuth } from '@/lib/api';
+import { useState } from 'react';
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, Sparkles, Scissors, Type, Maximize, Share2, X } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 
 interface ChecklistItem {
   id: string;
@@ -18,47 +15,23 @@ interface ChecklistItem {
 }
 
 export default function OnboardingChecklist() {
-  const { getToken } = useAuth();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
-  const [progress, setProgress] = useState({
-    hasUploadedVideo: false,
-    hasCreatedClip: false,
-    hasAddedSubtitles: false,
-    hasReframedVideo: false,
-    hasShared: false,
-  });
+  
+  // Use the new hook for real-time progress tracking
+  const { progress, isLoading } = useOnboardingProgress();
 
-  const getClerkToken = async () => {
-    const token = await getToken();
-    return token || '';
-  };
-
-  // Fetch progress from API
-  useEffect(() => {
-    fetchProgress();
-  }, []);
-
-  const fetchProgress = async () => {
-    try {
-      const response = await fetchWithAuth(`${API_URL}/v1/onboarding/progress`, {
-        getToken: getClerkToken,
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setProgress(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch onboarding progress:', error);
-    }
-  };
+  // Show loading state
+  if (isLoading && !progress) {
+    return null;
+  }
 
   const items: ChecklistItem[] = [
     {
       id: 'clips',
       title: 'Try AI Clips',
       description: 'Create viral short clips from your video',
-      completed: progress.hasCreatedClip,
+      completed: progress?.hasCreatedClip || false,
       icon: <Scissors className="w-5 h-5" />,
       actionText: 'Try AI Clips',
     },
@@ -66,7 +39,7 @@ export default function OnboardingChecklist() {
       id: 'subtitles',
       title: 'Try AI Subtitles',
       description: 'Add professional captions in 20+ languages',
-      completed: progress.hasAddedSubtitles,
+      completed: progress?.hasAddedSubtitles || false,
       icon: <Type className="w-5 h-5" />,
       actionText: 'Add Captions',
     },
@@ -74,7 +47,7 @@ export default function OnboardingChecklist() {
       id: 'reframe',
       title: 'Try AI Reframe',
       description: 'Convert to different aspect ratios (9:16, 1:1, etc.)',
-      completed: progress.hasReframedVideo,
+      completed: progress?.hasReframedVideo || false,
       icon: <Maximize className="w-5 h-5" />,
       actionText: 'Reframe Video',
     },
@@ -82,7 +55,7 @@ export default function OnboardingChecklist() {
       id: 'share',
       title: 'Share your transformation',
       description: 'Export and share your content on social media',
-      completed: progress.hasShared,
+      completed: progress?.hasShared || false,
       icon: <Share2 className="w-5 h-5" />,
       actionText: 'Share',
     },
