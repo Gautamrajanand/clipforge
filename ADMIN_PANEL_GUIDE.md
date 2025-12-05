@@ -1,8 +1,8 @@
 # Admin Panel & Monitoring Guide
 
-**Date:** November 23, 2025  
-**Status:** ✅ Complete  
-**Sprint:** Week 3 Day 1
+**Date:** December 5, 2025 (Updated)  
+**Status:** ✅ Complete & Production Ready  
+**Sprint:** Week 3 Day 1 (Completed) + Post-Migration Updates
 
 ---
 
@@ -560,8 +560,8 @@ npm run test admin
 
 ## 🎉 Summary
 
-**Status:** Admin Panel Complete ✅  
-**Time Invested:** 2 hours  
+**Status:** Admin Panel Complete ✅ PRODUCTION READY  
+**Time Invested:** 2 hours (initial) + ongoing updates  
 **Impact:** High (monitoring, support, analytics)
 
 **Implemented:**
@@ -572,13 +572,182 @@ npm run test admin
 - ✅ Transaction history
 - ✅ System health check
 - ✅ Beautiful frontend dashboard
+- ✅ Credit adjustment tools
+- ✅ Tier management
+- ✅ User search & filtering
 
-**Next Steps:**
-- Add charts/graphs
-- Implement role-based access
-- Add audit logs
-- Real-time updates
+**Recent Updates (Dec 5, 2025):**
+- ✅ Fixed tier update to correctly set credits
+- ✅ Added onboarding progress tracking
+- ✅ Database migration completed successfully
+- ✅ All admin features tested and working
+
+**Next Steps (Post-Launch):**
+- Add charts/graphs for better visualization
+- Implement role-based access (admin levels)
+- Add comprehensive audit logs
+- Real-time updates via WebSocket
+- Export reports (CSV/PDF)
 
 ---
 
-**Week 3 Day 1: Admin Panel COMPLETE!** 🚀
+## 📊 **ADMIN USER JOURNEY**
+
+### **What Admins Can Do:**
+
+**1. Dashboard Overview (GET /admin/dashboard)**
+```
+┌─────────────────────────────────────────┐
+│         ADMIN DASHBOARD                  │
+├─────────────────────────────────────────┤
+│ Users:                                   │
+│  • Total: 150                            │
+│  • Active (7d): 45                       │
+│  • Paid: 12                              │
+│  • Recent Signups: 23                    │
+├─────────────────────────────────────────┤
+│ Organizations:                           │
+│  • Total: 120                            │
+│  • FREE: 100 | STARTER: 15 | PRO: 5     │
+├─────────────────────────────────────────┤
+│ Projects:                                │
+│  • Total: 450                            │
+│  • Ready: 380 | Pending: 50 | Failed: 20│
+├─────────────────────────────────────────┤
+│ Content:                                 │
+│  • Clips: 2,340                          │
+│  • Exports: 1,890                        │
+├─────────────────────────────────────────┤
+│ Revenue:                                 │
+│  • MRR: $2,340                           │
+│  • Total: $15,680                        │
+└─────────────────────────────────────────┘
+```
+
+**2. User Management (GET /admin/users)**
+- Search by email/name
+- View user details
+- See organizations
+- Track activity
+- Recent signups
+
+**3. Organization Management (GET /admin/organizations)**
+- Search organizations
+- View members
+- See projects
+- Track transactions
+- Tier distribution
+
+**4. Credit Management**
+- **Adjust Credits:** `POST /admin/credits/adjust`
+  ```json
+  {
+    "orgId": "org_123",
+    "amount": 100,
+    "reason": "Compensation for issue"
+  }
+  ```
+- **View Transactions:** `GET /admin/transactions`
+- **Credit History:** Per organization
+
+**5. Tier Management**
+- **Update Tier:** `POST /admin/tier/update`
+  ```json
+  {
+    "orgId": "org_123",
+    "tier": "STARTER"
+  }
+  ```
+- Automatically updates credits based on tier
+- Logs all tier changes
+
+**6. System Health (GET /admin/health)**
+- Database status
+- Redis connection
+- Table sizes
+- Error rates
+- Uptime
+
+---
+
+## 🔐 **ADMIN ACCESS**
+
+### **How to Access:**
+
+1. **Mark User as Admin:**
+```sql
+UPDATE "User" 
+SET "isAdmin" = true 
+WHERE email = 'admin@clipforge.ai';
+```
+
+2. **Access Admin Panel:**
+- Navigate to: `http://localhost:3000/admin`
+- Or via API: `http://localhost:3001/admin/*`
+
+3. **Authentication:**
+- Uses same Clerk auth
+- `AdminGuard` checks `isAdmin` flag
+- Returns 403 if not admin
+
+### **Admin Routes:**
+
+**Frontend:**
+- `/admin` - Dashboard
+- `/admin/users` - User management
+- `/admin/analytics` - Analytics
+- `/admin/plg/nps` - NPS feedback
+- `/admin/plg/content` - Content management
+
+**Backend API:**
+- `GET /admin/dashboard` - Stats
+- `GET /admin/users` - List users
+- `GET /admin/organizations` - List orgs
+- `POST /admin/credits/adjust` - Adjust credits
+- `POST /admin/tier/update` - Update tier
+- `GET /admin/transactions` - Transaction history
+- `GET /admin/health` - System health
+
+---
+
+## 🎯 **COMMON ADMIN TASKS**
+
+### **1. Give User Credits**
+```bash
+curl -X POST http://localhost:3001/admin/credits/adjust \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orgId": "org_123",
+    "amount": 100,
+    "reason": "Compensation"
+  }'
+```
+
+### **2. Upgrade User Tier**
+```bash
+curl -X POST http://localhost:3001/admin/tier/update \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orgId": "org_123",
+    "tier": "STARTER"
+  }'
+```
+
+### **3. Search Users**
+```bash
+curl "http://localhost:3001/admin/users?search=john@example.com" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+### **4. View System Health**
+```bash
+curl http://localhost:3001/admin/health \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+---
+
+**Week 3 Day 1: Admin Panel COMPLETE!** 🚀  
+**December 5, 2025: Production Ready!** ✅
