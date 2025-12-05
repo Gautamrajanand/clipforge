@@ -24,14 +24,14 @@ export default function WelcomeModal({ isOpen, onClose, userName }: WelcomeModal
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to ClipForge{userName ? `, ${userName}` : ''}! 🎉
+            Welcome to ClipForge! 🎉
           </h2>
-          <p className="text-gray-600 text-lg">
-            Transform your long videos into viral short clips with AI
+          <p className="text-lg text-gray-600">
+            Your AI-powered Content OS for video editing, clipping, and optimization
           </p>
         </div>
 
