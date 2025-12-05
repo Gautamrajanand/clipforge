@@ -11,6 +11,7 @@ import { QueuesService } from '../queues/queues.service';
 import { CreditsService } from '../credits/credits.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { ReferralsService } from '../referrals/referrals.service';
+import { OnboardingProgressService } from '../onboarding/onboarding-progress.service';
 // import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ReframeDto } from './dto/reframe.dto';
@@ -34,6 +35,7 @@ export class ProjectsService {
     private credits: CreditsService,
     private analytics: AnalyticsService,
     private referrals: ReferralsService,
+    private onboardingProgress: OnboardingProgressService,
     // private email: EmailService, // TEMPORARILY DISABLED
   ) {}
 
@@ -393,6 +395,32 @@ export class ProjectsService {
         avgScore: momentsWithTitles.reduce((sum, m) => sum + m.score, 0) / momentsWithTitles.length,
         avgDuration: momentsWithTitles.reduce((sum, m) => sum + m.duration, 0) / momentsWithTitles.length,
       });
+
+      // Update onboarding progress - first clip created
+      try {
+        const project = await this.prisma.project.findUnique({
+          where: { id: projectId },
+          include: {
+            org: {
+              include: {
+                memberships: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        const userId = project?.org?.memberships?.[0]?.user?.id;
+        if (userId) {
+          await this.onboardingProgress.updateFeatureProgress(userId, 'clip');
+          this.logger.log(`✅ Updated onboarding progress for user ${userId}: clip`);
+        }
+      } catch (error) {
+        this.logger.error(`Failed to update onboarding progress:`, error);
+      }
 
       // Send email notification - TEMPORARILY DISABLED
       /* try {
