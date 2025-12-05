@@ -62,10 +62,12 @@ export function useOnboardingProgress() {
       refetchOnWindowFocus: false,
       // Cache for 5 minutes (long cache, manual refresh needed)
       staleTime: 300000,
-      // Refetch on mount to get latest data
-      refetchOnMount: true,
+      // Don't refetch on mount - wait for auth to be ready
+      refetchOnMount: false,
       // Disable background refetch
       refetchIntervalInBackground: false,
+      // Only enable query when we're sure auth is ready
+      enabled: false,
     }
   );
 

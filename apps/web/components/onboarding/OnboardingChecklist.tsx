@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/nextjs';
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, Sparkles, Scissors, Type, Maximize, Share2, X } from 'lucide-react';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 
@@ -17,12 +18,20 @@ interface ChecklistItem {
 export default function OnboardingChecklist() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
+  const { isLoaded, isSignedIn } = useAuth();
   
   // Use the new hook for real-time progress tracking
-  const { progress, isLoading } = useOnboardingProgress();
+  const { progress, isLoading, refetch } = useOnboardingProgress();
+
+  // Fetch progress when auth is ready
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      refetch();
+    }
+  }, [isLoaded, isSignedIn, refetch]);
 
   // Show loading state
-  if (isLoading && !progress) {
+  if (!isLoaded || (isLoading && !progress)) {
     return null;
   }
 
