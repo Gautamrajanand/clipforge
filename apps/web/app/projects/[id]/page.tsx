@@ -12,7 +12,7 @@ import { Play, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ExpiredProjectModal from '@/components/ExpiredProjectModal';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function ProjectPage() {
   const params = useParams();
