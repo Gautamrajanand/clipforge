@@ -52,18 +52,20 @@ export function useOnboardingProgress() {
       return response as unknown as OnboardingProgress;
     },
     {
-      // DISABLED auto-refetch to prevent blinking - will refetch manually on user actions
-      refetchInterval: false,
-      // Keep previous data while refetching
+      // Refetch every 30 seconds (balanced for updates without blinking)
+      refetchInterval: 30000,
+      // Keep previous data while refetching (prevents UI flicker)
       keepPreviousData: true,
-      // Retry on failure
+      // Retry once on failure
       retry: 1,
-      // Don't refetch on window focus
+      // Don't refetch on window focus (too aggressive)
       refetchOnWindowFocus: false,
-      // Cache for 30 seconds
-      staleTime: 30000,
-      // Don't refetch on mount
+      // Cache for 15 seconds (prevents unnecessary refetches)
+      staleTime: 15000,
+      // Don't refetch on mount (use cached data)
       refetchOnMount: false,
+      // Enable background refetch
+      refetchIntervalInBackground: false,
     }
   );
 

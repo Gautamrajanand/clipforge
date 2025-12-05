@@ -1167,8 +1167,9 @@ export default function Dashboard() {
       {/* NPS Widget */}
       <NPSWidget />
 
-      {/* Upgrade Nudges - TEMPORARILY DISABLED due to loading state issues */}
-      {/* {hasActiveTrigger && activeTriger && (
+      {/* Upgrade Nudges - DISABLED (showing incorrectly even with credits) */}
+      {/* TODO: Fix loading state detection before re-enabling */}
+      {/* {hasActiveTrigger && activeTriger && creditsAllocation > 0 && (
         <UpgradeModal
           isOpen={true}
           trigger={activeTriger.type}

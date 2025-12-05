@@ -398,6 +398,8 @@ export class ProjectsService {
 
       // Update onboarding progress - first clip created
       try {
+        this.logger.log(`🔄 Attempting to update onboarding progress for project ${projectId}`);
+        
         const project = await this.prisma.project.findUnique({
           where: { id: projectId },
           include: {
@@ -413,13 +415,23 @@ export class ProjectsService {
           },
         });
 
+        this.logger.log(`📊 Project data:`, {
+          hasOrg: !!project?.org,
+          hasMemberships: !!project?.org?.memberships,
+          membershipCount: project?.org?.memberships?.length || 0,
+        });
+
         const userId = project?.org?.memberships?.[0]?.user?.id;
         if (userId) {
+          this.logger.log(`👤 Found userId: ${userId}, updating progress...`);
           await this.onboardingProgress.updateFeatureProgress(userId, 'clip');
           this.logger.log(`✅ Updated onboarding progress for user ${userId}: clip`);
+        } else {
+          this.logger.warn(`⚠️ No userId found for project ${projectId}`);
         }
       } catch (error) {
-        this.logger.error(`Failed to update onboarding progress:`, error);
+        this.logger.error(`❌ Failed to update onboarding progress:`, error);
+        this.logger.error(`Error stack:`, error.stack);
       }
 
       // Send email notification - TEMPORARILY DISABLED
