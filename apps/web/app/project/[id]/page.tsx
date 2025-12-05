@@ -11,6 +11,7 @@ import ClipsGrid from '@/components/clips/ClipsGrid';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import ClipSettings from '@/components/clips/ClipSettings';
 import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
+import SuccessCelebration from '@/components/SuccessCelebration';
 import { fetchWithAuth } from '@/lib/api';
 import { analytics, AnalyticsEvents } from '@/lib/analytics';
 import { usePageTracking } from '@/hooks/useAnalytics';
@@ -45,6 +46,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [creditsAllocation, setCreditsAllocation] = useState(60);
   const [resetDate, setResetDate] = useState<string>('');
   const [tier, setTier] = useState<string>('FREE');
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [isFirstClip, setIsFirstClip] = useState(false);
 
   const fetchExistingExports = async () => {
     try {
@@ -405,6 +408,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const handleDetectClips = async () => {
     setIsDetecting(true);
+    const hadNoClipsBefore = clips.length === 0;
+    
     try {
       const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/detect`, {
         method: 'POST',
@@ -421,7 +426,23 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       if (response.ok) {
         // Refresh project data to get new clips
         await fetchProjectData();
-        alert('Clips detected successfully!');
+        
+        // Check if this was the first clip creation (aha moment!)
+        if (hadNoClipsBefore && clips.length > 0) {
+          setIsFirstClip(true);
+          setShowCelebration(true);
+          
+          // Track aha moment
+          analytics.track(AnalyticsEvents.AHA_MOMENT, {
+            feature: 'ai_clips',
+            projectId: params.id,
+            clipCount: clips.length,
+          });
+          
+          console.log('🎉 First clip created - Aha moment!');
+        } else {
+          alert('Clips detected successfully!');
+        }
       } else {
         alert('Failed to detect clips');
       }
@@ -499,6 +520,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Success Celebration for First Clip */}
+      <SuccessCelebration
+        isOpen={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        title="Your First AI Clip! 🎉"
+        message="You just created your first viral clip in seconds. That's the power of AI!"
+      />
+      
       <Sidebar 
         credits={credits}
         creditsAllocation={creditsAllocation}

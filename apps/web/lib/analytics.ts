@@ -271,6 +271,11 @@ export const AnalyticsEvents = {
   UPGRADE_PROMPT_SHOWN: 'upgrade_prompt_shown',
   UPGRADE_PROMPT_CLICKED: 'upgrade_prompt_clicked',
   
+  // PLG Milestones
+  AHA_MOMENT: 'aha_moment',
+  ONBOARDING_COMPLETED: 'onboarding_completed',
+  FIRST_CLIP_CREATED: 'first_clip_created',
+  
   // Social Sharing
   CLIP_SHARED: 'clip_shared',
   REFERRAL_LINK_SHARED: 'referral_link_shared',
