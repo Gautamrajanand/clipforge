@@ -78,7 +78,7 @@ export default function Dashboard() {
     credits: credits || 0,
     tier: tier as 'FREE' | 'STARTER' | 'PRO' | 'BUSINESS',
     monthlyAllocation: creditsAllocation,
-    exportCount: projects.length, // Using projects as proxy for exports
+    exportCount: 0, // TODO: Track actual export count from backend
     daysActive: 7, // Default value
   });
 

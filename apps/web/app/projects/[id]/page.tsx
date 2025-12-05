@@ -86,11 +86,27 @@ export default function ProjectPage() {
   }
 
   // Calculate if project is expired (48 hours for free tier)
-  const isProjectExpired = project && project.tier === 'FREE' && (() => {
+  const isProjectExpired = project && (() => {
+    // If tier is not set, assume FREE (default for new users)
+    const projectTier = project.tier || 'FREE';
+    
+    // Premium users never expire
+    if (projectTier !== 'FREE') return false;
+    
     const createdAt = new Date(project.createdAt);
     const now = new Date();
     const hoursSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60));
-    return hoursSinceCreation > 48;
+    const expired = hoursSinceCreation > 48;
+    
+    console.log('🔍 Project Expiration Check:', {
+      projectId,
+      tier: projectTier,
+      createdAt: createdAt.toISOString(),
+      hoursSinceCreation,
+      expired,
+    });
+    
+    return expired;
   })();
 
   return (
