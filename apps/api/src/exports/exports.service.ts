@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../prisma/prisma.service';
+import { OnboardingProgressService } from '../onboarding/onboarding-progress.service';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class ExportsService {
   constructor(
     private prisma: PrismaService,
     private httpService: HttpService,
+    private onboardingProgress: OnboardingProgressService,
   ) {}
 
   async create(momentId: string, orgId: string, dto: any) {
@@ -37,6 +39,32 @@ export class ExportsService {
         publishedTo: [],
       } as any,
     });
+
+    // Update onboarding progress - export created
+    try {
+      const project = await this.prisma.project.findUnique({
+        where: { id: moment.projectId },
+        include: {
+          org: {
+            include: {
+              memberships: {
+                include: {
+                  user: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const userId = project?.org?.memberships?.[0]?.user?.id;
+      if (userId) {
+        await this.onboardingProgress.updateFeatureProgress(userId, 'export');
+        this.logger.log(`✅ Updated onboarding progress for user ${userId}: export`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to update onboarding progress:`, error);
+    }
 
     // TODO: Enqueue render job to ML workers
 
