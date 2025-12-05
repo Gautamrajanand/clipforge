@@ -46,6 +46,9 @@ export function useUpgradeTriggers({
     // Don't show to paid users (except PRO → BUSINESS)
     if (tier === 'BUSINESS') return;
 
+    // Don't show if credits haven't loaded yet (monthlyAllocation is 0 on initial load)
+    if (monthlyAllocation === 0) return;
+
     const now = Date.now();
     const newTriggers: UpgradeTrigger[] = [];
 
