@@ -101,10 +101,17 @@ export default function SubtitlesModal({
 
     setIsProcessing(true);
     try {
+      // Styles with their own colors (don't override)
+      const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi'];
+      const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
+      
       const settings = {
         captionStyle,
-        primaryColor,
-        secondaryColor,
+        // Only send color overrides for white/neutral styles
+        ...((!shouldUseStyleColor) && {
+          primaryColor,
+          secondaryColor,
+        }),
         fontSize,
         position,
       };
