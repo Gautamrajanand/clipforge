@@ -44,17 +44,17 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
 
   bold: {
     id: 'bold',
-    name: 'Bold',
-    description: 'Pop-in animation with large text (Opus Clip style)',
-    fontFamily: 'Arial Black',
-    fontSize: 56,
+    name: 'Meme Block Capitals',
+    description: 'Classic YouTube meme style (comedy edits, reactions)',
+    fontFamily: 'Impact',
+    fontSize: 80, // Canonical: 70-90px
     textColor: '#FFFFFF',
     backgroundColor: 'rgba(0, 0, 0, 0)',
     position: 'center',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 5,
+      width: 8, // Canonical: 8px thick stroke
     },
   },
 
@@ -92,33 +92,39 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
 
   karaoke: {
     id: 'karaoke',
-    name: 'Karaoke',
-    description: 'Word-by-word color highlighting (Opus Clip style)',
-    fontFamily: 'Arial',
+    name: 'Karaoke Sync',
+    description: 'Progressive fill synced to audio (singing, poetry)',
+    fontFamily: 'Montserrat',
     fontSize: 48,
-    textColor: '#00FF00',
+    textColor: '#FFFFFF', // Canonical: White inactive
     backgroundColor: 'rgba(0, 0, 0, 0)',
     position: 'bottom',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 4,
+      width: 2,
     },
   },
 
   podcast: {
     id: 'podcast',
-    name: 'Podcast',
-    description: 'Professional style with speaker labels',
-    fontFamily: 'Arial',
-    fontSize: 48, // Increased from 30 for better visibility
+    name: 'Soft Subtle Podcast',
+    description: 'Minimal clean style for educational content (Lex Fridman, Ali Abdaal)',
+    fontFamily: 'Inter',
+    fontSize: 40, // Canonical: 32-48px
     textColor: '#FFFFFF',
-    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Slightly more opaque
+    backgroundColor: 'rgba(0, 0, 0, 0.25)', // Canonical: soft translucent strip
     position: 'bottom',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 4, // Increased from 2 for better contrast
+      width: 2,
+    },
+    shadow: {
+      offsetX: 0,
+      offsetY: 2,
+      blur: 8,
+      color: 'rgba(0, 0, 0, 0.35)',
     },
   },
 
@@ -126,17 +132,17 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
 
   mrbeast: {
     id: 'mrbeast',
-    name: 'MrBeast',
-    description: 'Viral yellow pop style with bounce animation',
-    fontFamily: 'Arial Black',
-    fontSize: 95, // Increased from 80 for maximum impact
-    textColor: '#FFD700', // Gold/Yellow
+    name: 'MrBeast Bold',
+    description: 'Most viral style - ALL CAPS jumpy emphasis (MrBeast, meme pages)',
+    fontFamily: 'Impact',
+    fontSize: 75, // Canonical: 60-90px
+    textColor: '#FFD900', // Canonical: High-sat yellow
     backgroundColor: 'rgba(0, 0, 0, 0)',
     position: 'center',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 12, // Increased from 10 for even stronger outline
+      width: 5, // Canonical: 4-6px
     },
   },
 
@@ -164,16 +170,16 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
 
   highlight: {
     id: 'highlight',
-    name: 'Highlight',
-    description: 'Yellow box highlights on key words (Hormozi style)',
-    fontFamily: 'Arial Black',
-    fontSize: 90, // Increased from 70 for maximum impact
+    name: 'Highlighter Box',
+    description: 'Word-level emphasis for debate clips (Opus Highlighter)',
+    fontFamily: 'Inter',
+    fontSize: 47, // Canonical: 42-52px
     textColor: '#000000', // Black text
-    backgroundColor: '#FFD700', // Yellow background
+    backgroundColor: '#FFE600', // Canonical: Yellow highlight
     position: 'center',
     alignment: 'center',
     stroke: {
-      color: '#FFFFFF',
+      color: 'transparent',
       width: 0,
     },
   },
@@ -236,39 +242,227 @@ export const CAPTION_STYLE_PRESETS: Record<string, CaptionStylePreset> = {
 
   tricolor: {
     id: 'tricolor',
-    name: 'Tricolor',
-    description: 'Three words with accent color on middle word',
-    fontFamily: 'Arial Black',
-    fontSize: 90,
-    textColor: '#FFFFFF', // White for regular words
-    backgroundColor: 'rgba(0, 0, 0, 0)',
-    position: 'center',
-    alignment: 'center',
-    stroke: {
-      color: '#000000',
-      width: 10,
-    },
-  },
-
-  bounce: {
-    id: 'bounce',
-    name: 'Bounce',
-    description: 'Words bounce UP on emphasis (Hormozi/Gary Vee style)',
-    fontFamily: 'Arial Black',
-    fontSize: 95,
+    name: 'Multi-Color Highlight',
+    description: 'Color-coded meaning (Alex Hormozi style)',
+    fontFamily: 'Inter',
+    fontSize: 48, // Canonical: 42-54px
     textColor: '#FFFFFF',
     backgroundColor: 'rgba(0, 0, 0, 0)',
     position: 'center',
     alignment: 'center',
     stroke: {
       color: '#000000',
-      width: 12,
+      width: 2,
+    },
+  },
+
+  bounce: {
+    id: 'bounce',
+    name: 'Bounce Zoom',
+    description: 'TikTok default emphasis bounce (humor, punchlines)',
+    fontFamily: 'Arial Black',
+    fontSize: 62, // Canonical: 52-72px
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 3, 
+    },
+  },
+
+  typewriter: {
+    id: 'typewriter',
+    name: 'Typewriter',
+    description: 'Letter-by-letter typing animation (nostalgic storytelling)',
+    fontFamily: 'Courier New',
+    fontSize: 38, 
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'bottom',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 2,
+    },
+  },
+
+  glitch: {
+    id: 'glitch',
+    name: 'Glitch RGB',
+    description: 'RGB split distortion (gaming, tech, Gen-Z)',
+    fontFamily: 'Arial Black',
+    fontSize: 48, 
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 3,
+    },
+  },
+
+  popline: {
+    id: 'popline',
+    name: 'Popline Slide-Bar',
+    description: 'Horizontal wipe bar (modern TikTok, motivational)',
+    fontFamily: 'Inter',
+    fontSize: 40, 
+    textColor: '#000000',
+    backgroundColor: '#00FF87', 
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: 'transparent',
+      width: 0,
+    },
+  },
+
+  blur: {
+    id: 'blur',
+    name: 'Blur Switch',
+    description: 'Frosted glass caption (aesthetic, luxury)',
+    fontFamily: 'Inter',
+    fontSize: 38, 
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', 
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: 'transparent',
+      width: 0,
     },
     shadow: {
-      offsetX: 4,
+      offsetX: 0,
       offsetY: 4,
-      blur: 0,
+      blur: 12,
+      color: 'rgba(0, 0, 0, 0.3)',
+    },
+  },
+
+  documentary: {
+    id: 'documentary',
+    name: 'Cut-Out Block',
+    description: 'Documentary style (Vox, AJ+, explainers)',
+    fontFamily: 'Arial Black',
+    fontSize: 40, 
+    textColor: '#FFFFFF',
+    backgroundColor: '#FF3DA1', 
+    position: 'bottom',
+    alignment: 'center',
+    stroke: {
+      color: 'transparent',
+      width: 0,
+    },
+  },
+
+  cinematic: {
+    id: 'cinematic',
+    name: 'Cinematic Subtitles',
+    description: 'Film-style captions (travel reels, vlogs)',
+    fontFamily: 'Georgia',
+    fontSize: 38, 
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'bottom',
+    alignment: 'center',
+    stroke: {
+      color: 'transparent',
+      width: 0,
+    },
+    shadow: {
+      offsetX: 0,
+      offsetY: 4,
+      blur: 12,
+      color: 'rgba(0, 0, 0, 0.7)',
+    },
+  },
+
+  uppercase: {
+    id: 'uppercase',
+    name: 'Uppercase Plate',
+    description: 'Clean boxed text (corporate, tips reels)',
+    fontFamily: 'Montserrat',
+    fontSize: 44, 
+    textColor: '#FFFFFF',
+    backgroundColor: '#000000',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: 'transparent',
+      width: 0,
+    },
+  },
+
+  zoom: {
+    id: 'zoom',
+    name: 'Word Zoom Emphasis',
+    description: 'Key words zoom 1.2x (business, TED talks)',
+    fontFamily: 'Inter',
+    fontSize: 40, 
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
       color: '#000000',
+      width: 2,
+    },
+  },
+
+  gradient: {
+    id: 'gradient',
+    name: 'Gradient Pop',
+    description: 'Gradient text (fitness, influencer reels)',
+    fontFamily: 'Montserrat',
+    fontSize: 40, 
+    textColor: '#FF1493', 
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    position: 'center',
+    alignment: 'center',
+    stroke: {
+      color: '#000000',
+      width: 2,
+    },
+  },
+
+  bubble: {
+    id: 'bubble',
+    name: 'Podcast Bubble Words',
+    description: 'Bubble behind each word (ClipFM style)',
+    fontFamily: 'Inter',
+    fontSize: 36, 
+    textColor: '#FFFFFF',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    position: 'bottom',
+    alignment: 'center',
+    stroke: {
+      color: 'transparent',
+      width: 0,
+    },
+    shadow: {
+      offsetX: 0,
+      offsetY: 2,
+      blur: 6,
+      color: 'rgba(0, 0, 0, 0.3)',
+    },
+  },
+
+  news: {
+    id: 'news',
+    name: 'News Ticker',
+    description: 'Breaking news meme style (satire, commentary)',
+    fontFamily: 'Arial Black',
+    fontSize: 38, 
+    textColor: '#FFFFFF',
+    backgroundColor: '#D90000', 
+    position: 'bottom',
+    alignment: 'center',
+    stroke: {
+      color: 'transparent',
+      width: 0,
     },
   },
 };

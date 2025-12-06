@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Upload, Link as LinkIcon, Type } from 'lucide-react';
 import CaptionStyleSelector from '../captions/CaptionStyleSelector';
+import CaptionPreviewModal from '../captions/CaptionPreviewModal';
 
 interface SubtitlesModalProps {
   isOpen: boolean;
@@ -48,23 +49,40 @@ export default function SubtitlesModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [videoDuration, setVideoDuration] = useState<number | null>(null);
   const [estimatedCredits, setEstimatedCredits] = useState<number | null>(null);
+  const [previewStyleId, setPreviewStyleId] = useState<string | null>(null);
+  const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
     
-    // Get video duration to calculate credits
+    // Get video duration to calculate credits and generate thumbnail
     const video = document.createElement('video');
     video.preload = 'metadata';
     video.onloadedmetadata = () => {
-      window.URL.revokeObjectURL(video.src);
       const durationMinutes = video.duration / 60;
       setVideoDuration(video.duration);
       // Calculate credits: 1 credit per minute, round down, minimum 1
       const credits = Math.max(1, Math.floor(durationMinutes));
       setEstimatedCredits(credits);
+      
+      // Generate thumbnail for preview
+      video.currentTime = video.duration / 2; // Middle of video
     };
+    
+    video.onseeked = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        setVideoThumbnail(canvas.toDataURL('image/jpeg'));
+      }
+      window.URL.revokeObjectURL(video.src);
+    };
+    
     video.src = URL.createObjectURL(selectedFile);
   };
 
@@ -257,6 +275,7 @@ export default function SubtitlesModal({
             <CaptionStyleSelector
               selectedStyle={captionStyle}
               onStyleChange={setCaptionStyle}
+              onPreview={(styleId) => setPreviewStyleId(styleId)}
             />
           </div>
 
@@ -382,6 +401,17 @@ export default function SubtitlesModal({
           )}
         </div>
       </div>
+
+      {/* Caption Preview Modal */}
+      {previewStyleId && (
+        <CaptionPreviewModal
+          isOpen={true}
+          onClose={() => setPreviewStyleId(null)}
+          styleId={previewStyleId}
+          videoThumbnail={videoThumbnail || undefined}
+          sampleText="Your AI-generated subtitles will look like this"
+        />
+      )}
     </div>
   );
 }

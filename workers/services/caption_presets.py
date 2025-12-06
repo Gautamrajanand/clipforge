@@ -9,17 +9,39 @@ from enum import Enum
 
 
 class CaptionPreset(Enum):
-    """Available caption presets"""
-    KARAOKE = "karaoke"
-    DEEP_DIVER = "deep_diver"
-    POD_P = "pod_p"
+    """Available caption presets - 21 Canonical Styles"""
+    # Static Styles
+    MINIMAL = "minimal"
+    ELEGANT = "elegant"
+    MODERN = "modern"
+    PODCAST = "podcast"
+    CINEMATIC = "cinematic"
+    
+    # Viral Styles
+    MRBEAST = "mrbeast"
+    NEON = "neon"
+    HIGHLIGHT = "highlight"
+    RAINBOW = "rainbow"
+    BOUNCE = "bounce"
+    GLITCH = "glitch"
     POPLINE = "popline"
-    SEAMLESS_BOUNCE = "seamless_bounce"
-    BEASTY = "beasty"
-    YOUSHAEI = "youshaei"
-    MOZI = "mozi"
-    GLITCH_INFINITE = "glitch_infinite"
-    BABY_EARTHQUAKE = "baby_earthquake"
+    
+    # Professional Styles
+    DOCUMENTARY = "documentary"
+    UPPERCASE = "uppercase"
+    ZOOM = "zoom"
+    BLUR = "blur"
+    BUBBLE = "bubble"
+    
+    # Creative Styles
+    KARAOKE = "karaoke"
+    TYPEWRITER = "typewriter"
+    FILL = "fill"
+    SHADOW3D = "shadow3d"
+    TRICOLOR = "tricolor"
+    BOLD = "bold"
+    GRADIENT = "gradient"
+    NEWS = "news"
 
 
 @dataclass
@@ -65,21 +87,129 @@ class CaptionStyle:
     scale_y: float  # Vertical scale (100 = normal)
 
 
-# Preset definitions
+# Preset definitions - 21 Canonical Styles
 CAPTION_PRESETS = {
-    CaptionPreset.KARAOKE: CaptionStyle(
-        name="Karaoke",
-        description="Word-by-word highlight, big caps, bottom aligned",
-        font_name="Manrope",
-        font_size=72,
+    CaptionPreset.MINIMAL: CaptionStyle(
+        name="Minimal",
+        description="Simple white text with subtle background",
+        font_name="Arial",
+        font_size=46,
+        bold=False,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",  # Black
+        back_color="&HCC000000",  # Semi-transparent black
+        border_style=1,
+        outline=4.0,
+        shadow=0.0,
+        alignment=2,  # Bottom center
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.BOLD: CaptionStyle(
+        name="Meme Block Capitals",
+        description="Classic YouTube meme style",
+        font_name="Impact",
+        font_size=80,
         bold=True,
         italic=False,
         primary_color="&HFFFFFFFF",  # White
-        secondary_color="&HFFFF00",  # Yellow highlight
-        outline_color="&H40000000",  # Semi-transparent black
-        back_color="&H80000000",  # Transparent black
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",
         border_style=1,
-        outline=3.0,
+        outline=8.0,  # Thick stroke
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.ELEGANT: CaptionStyle(
+        name="Elegant",
+        description="Smooth slide-up animation with serif font",
+        font_name="Georgia",
+        font_size=48,
+        bold=False,
+        italic=False,
+        primary_color="&HF5F5F5FF",  # Off-white
+        secondary_color="&HF5F5F5FF",
+        outline_color="&H00000000",  # Black
+        back_color="&HB3000000",  # Semi-transparent
+        border_style=1,
+        outline=4.0,
+        shadow=0.0,
+        alignment=2,  # Bottom center
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=150,
+        fade_out=150,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.MODERN: CaptionStyle(
+        name="Modern",
+        description="Fade-in animation with clean sans-serif",
+        font_name="Arial",
+        font_size=50,
+        bold=False,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",  # Black
+        back_color="&HBF000000",  # Semi-transparent
+        border_style=1,
+        outline=4.0,
+        shadow=0.0,
+        alignment=2,  # Bottom center
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=120,
+        fade_out=120,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.KARAOKE: CaptionStyle(
+        name="Karaoke Sync",
+        description="Progressive fill synced to audio",
+        font_name="Montserrat",
+        font_size=48,
+        bold=True,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White inactive
+        secondary_color="&H00C8F8FF",  # Cyan fill (#00F8C8)
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",  # Transparent
+        border_style=1,
+        outline=2.0,
         shadow=0.0,
         alignment=2,  # Bottom center
         margin_v=80,
@@ -94,47 +224,20 @@ CAPTION_PRESETS = {
         scale_y=100.0,
     ),
     
-    CaptionPreset.DEEP_DIVER: CaptionStyle(
-        name="Deep Diver",
-        description="Centered, bold, large lines for emphasis",
-        font_name="Manrope",
-        font_size=80,
-        bold=True,
-        italic=False,
-        primary_color="&HFFFFFFFF",  # White
-        secondary_color="&HFFFFFFFF",
-        outline_color="&H00000000",  # Black outline
-        back_color="&H80000000",
-        border_style=1,
-        outline=4.0,
-        shadow=2.0,
-        alignment=5,  # Center
-        margin_v=0,
-        margin_l=100,
-        margin_r=100,
-        fade_in=150,
-        fade_out=150,
-        keyword_paint=True,
-        karaoke_effect=False,
-        spacing=1.0,
-        scale_x=105.0,
-        scale_y=105.0,
-    ),
-    
-    CaptionPreset.POD_P: CaptionStyle(
-        name="Pod P",
-        description="Bottom aligned, clean blocks, minimal styling",
+    CaptionPreset.PODCAST: CaptionStyle(
+        name="Soft Subtle Podcast",
+        description="Minimal clean style for educational content",
         font_name="Inter",
-        font_size=64,
+        font_size=40,
         bold=False,
         italic=False,
         primary_color="&HFFFFFFFF",  # White
         secondary_color="&HFFFFFFFF",
-        outline_color="&H40000000",  # Light outline
-        back_color="&H00000000",
+        outline_color="&H00000000",  # Black
+        back_color="&H40000000",  # Soft translucent
         border_style=1,
         outline=2.0,
-        shadow=0.0,
+        shadow=2.0,
         alignment=2,  # Bottom center
         margin_v=100,
         margin_l=80,
@@ -148,53 +251,26 @@ CAPTION_PRESETS = {
         scale_y=100.0,
     ),
     
-    CaptionPreset.POPLINE: CaptionStyle(
-        name="Popline",
-        description="Upper third, strong outline, high visibility",
-        font_name="Manrope",
-        font_size=70,
+    CaptionPreset.MRBEAST: CaptionStyle(
+        name="MrBeast Bold",
+        description="Most viral style - ALL CAPS jumpy emphasis",
+        font_name="Impact",
+        font_size=75,
         bold=True,
         italic=False,
-        primary_color="&HFFFFFFFF",  # White
-        secondary_color="&HFFFFFFFF",
-        outline_color="&H00000000",  # Black outline
+        primary_color="&H00D9FFFF",  # Yellow (#FFD900)
+        secondary_color="&H00D9FFFF",
+        outline_color="&H00000000",  # Black
         back_color="&H00000000",
         border_style=1,
         outline=5.0,
-        shadow=1.0,
-        alignment=8,  # Top center
-        margin_v=150,
-        margin_l=60,
-        margin_r=60,
-        fade_in=120,
-        fade_out=120,
-        keyword_paint=True,
-        karaoke_effect=False,
-        spacing=0.5,
-        scale_x=100.0,
-        scale_y=100.0,
-    ),
-    
-    CaptionPreset.SEAMLESS_BOUNCE: CaptionStyle(
-        name="Seamless Bounce",
-        description="Subtle bounce entrance, smooth transitions",
-        font_name="Manrope",
-        font_size=68,
-        bold=True,
-        italic=False,
-        primary_color="&HFFFFFFFF",  # White
-        secondary_color="&HFFFFFFFF",
-        outline_color="&H40000000",
-        back_color="&H00000000",
-        border_style=1,
-        outline=2.5,
         shadow=0.0,
-        alignment=2,  # Bottom center
-        margin_v=90,
-        margin_l=70,
-        margin_r=70,
-        fade_in=200,  # Longer fade for bounce effect
-        fade_out=150,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=80,
+        fade_out=80,
         keyword_paint=False,
         karaoke_effect=False,
         spacing=0.0,
@@ -202,11 +278,92 @@ CAPTION_PRESETS = {
         scale_y=100.0,
     ),
     
-    CaptionPreset.BEASTY: CaptionStyle(
-        name="Beasty",
-        description="Heavy stroke, high contrast, bold presence",
-        font_name="Manrope",
-        font_size=76,
+    CaptionPreset.NEON: CaptionStyle(
+        name="Neon",
+        description="Bright neon green with glow effect",
+        font_name="Arial Black",
+        font_size=85,  # Industry standard: 85px
+        bold=True,
+        italic=False,
+        primary_color="&H00FF00FF",  # Neon green (#00FF00)
+        secondary_color="&H00FF00FF",
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",  # Transparent
+        border_style=1,
+        outline=10.0,  # Thick for glow effect
+        shadow=0.0,
+        alignment=2,  # Bottom center
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.HIGHLIGHT: CaptionStyle(
+        name="Highlighter Box",
+        description="Word-level emphasis for debate clips",
+        font_name="Inter",
+        font_size=47,
+        bold=True,
+        italic=False,
+        primary_color="&H00000000",  # Black text
+        secondary_color="&H00000000",
+        outline_color="&H00000000",
+        back_color="&H00E6FFFF",  # Yellow highlight (#FFE600)
+        border_style=3,  # Opaque box
+        outline=0.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.POPLINE: CaptionStyle(
+        name="Popline Slide-Bar",
+        description="Horizontal wipe bar (modern TikTok)",
+        font_name="Inter",
+        font_size=45,
+        bold=True,
+        italic=False,
+        primary_color="&H00000000",  # Black text
+        secondary_color="&H00000000",
+        outline_color="&H00000000",
+        back_color="&H0087FF00",  # Green (#00FF87)
+        border_style=3,  # Opaque box
+        outline=0.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=120,
+        fade_out=120,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.BOUNCE: CaptionStyle(
+        name="Bounce Zoom",
+        description="TikTok default emphasis bounce",
+        font_name="Arial Black",
+        font_size=62,
         bold=True,
         italic=False,
         primary_color="&HFFFFFFFF",  # White
@@ -214,68 +371,257 @@ CAPTION_PRESETS = {
         outline_color="&H00000000",  # Black
         back_color="&H00000000",
         border_style=1,
-        outline=6.0,  # Heavy outline
-        shadow=3.0,
-        alignment=2,  # Bottom center
-        margin_v=85,
+        outline=4.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
         margin_l=50,
         margin_r=50,
-        fade_in=100,
-        fade_out=100,
-        keyword_paint=True,
-        karaoke_effect=False,
-        spacing=1.0,
-        scale_x=110.0,  # Slightly wider
-        scale_y=100.0,
-    ),
-    
-    CaptionPreset.YOUSHAEI: CaptionStyle(
-        name="Youshaei",
-        description="Thin stroke, brand color keyword paint",
-        font_name="Inter",
-        font_size=66,
-        bold=False,
-        italic=False,
-        primary_color="&HFFFFFFFF",  # White
-        secondary_color="&HFF00FF",  # Magenta for keywords
-        outline_color="&H60000000",  # Light outline
-        back_color="&H00000000",
-        border_style=1,
-        outline=1.5,  # Thin outline
-        shadow=0.0,
-        alignment=2,  # Bottom center
-        margin_v=95,
-        margin_l=75,
-        margin_r=75,
-        fade_in=120,
-        fade_out=120,
-        keyword_paint=True,  # Enable keyword painting
+        fade_in=80,
+        fade_out=80,
+        keyword_paint=False,
         karaoke_effect=False,
         spacing=0.0,
         scale_x=100.0,
         scale_y=100.0,
     ),
     
-    CaptionPreset.MOZI: CaptionStyle(
-        name="Mozi",
-        description="Rounded pill backgrounds, modern look",
+    CaptionPreset.TYPEWRITER: CaptionStyle(
+        name="Typewriter",
+        description="Letter-by-letter typing animation",
+        font_name="Courier New",
+        font_size=38,  # Match TypeScript: 38px
+        bold=False,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",  # Transparent
+        border_style=1,
+        outline=2.0,
+        shadow=0.0,
+        alignment=2,  # Bottom center
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=50,  # Quick typing effect
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=1.0,  # Letter spacing for typewriter effect
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.GLITCH: CaptionStyle(
+        name="Glitch RGB",
+        description="RGB split distortion (gaming, tech, Gen-Z)",
+        font_name="Arial Black",
+        font_size=54,
+        bold=True,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",
+        border_style=1,
+        outline=3.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=50,  # Quick glitch
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.BLUR: CaptionStyle(
+        name="Blur Switch",
+        description="Frosted glass caption (aesthetic, luxury)",
         font_name="Inter",
-        font_size=64,
+        font_size=43,
+        bold=False,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",
+        back_color="&H26FFFFFF",  # Frosted white
+        border_style=3,  # Opaque box
+        outline=0.0,
+        shadow=4.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=130,
+        fade_out=130,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.DOCUMENTARY: CaptionStyle(
+        name="Cut-Out Block",
+        description="Documentary style (Vox, AJ+, explainers)",
+        font_name="Arial Black",
+        font_size=48,
         bold=True,
         italic=False,
         primary_color="&HFFFFFFFF",  # White
         secondary_color="&HFFFFFFFF",
         outline_color="&H00000000",
-        back_color="&HCC000000",  # Semi-opaque black background
-        border_style=3,  # Opaque box (pill effect)
+        back_color="&H00A13DFF",  # Hot pink (#FF3DA1)
+        border_style=3,  # Opaque box
         outline=0.0,
         shadow=0.0,
         alignment=2,  # Bottom center
-        margin_v=100,
-        margin_l=90,
-        margin_r=90,
-        fade_in=130,
-        fade_out=130,
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.CINEMATIC: CaptionStyle(
+        name="Cinematic Subtitles",
+        description="Film-style captions (travel reels, vlogs)",
+        font_name="Georgia",
+        font_size=43,
+        bold=False,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",
+        back_color="&H00000000",
+        border_style=1,
+        outline=0.0,
+        shadow=4.0,
+        alignment=2,  # Bottom center
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=120,
+        fade_out=120,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.UPPERCASE: CaptionStyle(
+        name="Uppercase Plate",
+        description="Clean boxed text (corporate, tips reels)",
+        font_name="Montserrat",
+        font_size=48,
+        bold=True,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",
+        back_color="&H00000000",  # Black box
+        border_style=3,  # Opaque box
+        outline=0.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.ZOOM: CaptionStyle(
+        name="Word Zoom Emphasis",
+        description="Key words zoom 1.2x (business, TED talks)",
+        font_name="Inter",
+        font_size=45,
+        bold=True,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",
+        border_style=1,
+        outline=2.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=True,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=120.0,  # Zoom effect
+        scale_y=120.0,
+        ),
+    
+    CaptionPreset.GRADIENT: CaptionStyle(
+        name="Gradient Pop",
+        description="Gradient text (fitness, influencer reels)",
+        font_name="Montserrat",
+        font_size=50,
+        bold=True,
+        italic=False,
+        primary_color="&H009314FF",  # Hot pink (#FF1493)
+        secondary_color="&H009314FF",
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",
+        border_style=1,
+        outline=2.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.BUBBLE: CaptionStyle(
+        name="Podcast Bubble Words",
+        description="Bubble behind each word (ClipFM style)",
+        font_name="Inter",
+        font_size=42,
+        bold=False,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",
+        back_color="&HB3000000",  # Semi-transparent black
+        border_style=3,  # Opaque box (bubble)
+        outline=0.0,
+        shadow=2.0,
+        alignment=2,  # Bottom center
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
         keyword_paint=False,
         karaoke_effect=False,
         spacing=0.5,
@@ -283,54 +629,136 @@ CAPTION_PRESETS = {
         scale_y=100.0,
     ),
     
-    CaptionPreset.GLITCH_INFINITE: CaptionStyle(
-        name="Glitch Infinite",
-        description="Short glitch-in effect, edgy style",
-        font_name="Manrope",
-        font_size=70,
+    CaptionPreset.NEWS: CaptionStyle(
+        name="News Ticker",
+        description="Breaking news meme style (satire, commentary)",
+        font_name="Arial Black",
+        font_size=41,
         bold=True,
         italic=False,
         primary_color="&HFFFFFFFF",  # White
-        secondary_color="&HFF00FF",  # Magenta
-        outline_color="&H00FF00",  # Cyan outline for glitch
-        back_color="&H00000000",
-        border_style=1,
-        outline=3.0,
-        shadow=1.0,
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",
+        back_color="&H000090D9",  # Red bar (#D90000)
+        border_style=3,  # Opaque box
+        outline=0.0,
+        shadow=0.0,
         alignment=2,  # Bottom center
-        margin_v=88,
-        margin_l=65,
-        margin_r=65,
-        fade_in=50,  # Quick glitch in
+        margin_v=80,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
         fade_out=100,
-        keyword_paint=True,
+        keyword_paint=False,
         karaoke_effect=False,
         spacing=0.0,
         scale_x=100.0,
         scale_y=100.0,
     ),
     
-    CaptionPreset.BABY_EARTHQUAKE: CaptionStyle(
-        name="Baby Earthquake",
-        description="Micro shake on emphasized words",
-        font_name="Manrope",
-        font_size=68,
+    # Additional styles for completeness
+    CaptionPreset.RAINBOW: CaptionStyle(
+        name="Rainbow",
+        description="Rotating colors for maximum engagement",
+        font_name="Arial Black",
+        font_size=95,  # Industry standard: 95px
+        bold=True,
+        italic=False,
+        primary_color="&H00D7FFFF",  # Yellow (will rotate through rainbow)
+        secondary_color="&H00D7FFFF",
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",  # Transparent
+        border_style=1,
+        outline=12.0,  # Thick stroke
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=True,  # Color rotation on keywords
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.FILL: CaptionStyle(
+        name="Fill",
+        description="Progressive fill effect as words are spoken",
+        font_name="Arial Black",
+        font_size=90,  # Industry standard: 90px
+        bold=True,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White inactive
+        secondary_color="&H00F8BF00",  # Cyan fill (#00BFF8)
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",  # Transparent
+        border_style=1,
+        outline=10.0,  # Thick stroke
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=False,
+        karaoke_effect=True,  # Progressive fill
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.SHADOW3D: CaptionStyle(
+        name="3D Shadow",
+        description="Bold text with 3D shadow effect for depth",
+        font_name="Arial Black",
+        font_size=95,
         bold=True,
         italic=False,
         primary_color="&HFFFFFFFF",  # White
-        secondary_color="&HFFFF00",  # Yellow for emphasis
-        outline_color="&H40000000",
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",  # Black
         back_color="&H00000000",
         border_style=1,
-        outline=2.5,
-        shadow=0.0,
-        alignment=2,  # Bottom center
-        margin_v=92,
-        margin_l=70,
-        margin_r=70,
-        fade_in=80,
+        outline=12.0,
+        shadow=6.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
         fade_out=100,
-        keyword_paint=True,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.TRICOLOR: CaptionStyle(
+        name="Multi-Color Highlight",
+        description="Color-coded meaning (Alex Hormozi style)",
+        font_name="Inter",
+        font_size=48,  # Industry standard: 48px
+        bold=True,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&H0000D7FF",  # Gold/Yellow for emphasis (#FFD700)
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",  # Transparent
+        border_style=1,
+        outline=2.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=True,  # Color-coded keywords
         karaoke_effect=False,
         spacing=0.0,
         scale_x=100.0,

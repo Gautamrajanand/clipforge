@@ -1,13 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Type, Sparkles, Zap, Mic, Wand2, Star, Flame, Highlighter, Rainbow, Droplet, Box, Palette, ArrowUp } from "lucide-react";
+import { Check, Type, Sparkles, Zap, Mic, Wand2, Star, Flame, Highlighter, Rainbow, Droplet, Box, Palette, ArrowUp, Eye, Keyboard, Tv, TrendingUp, Cloud, FileText, Film, Square, ZoomIn, MessageCircle, Radio, Paintbrush } from "lucide-react";
 
 /**
  * Caption Style Presets
  * Professional styles for social media and content creation
  */
-export const CAPTION_PRESETS = [
+
+// Preview GIF URLs (to be added)
+const PREVIEW_GIFS: Record<string, string> = {
+  // TODO: Add professional preview GIF URLs here
+  // Example: mrbeast: 'https://cdn.clipforge.com/previews/mrbeast.gif',
+};
+
+const CAPTION_PRESETS = [
   {
     id: "minimal",
     name: "Minimal",
@@ -115,23 +122,114 @@ export const CAPTION_PRESETS = [
   },
   {
     id: "bounce",
-    name: "Bounce",
-    description: "⬆️ Words bounce UP (Hormozi/Gary Vee)",
+    name: "Bounce Zoom",
+    description: "⬆️ TikTok emphasis bounce (humor, punchlines)",
     icon: ArrowUp,
     position: "center",
     gradient: "from-red-500 to-pink-600",
+  },
+  // NEW CANONICAL STYLES (Complete the 21)
+  {
+    id: "typewriter",
+    name: "Typewriter",
+    description: "⌨️ Letter-by-letter typing (nostalgic storytelling)",
+    icon: Keyboard,
+    position: "bottom",
+    gradient: "from-gray-600 to-slate-700",
+  },
+  {
+    id: "glitch",
+    name: "Glitch RGB",
+    description: "📺 RGB split distortion (gaming, tech, Gen-Z)",
+    icon: Tv,
+    position: "center",
+    gradient: "from-purple-600 via-pink-500 to-cyan-500",
+  },
+  {
+    id: "popline",
+    name: "Popline Slide-Bar",
+    description: "➡️ Horizontal wipe bar (modern TikTok)",
+    icon: TrendingUp,
+    position: "center",
+    gradient: "from-green-400 to-emerald-500",
+  },
+  {
+    id: "blur",
+    name: "Blur Switch",
+    description: "🧊 Frosted glass caption (aesthetic, luxury)",
+    icon: Cloud,
+    position: "center",
+    gradient: "from-blue-300 to-indigo-400",
+  },
+  {
+    id: "documentary",
+    name: "Cut-Out Block",
+    description: "✂️ Documentary style (Vox, AJ+, explainers)",
+    icon: FileText,
+    position: "bottom",
+    gradient: "from-pink-500 to-rose-600",
+  },
+  {
+    id: "cinematic",
+    name: "Cinematic Subtitles",
+    description: "🎞️ Film-style captions (travel reels, vlogs)",
+    icon: Film,
+    position: "bottom",
+    gradient: "from-gray-800 to-black",
+  },
+  {
+    id: "uppercase",
+    name: "Uppercase Plate",
+    description: "🔳 Clean boxed text (corporate, tips reels)",
+    icon: Square,
+    position: "center",
+    gradient: "from-slate-700 to-gray-900",
+  },
+  {
+    id: "zoom",
+    name: "Word Zoom Emphasis",
+    description: "🔍 Key words zoom 1.2x (business, TED talks)",
+    icon: ZoomIn,
+    position: "center",
+    gradient: "from-blue-600 to-indigo-700",
+  },
+  {
+    id: "gradient",
+    name: "Gradient Pop",
+    description: "🌟 Gradient text (fitness, influencer reels)",
+    icon: Paintbrush,
+    position: "center",
+    gradient: "from-pink-400 via-purple-500 to-blue-500",
+  },
+  {
+    id: "bubble",
+    name: "Podcast Bubble Words",
+    description: "🎧 Bubble behind each word (ClipFM style)",
+    icon: MessageCircle,
+    position: "bottom",
+    gradient: "from-teal-500 to-cyan-600",
+  },
+  {
+    id: "news",
+    name: "News Ticker",
+    description: "🟠 Breaking news meme (satire, commentary)",
+    icon: Radio,
+    position: "bottom",
+    gradient: "from-red-600 to-red-800",
   },
 ];
 
 interface CaptionStyleSelectorProps {
   selectedStyle: string;
   onStyleChange: (styleId: string) => void;
+  onPreview?: (styleId: string) => void;
   className?: string;
 }
 
 export default function CaptionStyleSelector({
   selectedStyle,
   onStyleChange,
+  onPreview,
   className = "",
 }: CaptionStyleSelectorProps) {
   const [activeTab, setActiveTab] = useState<"styles" | "custom">("styles");
@@ -164,7 +262,7 @@ export default function CaptionStyleSelector({
 
       {/* Content */}
       {activeTab === "styles" && (
-        <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
+        <div className="grid grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-2">
           {CAPTION_PRESETS.map((preset) => (
             <button
               key={preset.id}
@@ -182,27 +280,106 @@ export default function CaptionStyleSelector({
                 </div>
               )}
 
+              {/* Preview button */}
+              {onPreview && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPreview(preset.id);
+                  }}
+                  className="absolute top-2 left-2 w-7 h-7 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+                  title="Preview this style"
+                >
+                  <Eye className="w-4 h-4 text-white" />
+                </button>
+              )}
+
               {/* Preview with gradient and animated caption */}
               <div className={`mb-3 h-24 bg-gradient-to-br ${preset.gradient} rounded flex items-center justify-center overflow-hidden relative`}>
-                {/* Background icon */}
-                <preset.icon className="w-12 h-12 text-white opacity-10 absolute" />
+                {/* GIF Preview (if available) */}
+                {PREVIEW_GIFS[preset.id] ? (
+                  <img 
+                    src={PREVIEW_GIFS[preset.id]} 
+                    alt={`${preset.name} preview`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <>
+                    {/* Background icon */}
+                    <preset.icon className="w-12 h-12 text-white opacity-10 absolute" />
                 
-                {/* Animated caption preview */}
+                {/* Animated caption preview - Style-specific */}
                 <div className="relative z-10 w-full px-3">
                   <div 
-                    className="text-white font-bold text-center animate-pulse"
+                    className={`text-white font-bold text-center ${
+                      preset.id === 'bounce' ? 'animate-bounce' :
+                      preset.id === 'typewriter' ? 'animate-pulse' :
+                      preset.id === 'glitch' ? 'animate-ping' :
+                      preset.id === 'mrbeast' ? 'animate-bounce' :
+                      preset.id === 'neon' ? 'animate-pulse' :
+                      'animate-pulse'
+                    }`}
                     style={{
-                      fontSize: preset.id === 'bold' ? '16px' : preset.id === 'karaoke' ? '14px' : '12px',
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                      letterSpacing: '0.5px',
+                      fontSize: 
+                        preset.id === 'bold' || preset.id === 'mrbeast' ? '16px' :
+                        preset.id === 'karaoke' || preset.id === 'typewriter' ? '11px' :
+                        preset.id === 'neon' || preset.id === 'rainbow' ? '14px' :
+                        '12px',
+                      textShadow: 
+                        preset.id === 'neon' ? '0 0 10px #00FF00, 2px 2px 4px rgba(0,0,0,0.8)' :
+                        preset.id === 'glitch' ? '2px 0 #FF0000, -2px 0 #00FFFF' :
+                        preset.id === 'shadow3d' ? '4px 4px 0px #000' :
+                        '2px 2px 4px rgba(0,0,0,0.8)',
+                      letterSpacing: 
+                        preset.id === 'typewriter' ? '2px' :
+                        preset.id === 'bold' || preset.id === 'mrbeast' ? '1px' :
+                        '0.5px',
+                      fontFamily:
+                        preset.id === 'typewriter' ? 'Courier New, monospace' :
+                        preset.id === 'bold' || preset.id === 'mrbeast' ? 'Impact, sans-serif' :
+                        preset.id === 'elegant' || preset.id === 'cinematic' ? 'Georgia, serif' :
+                        'inherit',
+                      color:
+                        preset.id === 'highlight' || preset.id === 'popline' || preset.id === 'documentary' ? '#000' :
+                        preset.id === 'karaoke' ? '#00F8C8' :
+                        preset.id === 'mrbeast' ? '#FFD900' :
+                        preset.id === 'neon' ? '#00FF00' :
+                        preset.id === 'gradient' ? '#FF1493' :
+                        '#FFF',
+                      backgroundColor:
+                        preset.id === 'highlight' ? '#FFE600' :
+                        preset.id === 'popline' ? '#00FF87' :
+                        preset.id === 'documentary' ? '#FF3DA1' :
+                        preset.id === 'uppercase' || preset.id === 'news' ? '#000' :
+                        preset.id === 'bubble' ? 'rgba(0,0,0,0.7)' :
+                        preset.id === 'blur' ? 'rgba(255,255,255,0.15)' :
+                        'transparent',
+                      padding:
+                        preset.id === 'highlight' || preset.id === 'popline' || preset.id === 'documentary' ||
+                        preset.id === 'uppercase' || preset.id === 'bubble' || preset.id === 'news' ||
+                        preset.id === 'blur' ? '4px 8px' :
+                        '0',
+                      borderRadius:
+                        preset.id === 'bubble' ? '12px' :
+                        preset.id === 'blur' ? '6px' :
+                        '0',
+                      backdropFilter:
+                        preset.id === 'blur' ? 'blur(8px)' : 'none',
+                      display: 'inline-block',
+                      textTransform:
+                        preset.id === 'bold' || preset.id === 'mrbeast' || preset.id === 'uppercase' ? 'uppercase' : 'none',
                     }}
                   >
                     {preset.id === 'karaoke' ? (
-                      <span className="text-green-400">SAMPLE TEXT</span>
-                    ) : preset.id === 'bold' ? (
-                      <span className="tracking-wide">SAMPLE TEXT</span>
+                      <span>SAMPLE</span>
+                    ) : preset.id === 'typewriter' ? (
+                      <span>Type...</span>
+                    ) : preset.id === 'bold' || preset.id === 'mrbeast' || preset.id === 'uppercase' ? (
+                      <span>SAMPLE</span>
+                    ) : preset.id === 'news' ? (
+                      <span>BREAKING</span>
                     ) : (
-                      'Sample Caption Text'
+                      'Sample'
                     )}
                   </div>
                   {/* Position indicator */}
@@ -210,6 +387,8 @@ export default function CaptionStyleSelector({
                     {preset.position === 'center' ? '⬤ Center' : preset.position === 'top' ? '⬆ Top' : '⬇ Bottom'}
                   </div>
                 </div>
+                  </>
+                )}
               </div>
 
               {/* Info */}
