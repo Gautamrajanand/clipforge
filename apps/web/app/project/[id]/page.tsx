@@ -826,17 +826,9 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                         </span>
                         {exportItem.captionStyle && (
                           <div className="flex items-center gap-2 text-xs text-gray-600">
-                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded font-medium">
                               {exportItem.captionStyle}
                             </span>
-                            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                              {exportItem.fontSize}px
-                            </span>
-                            <span 
-                              className="w-4 h-4 rounded border border-gray-300"
-                              style={{ backgroundColor: exportItem.primaryColor }}
-                              title={`Color: ${exportItem.primaryColor}`}
-                            />
                           </div>
                         )}
                       </div>

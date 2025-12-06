@@ -9,19 +9,17 @@ from enum import Enum
 
 
 class CaptionPreset(Enum):
-    """Available caption presets - 21 Canonical Styles"""
+    """Available caption presets - Industry Standard (Opus Clip, Podcastle, CapCut)"""
     # Static Styles
     MINIMAL = "minimal"
-    ELEGANT = "elegant"
-    MODERN = "modern"
     PODCAST = "podcast"
     CINEMATIC = "cinematic"
+    BOLD = "bold"  # Meme Block Capitals
     
     # Viral Styles
     MRBEAST = "mrbeast"
     NEON = "neon"
     HIGHLIGHT = "highlight"
-    RAINBOW = "rainbow"
     BOUNCE = "bounce"
     GLITCH = "glitch"
     POPLINE = "popline"
@@ -29,19 +27,12 @@ class CaptionPreset(Enum):
     # Professional Styles
     DOCUMENTARY = "documentary"
     UPPERCASE = "uppercase"
-    ZOOM = "zoom"
     BLUR = "blur"
     BUBBLE = "bubble"
     
     # Creative Styles
     KARAOKE = "karaoke"
     TYPEWRITER = "typewriter"
-    FILL = "fill"
-    SHADOW3D = "shadow3d"
-    TRICOLOR = "tricolor"
-    BOLD = "bold"
-    GRADIENT = "gradient"
-    NEWS = "news"
 
 
 @dataclass
@@ -314,10 +305,10 @@ CAPTION_PRESETS = {
         italic=False,
         primary_color="&H00000000",  # Black text
         secondary_color="&H00000000",
-        outline_color="&H00000000",
-        back_color="&H00E6FFFF",  # Yellow highlight (#FFE600)
-        border_style=3,  # Opaque box
-        outline=0.0,
+        outline_color="&H00E6FFFF",  # Yellow outline (#FFE600)
+        back_color="&HCCE6FFFF",  # Semi-opaque yellow background
+        border_style=4,  # Box with outline
+        outline=20.0,  # Thick outline creates box effect
         shadow=0.0,
         alignment=5,  # Center
         margin_v=0,
@@ -341,10 +332,10 @@ CAPTION_PRESETS = {
         italic=False,
         primary_color="&H00000000",  # Black text
         secondary_color="&H00000000",
-        outline_color="&H00000000",
-        back_color="&H0087FF00",  # Green (#00FF87)
-        border_style=3,  # Opaque box
-        outline=0.0,
+        outline_color="&H0087FF00",  # Green outline (#00FF87)
+        back_color="&HCC87FF00",  # Semi-opaque green background
+        border_style=4,  # Box with outline
+        outline=20.0,  # Thick outline creates box effect
         shadow=0.0,
         alignment=5,  # Center
         margin_v=0,
@@ -474,12 +465,12 @@ CAPTION_PRESETS = {
         font_size=48,
         bold=True,
         italic=False,
-        primary_color="&HFFFFFFFF",  # White
+        primary_color="&HFFFFFFFF",  # White text
         secondary_color="&HFFFFFFFF",
-        outline_color="&H00000000",
-        back_color="&H00A13DFF",  # Hot pink (#FF3DA1)
-        border_style=3,  # Opaque box
-        outline=0.0,
+        outline_color="&H00A13DFF",  # Pink outline (#FF3DA1)
+        back_color="&HCCA13DFF",  # Semi-opaque pink background
+        border_style=4,  # Box with outline
+        outline=20.0,  # Thick outline creates box effect
         shadow=0.0,
         alignment=2,  # Bottom center
         margin_v=80,
@@ -528,12 +519,12 @@ CAPTION_PRESETS = {
         font_size=48,
         bold=True,
         italic=False,
-        primary_color="&HFFFFFFFF",  # White
+        primary_color="&HFFFFFFFF",  # White text
         secondary_color="&HFFFFFFFF",
-        outline_color="&H00000000",
-        back_color="&H00000000",  # Black box
-        border_style=3,  # Opaque box
-        outline=0.0,
+        outline_color="&H00000000",  # Black outline
+        back_color="&HCC000000",  # Semi-opaque black background
+        border_style=4,  # Box with outline
+        outline=20.0,  # Thick outline creates box effect
         shadow=0.0,
         alignment=5,  # Center
         margin_v=0,
