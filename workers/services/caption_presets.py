@@ -15,6 +15,7 @@ class CaptionPreset(Enum):
     PODCAST = "podcast"
     CINEMATIC = "cinematic"
     BOLD = "bold"  # Meme Block Capitals
+    SUBTITLE = "subtitle"  # Professional Netflix/YouTube
     
     # Viral Styles
     MRBEAST = "mrbeast"
@@ -29,6 +30,9 @@ class CaptionPreset(Enum):
     UPPERCASE = "uppercase"
     BLUR = "blur"
     BUBBLE = "bubble"
+    
+    # Business Styles
+    HORMOZI = "hormozi"  # Alex Hormozi gold keywords
     
     # Creative Styles
     KARAOKE = "karaoke"
@@ -509,6 +513,60 @@ CAPTION_PRESETS = {
         keyword_paint=False,
         karaoke_effect=False,
         spacing=0.5,
+        scale_x=100.0,
+        scale_y=100.0,
+    ),
+    
+    CaptionPreset.HORMOZI: CaptionStyle(
+        name="Alex Hormozi",
+        description="Gold keyword emphasis for business/sales content (100M+ views style)",
+        font_name="Inter",
+        font_size=48,
+        bold=True,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White text
+        secondary_color="&H0000D7FF",  # Gold keywords (#FFD700) - ASS format: &HAABBGGRR
+        outline_color="&H00000000",  # Black
+        back_color="&H00000000",  # Transparent
+        border_style=1,
+        outline=2.0,
+        shadow=0.0,
+        alignment=5,  # Center
+        margin_v=0,
+        margin_l=50,
+        margin_r=50,
+        fade_in=100,
+        fade_out=100,
+        keyword_paint=True,  # CRITICAL - enables gold keywords
+        karaoke_effect=False,
+        spacing=0.0,
+        scale_x=110.0,  # Keywords pop 1.1x
+        scale_y=110.0,
+    ),
+    
+    CaptionPreset.SUBTITLE: CaptionStyle(
+        name="Subtitle",
+        description="Professional Netflix/YouTube style (30% of global content)",
+        font_name="Arial",
+        font_size=40,
+        bold=False,
+        italic=False,
+        primary_color="&HFFFFFFFF",  # White
+        secondary_color="&HFFFFFFFF",
+        outline_color="&H00000000",  # Black
+        back_color="&HCC000000",  # Semi-opaque black bar
+        border_style=1,
+        outline=0.0,
+        shadow=2.0,
+        alignment=2,  # Bottom center
+        margin_v=60,
+        margin_l=100,
+        margin_r=100,
+        fade_in=0,  # No animation (professional)
+        fade_out=0,
+        keyword_paint=False,
+        karaoke_effect=False,
+        spacing=0.0,
         scale_x=100.0,
         scale_y=100.0,
     ),
