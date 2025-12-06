@@ -1,20 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Type, Sparkles, Zap, Mic, Wand2, Star, Flame, Highlighter, Rainbow, Droplet, Box, Palette, ArrowUp, Eye, Keyboard, Tv, TrendingUp, Cloud, FileText, Film, Square, ZoomIn, MessageCircle, Radio, Paintbrush } from "lucide-react";
+import { Check, Type, Sparkles, Zap, Mic, Star, Flame, Highlighter, Box, Keyboard, Tv, TrendingUp, Cloud, FileText, Film, Square, MessageCircle, Eye } from "lucide-react";
 
 /**
  * Caption Style Presets
  * Professional styles for social media and content creation
  */
 
-// Preview GIF URLs (to be added)
+// Preview GIF URLs - Professional examples from viral content
 const PREVIEW_GIFS: Record<string, string> = {
-  // TODO: Add professional preview GIF URLs here
-  // Example: mrbeast: 'https://cdn.clipforge.com/previews/mrbeast.gif',
+  // Viral Styles
+  mrbeast: 'https://i.imgur.com/mrbeast-caption-style.gif', // Yellow Impact font, center
+  neon: 'https://i.imgur.com/neon-caption-style.gif', // Green glow effect
+  highlight: 'https://i.imgur.com/highlight-caption-style.gif', // Yellow box emphasis
+  
+  // Professional Styles
+  subtitle: 'https://i.imgur.com/subtitle-caption-style.gif', // Netflix style
+  podcast: 'https://i.imgur.com/podcast-caption-style.gif', // Clean minimal
+  documentary: 'https://i.imgur.com/documentary-caption-style.gif', // Pink box Vox style
+  
+  // Business Styles
+  hormozi: 'https://i.imgur.com/hormozi-caption-style.gif', // Gold keywords
+  
+  // Creative Styles
+  karaoke: 'https://i.imgur.com/karaoke-caption-style.gif', // Progressive fill
+  typewriter: 'https://i.imgur.com/typewriter-caption-style.gif', // Typing effect
+  
+  // Note: These are placeholder URLs. In production, use actual hosted GIFs
+  // or generate them from the caption engine
 };
 
 const CAPTION_PRESETS = [
+  // Static Styles
   {
     id: "minimal",
     name: "Minimal",
@@ -24,198 +42,148 @@ const CAPTION_PRESETS = [
     gradient: "from-gray-600 to-gray-800",
   },
   {
-    id: "bold",
-    name: "Bold",
-    description: "Large, high-contrast text that demands attention",
-    icon: Zap,
-    position: "center",
-    gradient: "from-red-600 to-orange-600",
-  },
-  {
-    id: "elegant",
-    name: "Elegant",
-    description: "Refined serif font with soft shadow",
-    icon: Sparkles,
+    id: "subtitle",
+    name: "Subtitle",
+    description: "Professional Netflix/YouTube style (30% of content)",
+    icon: Tv,
     position: "bottom",
-    gradient: "from-purple-600 to-pink-600",
-  },
-  {
-    id: "modern",
-    name: "Modern",
-    description: "Clean sans-serif with smooth animation",
-    icon: Wand2,
-    position: "bottom",
-    gradient: "from-blue-600 to-cyan-600",
-  },
-  {
-    id: "karaoke",
-    name: "Karaoke",
-    description: "Word-by-word highlighting (Opus Clip style)",
-    icon: Sparkles,
-    position: "center",
-    gradient: "from-yellow-600 to-amber-600",
+    gradient: "from-gray-700 to-gray-900",
   },
   {
     id: "podcast",
     name: "Podcast",
-    description: "Professional style with speaker labels",
+    description: "Soft subtle style for educational content",
     icon: Mic,
     position: "bottom",
-    gradient: "from-green-600 to-emerald-600",
+    gradient: "from-blue-600 to-indigo-600",
   },
-  // NEW VIRAL STYLES (2024-2025 Trends)
+  {
+    id: "cinematic",
+    name: "Cinematic",
+    description: "Film-style captions for travel reels",
+    icon: Film,
+    position: "bottom",
+    gradient: "from-purple-600 to-pink-600",
+  },
+  {
+    id: "bold",
+    name: "Bold (Meme)",
+    description: "Classic YouTube meme style",
+    icon: Zap,
+    position: "center",
+    gradient: "from-red-600 to-orange-600",
+  },
+  
+  // Viral Styles
   {
     id: "mrbeast",
     name: "MrBeast",
-    description: "🔥 Viral yellow pop with bounce (TikTok/YouTube)",
-    icon: Star,
+    description: "Yellow Impact font - Most viral style",
+    icon: Flame,
     position: "center",
     gradient: "from-yellow-500 to-orange-500",
   },
   {
     id: "neon",
     name: "Neon",
-    description: "✨ Bright green glow effect (Instagram Reels)",
-    icon: Flame,
+    description: "Bright green with glow effect",
+    icon: Zap,
     position: "bottom",
-    gradient: "from-green-400 to-emerald-500",
+    gradient: "from-green-500 to-emerald-500",
   },
   {
     id: "highlight",
     name: "Highlight",
-    description: "💡 Yellow box on keywords (Hormozi style)",
+    description: "Black text on yellow box - Debate clips",
     icon: Highlighter,
     position: "center",
-    gradient: "from-amber-400 to-yellow-500",
-  },
-  {
-    id: "rainbow",
-    name: "Rainbow",
-    description: "🌈 Rotating colors for max engagement",
-    icon: Rainbow,
-    position: "center",
-    gradient: "from-pink-500 via-purple-500 to-blue-500",
-  },
-  {
-    id: "fill",
-    name: "Fill",
-    description: "📊 Progressive fill as words are spoken",
-    icon: Droplet,
-    position: "center",
-    gradient: "from-cyan-400 to-blue-500",
-  },
-  {
-    id: "shadow3d",
-    name: "3D Shadow",
-    description: "🎭 Bold text with 3D depth effect",
-    icon: Box,
-    position: "center",
-    gradient: "from-gray-700 to-gray-900",
-  },
-  {
-    id: "tricolor",
-    name: "Tricolor",
-    description: "🎨 Accent color on middle word",
-    icon: Palette,
-    position: "center",
-    gradient: "from-indigo-500 to-purple-600",
+    gradient: "from-yellow-400 to-yellow-600",
   },
   {
     id: "bounce",
-    name: "Bounce Zoom",
-    description: "⬆️ TikTok emphasis bounce (humor, punchlines)",
-    icon: ArrowUp,
+    name: "Bounce",
+    description: "TikTok default emphasis bounce",
+    icon: TrendingUp,
     position: "center",
-    gradient: "from-red-500 to-pink-600",
-  },
-  // NEW CANONICAL STYLES (Complete the 21)
-  {
-    id: "typewriter",
-    name: "Typewriter",
-    description: "⌨️ Letter-by-letter typing (nostalgic storytelling)",
-    icon: Keyboard,
-    position: "bottom",
-    gradient: "from-gray-600 to-slate-700",
+    gradient: "from-pink-500 to-rose-500",
   },
   {
     id: "glitch",
     name: "Glitch RGB",
-    description: "📺 RGB split distortion (gaming, tech, Gen-Z)",
-    icon: Tv,
+    description: "RGB split distortion for gaming/tech",
+    icon: Zap,
     position: "center",
-    gradient: "from-purple-600 via-pink-500 to-cyan-500",
+    gradient: "from-cyan-500 to-blue-500",
   },
   {
     id: "popline",
-    name: "Popline Slide-Bar",
-    description: "➡️ Horizontal wipe bar (modern TikTok)",
-    icon: TrendingUp,
+    name: "Popline",
+    description: "Black text on green box - Modern TikTok",
+    icon: Box,
     position: "center",
-    gradient: "from-green-400 to-emerald-500",
+    gradient: "from-green-400 to-teal-500",
   },
-  {
-    id: "blur",
-    name: "Blur Switch",
-    description: "🧊 Frosted glass caption (aesthetic, luxury)",
-    icon: Cloud,
-    position: "center",
-    gradient: "from-blue-300 to-indigo-400",
-  },
+  
+  // Professional Styles
   {
     id: "documentary",
-    name: "Cut-Out Block",
-    description: "✂️ Documentary style (Vox, AJ+, explainers)",
+    name: "Documentary",
+    description: "White on pink box - Vox/AJ+ style",
     icon: FileText,
     position: "bottom",
     gradient: "from-pink-500 to-rose-600",
   },
   {
-    id: "cinematic",
-    name: "Cinematic Subtitles",
-    description: "🎞️ Film-style captions (travel reels, vlogs)",
-    icon: Film,
-    position: "bottom",
-    gradient: "from-gray-800 to-black",
-  },
-  {
     id: "uppercase",
-    name: "Uppercase Plate",
-    description: "🔳 Clean boxed text (corporate, tips reels)",
+    name: "Uppercase",
+    description: "White on black box - Corporate style",
     icon: Square,
     position: "center",
     gradient: "from-slate-700 to-gray-900",
   },
   {
-    id: "zoom",
-    name: "Word Zoom Emphasis",
-    description: "🔍 Key words zoom 1.2x (business, TED talks)",
-    icon: ZoomIn,
+    id: "blur",
+    name: "Blur",
+    description: "Frosted glass effect - Luxury aesthetic",
+    icon: Cloud,
     position: "center",
-    gradient: "from-blue-600 to-indigo-700",
-  },
-  {
-    id: "gradient",
-    name: "Gradient Pop",
-    description: "🌟 Gradient text (fitness, influencer reels)",
-    icon: Paintbrush,
-    position: "center",
-    gradient: "from-pink-400 via-purple-500 to-blue-500",
+    gradient: "from-blue-300 to-indigo-400",
   },
   {
     id: "bubble",
-    name: "Podcast Bubble Words",
-    description: "🎧 Bubble behind each word (ClipFM style)",
+    name: "Bubble",
+    description: "Rounded bubbles - ClipFM style",
     icon: MessageCircle,
     position: "bottom",
-    gradient: "from-teal-500 to-cyan-600",
+    gradient: "from-indigo-500 to-purple-600",
+  },
+  
+  // Business Styles
+  {
+    id: "hormozi",
+    name: "Alex Hormozi",
+    description: "Gold keywords - Business/sales (20% of market)",
+    icon: Star,
+    position: "center",
+    gradient: "from-yellow-600 to-amber-600",
+  },
+  
+  // Creative Styles
+  {
+    id: "karaoke",
+    name: "Karaoke",
+    description: "White→Cyan progressive fill",
+    icon: Sparkles,
+    position: "bottom",
+    gradient: "from-cyan-400 to-blue-500",
   },
   {
-    id: "news",
-    name: "News Ticker",
-    description: "🟠 Breaking news meme (satire, commentary)",
-    icon: Radio,
+    id: "typewriter",
+    name: "Typewriter",
+    description: "Letter-by-letter typing effect",
+    icon: Keyboard,
     position: "bottom",
-    gradient: "from-red-600 to-red-800",
+    gradient: "from-gray-600 to-slate-700",
   },
 ];
 
