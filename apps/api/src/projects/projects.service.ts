@@ -1104,10 +1104,16 @@ export class ProjectsService {
       } else {
         // Use ASS subtitle burning for karaoke and static styles
         this.logger.log(`Using ASS subtitle burning for ${captionStyle} style with custom colors/size/position`);
+        
+        // Styles with their own colors (don't override)
+        const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi', 'karaoke'];
+        const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
+        
         const captionPath = this.video.getTempFilePath('.ass');
         const captionContent = this.captions.generateASS(words, {
           preset: captionStyle as any,
-          textColor: primaryColor,
+          // Only override color for white/neutral styles
+          ...((!shouldUseStyleColor) && { textColor: primaryColor }),
           fontSize: fontSize,
           position: position,
         });
@@ -1215,12 +1221,17 @@ export class ProjectsService {
     const animator = new CaptionAnimatorService();
     let stylePreset = getCaptionStylePreset(captionStyle);
     
+    // Styles with their own colors (don't override)
+    const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi', 'karaoke'];
+    const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
+    
     // Override preset colors, fontSize, and position with custom values if provided
     if (primaryColor || secondaryColor || fontSize || position) {
-      this.logger.log(`🎨 [Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}`);
+      this.logger.log(`🎨 [Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}, shouldUseStyleColor=${shouldUseStyleColor}`);
       stylePreset = {
         ...stylePreset,
-        ...(primaryColor && { textColor: primaryColor }),
+        // Only override color for white/neutral styles
+        ...((!shouldUseStyleColor && primaryColor) && { textColor: primaryColor }),
         ...(fontSize && { fontSize }),
         ...(position && { position }),
       };
@@ -1286,12 +1297,17 @@ export class ProjectsService {
     const animator = new CaptionAnimatorService();
     let stylePreset = getCaptionStylePreset(captionStyle);
     
+    // Styles with their own colors (don't override)
+    const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi', 'karaoke'];
+    const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
+    
     // Override preset colors, fontSize, and position with custom values if provided
     if (primaryColor || secondaryColor || fontSize || position) {
-      this.logger.log(`🎨 [Chunked Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}`);
+      this.logger.log(`🎨 [Chunked Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}, shouldUseStyleColor=${shouldUseStyleColor}`);
       stylePreset = {
         ...stylePreset,
-        ...(primaryColor && { textColor: primaryColor }),
+        // Only override color for white/neutral styles
+        ...((!shouldUseStyleColor && primaryColor) && { textColor: primaryColor }),
         ...(fontSize && { fontSize }),
         ...(position && { position }),
       };
