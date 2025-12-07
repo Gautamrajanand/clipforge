@@ -1225,16 +1225,21 @@ export class ProjectsService {
     const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi', 'karaoke'];
     const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
     
-    this.logger.log(`🎨 [Generic] BEFORE override - captionStyle=${captionStyle}, shouldUseStyleColor=${shouldUseStyleColor}, stylePreset.textColor=${stylePreset.textColor}, primaryColor=${primaryColor}`);
+    // Styles with their own font sizes (don't override)
+    const stylesWithOwnSizes = ['mrbeast', 'neon', 'highlight', 'bold', 'karaoke', 'hormozi'];
+    const shouldUseStyleSize = stylesWithOwnSizes.includes(captionStyle);
+    
+    this.logger.log(`🎨 [Generic] BEFORE override - captionStyle=${captionStyle}, shouldUseStyleColor=${shouldUseStyleColor}, shouldUseStyleSize=${shouldUseStyleSize}, stylePreset.textColor=${stylePreset.textColor}, stylePreset.fontSize=${stylePreset.fontSize}, primaryColor=${primaryColor}, fontSize=${fontSize}`);
     
     // Override preset colors, fontSize, and position with custom values if provided
     if (primaryColor || secondaryColor || fontSize || position) {
-      this.logger.log(`🎨 [Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}, shouldUseStyleColor=${shouldUseStyleColor}`);
+      this.logger.log(`🎨 [Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}`);
       stylePreset = {
         ...stylePreset,
         // Only override color for white/neutral styles
         ...((!shouldUseStyleColor && primaryColor) && { textColor: primaryColor }),
-        ...(fontSize && { fontSize }),
+        // Only override fontSize for customizable styles
+        ...((!shouldUseStyleSize && fontSize) && { fontSize }),
         ...(position && { position }),
       };
       this.logger.log(`🎨 [Generic] AFTER override - stylePreset.textColor=${stylePreset.textColor}, fontSize=${stylePreset.fontSize}, position=${stylePreset.position}`);
@@ -1303,14 +1308,19 @@ export class ProjectsService {
     const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi', 'karaoke'];
     const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
     
+    // Styles with their own font sizes (don't override)
+    const stylesWithOwnSizes = ['mrbeast', 'neon', 'highlight', 'bold', 'karaoke', 'hormozi'];
+    const shouldUseStyleSize = stylesWithOwnSizes.includes(captionStyle);
+    
     // Override preset colors, fontSize, and position with custom values if provided
     if (primaryColor || secondaryColor || fontSize || position) {
-      this.logger.log(`🎨 [Chunked Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}, shouldUseStyleColor=${shouldUseStyleColor}`);
+      this.logger.log(`🎨 [Chunked Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}, shouldUseStyleColor=${shouldUseStyleColor}, shouldUseStyleSize=${shouldUseStyleSize}`);
       stylePreset = {
         ...stylePreset,
         // Only override color for white/neutral styles
         ...((!shouldUseStyleColor && primaryColor) && { textColor: primaryColor }),
-        ...(fontSize && { fontSize }),
+        // Only override fontSize for customizable styles
+        ...((!shouldUseStyleSize && fontSize) && { fontSize }),
         ...(position && { position }),
       };
       this.logger.log(`🎨 [Chunked Generic] Final stylePreset: textColor=${stylePreset.textColor}, fontSize=${stylePreset.fontSize}, position=${stylePreset.position}`);

@@ -28,9 +28,9 @@ interface AnimationFrame {
 export class CaptionAnimatorService {
   private readonly logger = new Logger(CaptionAnimatorService.name);
 
-  constructor(private readonly fontLoader: FontLoaderService) {
-    // Ensure fonts are loaded
-    if (!this.fontLoader.areFontsLoaded()) {
+  constructor(private readonly fontLoader?: FontLoaderService) {
+    // Ensure fonts are loaded if FontLoader is provided
+    if (this.fontLoader && !this.fontLoader.areFontsLoaded()) {
       this.logger.warn('Fonts not loaded yet, loading now...');
       this.fontLoader.loadFonts();
     }

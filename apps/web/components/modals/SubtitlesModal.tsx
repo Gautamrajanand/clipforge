@@ -105,6 +105,10 @@ export default function SubtitlesModal({
       const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi'];
       const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
       
+      // Styles with their own font sizes (don't override)
+      const stylesWithOwnSizes = ['mrbeast', 'neon', 'highlight', 'bold', 'karaoke', 'hormozi'];
+      const shouldUseStyleSize = stylesWithOwnSizes.includes(captionStyle);
+      
       const settings = {
         captionStyle,
         // Only send color overrides for white/neutral styles
@@ -112,7 +116,10 @@ export default function SubtitlesModal({
           primaryColor,
           secondaryColor,
         }),
-        fontSize,
+        // Only send fontSize for customizable styles
+        ...((!shouldUseStyleSize) && {
+          fontSize,
+        }),
         position,
       };
 
