@@ -31,7 +31,7 @@ const PREVIEW_GIFS: Record<string, string> = {
   // or generate them from the caption engine
 };
 
-const CAPTION_PRESETS = [
+export const CAPTION_PRESETS = [
   // Static Styles
   {
     id: "minimal",
