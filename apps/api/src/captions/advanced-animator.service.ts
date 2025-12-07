@@ -532,12 +532,191 @@ export class AdvancedAnimatorService {
     y: number,
     lineState: RenderState
   ): Promise<void> {
-    // Implementation for character-by-character animations
-    // This will be used for Typewriter and Karaoke styles
-    this.logger.warn('Per-character animation not yet fully implemented');
+    const fullText = words.map(w => w.text).join(' ');
     
-    // Fallback to line animation for now
-    await this.renderLineAnimation(ctx, words, style, timestamp, width, y, lineState);
+    // Set font
+    const fontWeight = typeof style.fontWeight === 'number' ? style.fontWeight : 400;
+    ctx.font = `${fontWeight} ${style.fontSize}px ${style.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const x = width / 2;
+
+    // Apply line transformations
+    ctx.save();
+    ctx.globalAlpha = lineState.lineOpacity;
+    ctx.translate(x + lineState.lineTranslateX, y + lineState.lineTranslateY);
+    ctx.scale(lineState.lineScale, lineState.lineScale);
+
+    // Draw background
+    if (style.background) {
+      this.drawLineBackground(ctx, fullText, style);
+    }
+
+    // Typewriter mode: Reveal characters one by one
+    if (style.animation.stagger?.type === 'char' && !style.karaokeMode?.enabled) {
+      await this.renderTypewriterAnimation(ctx, words, style, timestamp, lineState);
+    }
+    // Karaoke mode: Progressive fill
+    else if (style.karaokeMode?.enabled) {
+      await this.renderKaraokeAnimation(ctx, words, style, timestamp, lineState);
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Render typewriter animation (character-by-character reveal)
+   */
+  private async renderTypewriterAnimation(
+    ctx: CanvasRenderingContext2D,
+    words: WordTiming[],
+    style: CaptionStyle,
+    timestamp: number,
+    lineState: RenderState
+  ): Promise<void> {
+    const lineStart = words[0].start;
+    const charDelay = (style.animation.stagger?.delay || 40) / 1000; // Convert to seconds
+    
+    let charIndex = 0;
+    let currentX = 0;
+    
+    // Calculate total text width for centering
+    const fullText = words.map(w => w.text).join(' ');
+    const totalWidth = ctx.measureText(fullText).width;
+    currentX = -totalWidth / 2;
+
+    // Render each character
+    for (const word of words) {
+      for (let i = 0; i < word.text.length; i++) {
+        const char = word.text[i];
+        const charStartTime = lineStart + (charIndex * charDelay);
+        const timeSinceCharStart = timestamp - charStartTime;
+
+        // Only render if character should be visible
+        if (timeSinceCharStart >= 0) {
+          const charDuration = (style.animation.perChar?.duration || 40) / 1000;
+          const charProgress = Math.min(1, timeSinceCharStart / charDuration);
+
+          // Calculate character opacity
+          const charOpacity = style.animation.perChar?.properties.opacity
+            ? AnimationInterpolator.interpolate(
+                style.animation.perChar.properties.opacity.from,
+                style.animation.perChar.properties.opacity.to,
+                charProgress,
+                style.animation.perChar.easing || 'linear'
+              )
+            : 1;
+
+          ctx.save();
+          ctx.globalAlpha = charOpacity;
+
+          // Draw stroke
+          if (style.stroke) {
+            ctx.strokeStyle = style.stroke.color;
+            ctx.lineWidth = style.stroke.width;
+            ctx.strokeText(char, currentX, 0);
+          }
+
+          // Draw character
+          ctx.fillStyle = style.textColor;
+          ctx.fillText(char, currentX, 0);
+
+          ctx.restore();
+        }
+
+        currentX += ctx.measureText(char).width;
+        charIndex++;
+      }
+
+      // Add space between words
+      currentX += ctx.measureText(' ').width;
+      charIndex++;
+    }
+
+    // Optional blinking cursor
+    const totalChars = fullText.replace(/ /g, '').length;
+    const totalTypingTime = lineStart + (totalChars * charDelay);
+    const cursorBlinkInterval = 0.5; // 500ms
+    
+    if (timestamp >= totalTypingTime && timestamp < totalTypingTime + 1.0) {
+      const blinkProgress = ((timestamp - totalTypingTime) % cursorBlinkInterval) / cursorBlinkInterval;
+      const cursorOpacity = blinkProgress < 0.5 ? 1 : 0;
+
+      ctx.save();
+      ctx.globalAlpha = cursorOpacity;
+      ctx.fillStyle = style.textColor;
+      ctx.fillText('|', currentX, 0);
+      ctx.restore();
+    }
+  }
+
+  /**
+   * Render karaoke animation (progressive fill)
+   */
+  private async renderKaraokeAnimation(
+    ctx: CanvasRenderingContext2D,
+    words: WordTiming[],
+    style: CaptionStyle,
+    timestamp: number,
+    lineState: RenderState
+  ): Promise<void> {
+    if (!style.karaokeMode) return;
+
+    const fullText = words.map(w => w.text).join(' ');
+    const totalWidth = ctx.measureText(fullText).width;
+    let currentX = -totalWidth / 2;
+
+    // First pass: Draw all text in inactive color with stroke
+    if (style.stroke) {
+      ctx.strokeStyle = style.stroke.color;
+      ctx.lineWidth = style.stroke.width;
+      ctx.strokeText(fullText, 0, 0);
+    }
+
+    ctx.fillStyle = style.karaokeMode.inactiveColor;
+    ctx.fillText(fullText, 0, 0);
+
+    // Second pass: Draw active fill progressively
+    for (const word of words) {
+      const wordProgress = this.getWordProgress(word, timestamp);
+
+      if (wordProgress > 0) {
+        const wordWidth = ctx.measureText(word.text).width;
+        const fillWidth = wordWidth * wordProgress;
+
+        // Create clipping region for progressive fill
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(currentX, -style.fontSize / 2, fillWidth, style.fontSize);
+        ctx.clip();
+
+        // Draw active color
+        ctx.fillStyle = style.karaokeMode.activeColor;
+        
+        // Add glow for active text
+        ctx.shadowColor = style.karaokeMode.activeColor;
+        ctx.shadowBlur = 20;
+        
+        ctx.fillText(word.text, currentX + wordWidth / 2, 0);
+
+        ctx.restore();
+      }
+
+      currentX += ctx.measureText(word.text + ' ').width;
+    }
+  }
+
+  /**
+   * Get word progress (0-1) for karaoke fill
+   */
+  private getWordProgress(word: WordTiming, timestamp: number): number {
+    if (timestamp < word.start) return 0;
+    if (timestamp > word.end) return 1;
+    
+    const wordDuration = word.end - word.start;
+    const timeSinceStart = timestamp - word.start;
+    return timeSinceStart / wordDuration;
   }
 
   /**
