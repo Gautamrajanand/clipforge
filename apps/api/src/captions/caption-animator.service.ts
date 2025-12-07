@@ -3,6 +3,7 @@ import { createCanvas, Canvas, CanvasRenderingContext2D } from 'canvas';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CaptionStylePreset } from './caption-styles';
+import { FontLoaderService } from './font-loader.service';
 
 interface Word {
   text: string;
@@ -26,6 +27,14 @@ interface AnimationFrame {
 @Injectable()
 export class CaptionAnimatorService {
   private readonly logger = new Logger(CaptionAnimatorService.name);
+
+  constructor(private readonly fontLoader: FontLoaderService) {
+    // Ensure fonts are loaded
+    if (!this.fontLoader.areFontsLoaded()) {
+      this.logger.warn('Fonts not loaded yet, loading now...');
+      this.fontLoader.loadFonts();
+    }
+  }
 
   /**
    * Generate caption frames for a video
