@@ -746,9 +746,19 @@ export class AdvancedAnimatorService {
     ctx.translate(x + lineState.lineTranslateX, y + lineState.lineTranslateY);
     ctx.scale(lineState.lineScale, lineState.lineScale);
 
-    // Draw background
+    // Draw background (with slide animation for Popline/Documentary if in entry phase)
     if (style.background) {
-      this.drawLineBackground(ctx, text, style);
+      const lineStart = words[0].start;
+      const timeSinceStart = timestamp - lineStart;
+      const entryDuration = style.animation.entry.duration / 1000;
+      
+      // Check if we should use sliding background (Popline, Documentary)
+      if ((style.id === 'popline' || style.id === 'documentary') && timeSinceStart < entryDuration) {
+        const slideProgress = timeSinceStart / entryDuration;
+        this.drawSlidingBackground(ctx, text, style, slideProgress, 'left');
+      } else {
+        this.drawLineBackground(ctx, text, style);
+      }
     }
 
     // Draw shadow
@@ -879,15 +889,132 @@ export class AdvancedAnimatorService {
     const timeSinceLastGlitch = (timestamp * 1000) % frequency;
 
     if (timeSinceLastGlitch < duration) {
-      // Apply glitch effect
+      // Apply RGB split glitch effect
       const glitchProgress = timeSinceLastGlitch / duration;
-      const offset = Math.random() * 10 * intensity;
-
-      // This is a simplified glitch - full implementation would use image data manipulation
-      ctx.globalAlpha = 0.5;
-      ctx.fillStyle = `rgba(255, 0, 0, ${0.3 * intensity})`;
-      ctx.fillRect(0, 0, width, height);
+      
+      // Get canvas image data
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+      
+      // Calculate random offsets for RGB channels
+      const redOffsetX = Math.floor((Math.random() - 0.5) * 10 * intensity);
+      const blueOffsetX = Math.floor((Math.random() - 0.5) * 10 * intensity);
+      const greenOffsetY = Math.floor((Math.random() - 0.5) * 5 * intensity);
+      
+      // Create temporary canvas for RGB split
+      const tempCanvas = createCanvas(width, height);
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.putImageData(imageData, 0, 0);
+      
+      // Clear original canvas
+      ctx.clearRect(0, 0, width, height);
+      
+      // Draw red channel with offset
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = 0.8;
+      tempCtx.globalCompositeOperation = 'source-over';
+      const redData = ctx.createImageData(width, height);
+      for (let i = 0; i < data.length; i += 4) {
+        redData.data[i] = data[i]; // R
+        redData.data[i + 1] = 0; // G
+        redData.data[i + 2] = 0; // B
+        redData.data[i + 3] = data[i + 3]; // A
+      }
+      tempCtx.putImageData(redData, redOffsetX, 0);
+      ctx.drawImage(tempCanvas, 0, 0);
+      
+      // Draw green channel with offset
+      const greenData = ctx.createImageData(width, height);
+      for (let i = 0; i < data.length; i += 4) {
+        greenData.data[i] = 0; // R
+        greenData.data[i + 1] = data[i + 1]; // G
+        greenData.data[i + 2] = 0; // B
+        greenData.data[i + 3] = data[i + 3]; // A
+      }
+      tempCtx.clearRect(0, 0, width, height);
+      tempCtx.putImageData(greenData, 0, greenOffsetY);
+      ctx.drawImage(tempCanvas, 0, 0);
+      
+      // Draw blue channel with offset
+      const blueData = ctx.createImageData(width, height);
+      for (let i = 0; i < data.length; i += 4) {
+        blueData.data[i] = 0; // R
+        blueData.data[i + 1] = 0; // G
+        blueData.data[i + 2] = data[i + 2]; // B
+        blueData.data[i + 3] = data[i + 3]; // A
+      }
+      tempCtx.clearRect(0, 0, width, height);
+      tempCtx.putImageData(blueData, blueOffsetX, 0);
+      ctx.drawImage(tempCanvas, 0, 0);
+      
+      // Reset composite operation
+      ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
+      
+      // Add random horizontal lines for extra glitch effect
+      if (Math.random() < 0.3) {
+        const lineY = Math.floor(Math.random() * height);
+        const lineHeight = Math.floor(Math.random() * 5) + 1;
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.2 * intensity})`;
+        ctx.fillRect(0, lineY, width, lineHeight);
+      }
     }
+  }
+
+  /**
+   * Apply backdrop blur effect
+   */
+  private applyBackdropBlur(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    blurRadius: number
+  ): void {
+    // Note: Canvas doesn't support backdrop-filter
+    // This creates a semi-transparent overlay to simulate blur
+    ctx.save();
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.1 * blurRadius / 8})`;
+    ctx.fillRect(x, y, width, height);
+    ctx.restore();
+  }
+
+  /**
+   * Draw text with background slide animation (Popline, Documentary)
+   */
+  private drawSlidingBackground(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    style: CaptionStyle,
+    slideProgress: number,
+    fromDirection: 'left' | 'right' = 'left'
+  ): void {
+    if (!style.background) return;
+
+    const metrics = ctx.measureText(text);
+    const padding = style.background.padding || { x: 24, y: 12 };
+    const bgWidth = metrics.width + padding.x * 2;
+    const bgHeight = style.fontSize + padding.y * 2;
+
+    // Calculate slide position
+    const startX = fromDirection === 'left' ? -bgWidth : bgWidth;
+    const endX = 0;
+    const currentX = startX + (endX - startX) * slideProgress;
+
+    ctx.save();
+    ctx.translate(currentX, 0);
+
+    ctx.fillStyle = style.background.color;
+    ctx.globalAlpha = style.background.opacity;
+
+    if (style.background.borderRadius) {
+      this.roundRect(ctx, -bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight, style.background.borderRadius);
+    } else {
+      ctx.fillRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight);
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 }
