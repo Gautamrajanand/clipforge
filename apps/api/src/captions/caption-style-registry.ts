@@ -2,9 +2,50 @@
  * Caption Style Registry
  * Complete definitions for all 18 industry-standard caption styles
  * Matches TikTok/Reels/OpusClip quality standards
+ * 
+ * Includes Opus Clip style aliases for user recognition
  */
 
 import { CaptionStyle } from './animation-types';
+
+/**
+ * Opus Clip style name aliases
+ * Maps Opus Clip marketing names to our technical style IDs
+ */
+export const OPUS_CLIP_ALIASES: Record<string, string> = {
+  // Opus Clip Name → Our Style ID
+  'beasty': 'mrbeast',
+  'deep-diver': 'cinematic',
+  'deepdiver': 'cinematic',
+  'youshaei': 'bold',
+  'pod-p': 'podcast',
+  'podp': 'podcast',
+  'mozi': 'neon',
+  'glitch-infinite': 'glitch',
+  'glitchinfinite': 'glitch',
+  'seamless-bounce': 'bounce',
+  'seamlessbounce': 'bounce',
+  'baby-earthquake': 'bounce',
+  'babyearthquake': 'bounce',
+  'baby-steps': 'bounce',
+  'babysteps': 'bounce',
+  'grow': 'bounce',
+  'blur-switch': 'blur',
+  'blurswitch': 'blur',
+  'blur-in': 'blur',
+  'blurin': 'blur',
+  'focus': 'blur',
+  'highlighter-box': 'highlight',
+  'highlighterbox': 'highlight',
+  'simple': 'minimal',
+  'breathe': 'minimal',
+  'think-media': 'uppercase',
+  'thinkmedia': 'uppercase',
+  'with-backdrop': 'documentary',
+  'withbackdrop': 'documentary',
+  'soft-landing': 'podcast', // Soft landing = soft settle
+  'softlanding': 'podcast',
+};
 
 export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
   // ============================================
@@ -719,10 +760,17 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
 };
 
 /**
- * Get a caption style by ID
+ * Get a caption style by ID (supports Opus Clip aliases)
  */
 export function getCaptionStyle(styleId: string): CaptionStyle {
-  return CaptionStyleRegistry[styleId] || CaptionStyleRegistry.minimal;
+  // Normalize style ID (lowercase, remove spaces/hyphens)
+  const normalizedId = styleId.toLowerCase().replace(/[\s_]/g, '-');
+  
+  // Check if it's an Opus Clip alias
+  const actualStyleId = OPUS_CLIP_ALIASES[normalizedId] || normalizedId;
+  
+  // Return the style (fallback to minimal if not found)
+  return CaptionStyleRegistry[actualStyleId] || CaptionStyleRegistry.minimal;
 }
 
 /**
