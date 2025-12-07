@@ -22,6 +22,13 @@ import * as path from 'path';
 @Injectable()
 export class ProjectsService {
   private readonly logger = new Logger(ProjectsService.name);
+  
+  // Feature flag: Use new advanced animator for these styles
+  private readonly USE_ADVANCED_ANIMATOR = true;
+  private readonly ADVANCED_ANIMATOR_STYLES = [
+    'mrbeast', 'neon', 'highlight', 'bounce', 'karaoke', 'typewriter',
+    'glitch', 'popline', 'documentary', 'hormozi', 'blur', 'bubble'
+  ];
 
   constructor(
     private prisma: PrismaService,
@@ -1215,6 +1222,20 @@ export class ProjectsService {
     position?: 'top' | 'center' | 'bottom',
     addWatermark?: boolean,
   ): Promise<void> {
+    // Check if we should use the new advanced animator
+    const useAdvancedAnimator = this.USE_ADVANCED_ANIMATOR && 
+                                this.ADVANCED_ANIMATOR_STYLES.includes(captionStyle);
+    
+    if (useAdvancedAnimator) {
+      this.logger.log(`🎬 Using ADVANCED animator for ${captionStyle} (industry-standard quality)`);
+      return this.renderWithAdvancedAnimator(
+        inputPath, outputPath, words, videoMetadata, captionStyle, 
+        primaryColor, secondaryColor, fontSize, position, addWatermark
+      );
+    }
+    
+    // Fall back to old animator for simple styles
+    this.logger.log(`📹 Using legacy animator for ${captionStyle}`);
     const { CaptionAnimatorService } = await import('../captions/caption-animator.service');
     const { getCaptionStylePreset } = await import('../captions/caption-styles');
     
@@ -1829,5 +1850,66 @@ export class ProjectsService {
       },
       project: this.serializeProject(project),
     };
+  }
+
+  /**
+   * Render captions using the new Advanced Animator (industry-standard quality)
+   */
+  private async renderWithAdvancedAnimator(
+    inputPath: string,
+    outputPath: string,
+    words: any[],
+    videoMetadata: { width: number; height: number; duration: number },
+    captionStyle: string,
+    primaryColor?: string,
+    secondaryColor?: string,
+    fontSize?: number,
+    position?: 'top' | 'center' | 'bottom',
+    addWatermark?: boolean,
+  ): Promise<void> {
+    const { AdvancedAnimatorService } = await import('../captions/advanced-animator.service');
+    const { convertToWordTiming, detectKeywords } = await import('../captions/animation-adapter');
+    
+    const animator = new AdvancedAnimatorService();
+    
+    // Convert words to new format
+    let wordTimings = convertToWordTiming(words);
+    
+    // Detect keywords for emphasis styles (Hormozi)
+    if (captionStyle === 'hormozi') {
+      wordTimings = detectKeywords(wordTimings);
+    }
+    
+    // Generate caption frames with advanced animations
+    const frameDir = this.video.getTempFilePath('_frames_advanced');
+    await fs.mkdir(frameDir, { recursive: true });
+    
+    this.logger.log(`🎬 Generating ${Math.ceil(videoMetadata.duration * 30)} frames with ADVANCED animator...`);
+    this.logger.log(`   Style: ${captionStyle}`);
+    this.logger.log(`   Resolution: ${videoMetadata.width}x${videoMetadata.height}`);
+    this.logger.log(`   Duration: ${videoMetadata.duration.toFixed(1)}s`);
+    
+    const framePaths = await animator.generateCaptionFrames(
+      wordTimings,
+      captionStyle,
+      videoMetadata.duration,
+      videoMetadata.width,
+      videoMetadata.height,
+      30, // fps
+      frameDir
+    );
+    
+    this.logger.log(`✅ Generated ${framePaths.length} caption frames`);
+    
+    // Overlay frames onto video
+    this.logger.log('🎥 Overlaying caption frames onto video...');
+    const framePattern = `${frameDir}/frame_%06d.png`;
+    await this.ffmpeg.overlayCaptionFrames(inputPath, outputPath, framePattern, 30, addWatermark);
+    
+    // Cleanup frames
+    this.logger.log('🧹 Cleaning up frames...');
+    await fs.rm(frameDir, { recursive: true, force: true });
+    
+    this.logger.log('✅ Advanced animation rendering complete!');
   }
 }
