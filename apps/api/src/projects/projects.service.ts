@@ -1225,6 +1225,8 @@ export class ProjectsService {
     const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi', 'karaoke'];
     const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
     
+    this.logger.log(`🎨 [Generic] BEFORE override - captionStyle=${captionStyle}, shouldUseStyleColor=${shouldUseStyleColor}, stylePreset.textColor=${stylePreset.textColor}, primaryColor=${primaryColor}`);
+    
     // Override preset colors, fontSize, and position with custom values if provided
     if (primaryColor || secondaryColor || fontSize || position) {
       this.logger.log(`🎨 [Generic] Overriding caption style: primaryColor=${primaryColor}, fontSize=${fontSize}, position=${position}, shouldUseStyleColor=${shouldUseStyleColor}`);
@@ -1235,7 +1237,7 @@ export class ProjectsService {
         ...(fontSize && { fontSize }),
         ...(position && { position }),
       };
-      this.logger.log(`🎨 [Generic] Final stylePreset: textColor=${stylePreset.textColor}, fontSize=${stylePreset.fontSize}, position=${stylePreset.position}`);
+      this.logger.log(`🎨 [Generic] AFTER override - stylePreset.textColor=${stylePreset.textColor}, fontSize=${stylePreset.fontSize}, position=${stylePreset.position}`);
     }
     
     const actualDuration = videoMetadata.duration;
