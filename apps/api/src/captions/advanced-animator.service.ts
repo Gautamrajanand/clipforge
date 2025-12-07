@@ -77,7 +77,7 @@ export class AdvancedAnimatorService {
     // Group words into caption lines (based on timing gaps)
     const captionLines = this.groupWordsIntoLines(words, 3.0); // 3 second max per line
 
-    // Generate each frame
+    // Generate each frame with memory management
     for (let frameNum = 0; frameNum < totalFrames; frameNum++) {
       const timestamp = frameNum / fps;
       const framePath = path.join(outputDir, `frame_${String(frameNum).padStart(6, '0')}.png`);
@@ -93,6 +93,11 @@ export class AdvancedAnimatorService {
       );
 
       framePaths.push(framePath);
+
+      // Force garbage collection every 50 frames to prevent OOM
+      if (frameNum % 50 === 0 && global.gc) {
+        global.gc();
+      }
 
       // Progress logging
       if (frameNum % 100 === 0 || frameNum === totalFrames - 1) {

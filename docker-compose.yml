@@ -122,8 +122,8 @@ services:
       STRIPE_WEBHOOK_SECRET: whsec_YOUR_WEBHOOK_SECRET_HERE
       # Frontend URL
       FRONTEND_URL: http://localhost:3001
-      # Node.js optimization flags for high concurrency
-      NODE_OPTIONS: --max-old-space-size=2048 --max-http-header-size=16384
+      # Node.js optimization flags for high concurrency and memory management
+      NODE_OPTIONS: --max-old-space-size=4096 --max-http-header-size=16384 --expose-gc
       UV_THREADPOOL_SIZE: 128
       # Cluster mode: number of worker processes (0 = use all CPUs)
       CLUSTER_WORKERS: 4
