@@ -111,22 +111,25 @@ export class AdvancedAnimatorService {
   }
 
   /**
-   * Group words into caption lines based on timing
+   * Group words into caption lines (2-3 words per line for viral styles)
    */
   private groupWordsIntoLines(words: WordTiming[], maxDuration: number): WordTiming[][] {
     const lines: WordTiming[][] = [];
     let currentLine: WordTiming[] = [];
-    let lineStartTime = words[0]?.start || 0;
+    const MAX_WORDS_PER_LINE = 3; // Show 2-3 words at a time (viral style)
 
     for (const word of words) {
-      const lineDuration = word.end - lineStartTime;
+      currentLine.push(word);
 
-      if (lineDuration > maxDuration && currentLine.length > 0) {
+      // Break line after 2-3 words OR if there's a long pause
+      const shouldBreak = currentLine.length >= MAX_WORDS_PER_LINE;
+      const nextWordIndex = words.indexOf(word) + 1;
+      const hasLongPause = nextWordIndex < words.length && 
+                          (words[nextWordIndex].start - word.end) > 0.5; // 500ms pause
+
+      if (shouldBreak || hasLongPause) {
         lines.push(currentLine);
-        currentLine = [word];
-        lineStartTime = word.start;
-      } else {
-        currentLine.push(word);
+        currentLine = [];
       }
     }
 
@@ -369,10 +372,15 @@ export class AdvancedAnimatorService {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Calculate total width and positions
+    // Calculate total width and positions with safe margins
+    const SAFE_MARGIN = width * 0.05; // 5% margin on each side
+    const maxWidth = width - (SAFE_MARGIN * 2);
     const wordWidths = words.map(w => ctx.measureText(w.text).width);
     const spacing = 20;
-    const totalWidth = wordWidths.reduce((sum, w) => sum + w, 0) + (spacing * (words.length - 1));
+    const totalWidth = Math.min(
+      wordWidths.reduce((sum, w) => sum + w, 0) + (spacing * (words.length - 1)),
+      maxWidth
+    );
     let currentX = (width - totalWidth) / 2;
 
     // Render each word

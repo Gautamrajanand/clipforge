@@ -1102,7 +1102,11 @@ export class ProjectsService {
       }
 
       // Determine if we need frame-by-frame rendering (for animated styles)
-      const animatedStyles = ['bold', 'modern', 'elegant', 'mrbeast', 'neon', 'highlight', 'rainbow', 'fill', 'shadow3d', 'tricolor', 'bounce'];
+      // Use the same list as ADVANCED_ANIMATOR_STYLES to ensure consistency
+      const animatedStyles = [
+        'mrbeast', 'neon', 'highlight', 'bounce', 'karaoke', 'typewriter',
+        'glitch', 'popline', 'documentary', 'hormozi', 'blur', 'bubble'
+      ];
       const useFrameByFrame = animatedStyles.includes(captionStyle);
 
       if (useFrameByFrame) {
