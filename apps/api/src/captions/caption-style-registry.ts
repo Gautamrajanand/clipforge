@@ -273,12 +273,8 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
     textColor: '#00FF00',
     glow: {
       color: '#00FF00',
-      radius: 35,
-      intensity: 1.0,
-    },
-    stroke: {
-      color: '#000000',
-      width: 10,
+      radius: 40,
+      intensity: 1.2,
     },
     animation: {
       entry: {
@@ -321,9 +317,9 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
     name: 'Highlight',
     description: 'Word-level emphasis for debate clips',
     fontFamily: 'Inter',
-    fontWeight: 600,
-    fontSize: 47,
-    textColor: '#000000',
+    fontWeight: 700,
+    fontSize: 52,
+    textColor: '#FFFFFF',
     background: {
       color: '#FFE600',
       opacity: 1.0,
@@ -363,26 +359,27 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
     name: 'Bounce',
     description: 'Bouncy word animation',
     fontFamily: 'Montserrat',
-    fontWeight: 700,
-    fontSize: 68,
+    fontWeight: 800,
+    fontSize: 72,
     textColor: '#FFFFFF',
     stroke: {
       color: '#000000',
-      width: 4,
+      width: 6,
     },
     animation: {
       entry: {
         duration: 200,
         easing: 'easeOutBack',
         properties: {
-          scale: { from: 0.9, to: 1.0 },
+          scale: { from: 0.8, to: 1.0 },
         },
       },
       perWord: {
-        duration: 160,
+        duration: 200,
         delay: 0,
         easing: 'easeOutBounce',
         properties: {
+          scale: { from: 1.0, to: 1.35 },
           translateY: { from: 10, to: 0 },
         },
       },
