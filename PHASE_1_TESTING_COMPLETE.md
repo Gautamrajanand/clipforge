@@ -64,9 +64,11 @@ December 8, 2025
 ### Memory Management
 - **Container Memory:** 16GB
 - **Node Heap:** 4GB
-- **GC Frequency:** Every 10 frames
+- **Batch Processing:** 50 frames per batch
+- **GC Strategy:** Double GC after each batch + 50ms delay
 - **PNG Compression:** Level 3, no filters
-- **Result:** Stable exports without crashes
+- **Peak Memory:** 3-4GB per batch (safe)
+- **Result:** Stable exports for any video length
 
 ### Style Properties Verification
 All styles loading correctly from `caption-style-registry.ts`:
