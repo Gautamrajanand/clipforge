@@ -359,12 +359,12 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
     name: 'Bounce',
     description: 'Bouncy word animation',
     fontFamily: 'Montserrat',
-    fontWeight: 800,
+    fontWeight: 900,
     fontSize: 72,
     textColor: '#FFFFFF',
     stroke: {
       color: '#000000',
-      width: 6,
+      width: 8,
     },
     animation: {
       entry: {
@@ -379,7 +379,7 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
         delay: 0,
         easing: 'easeOutBounce',
         properties: {
-          scale: { from: 1.0, to: 1.35 },
+          scale: { from: 1.0, to: 1.25 },
           translateY: { from: 10, to: 0 },
         },
       },

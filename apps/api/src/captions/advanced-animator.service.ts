@@ -395,7 +395,11 @@ export class AdvancedAnimatorService {
     const SAFE_MARGIN = width * 0.05; // 5% margin on each side
     const maxWidth = width - (SAFE_MARGIN * 2);
     const wordWidths = words.map(w => ctx.measureText(w.text).width);
-    const spacing = 20;
+    
+    // Dynamic spacing based on style (Bounce needs more space for scale animation)
+    const baseSpacing = style.id === 'bounce' ? 40 : 20;
+    const spacing = baseSpacing;
+    
     const totalWidth = Math.min(
       wordWidths.reduce((sum, w) => sum + w, 0) + (spacing * (words.length - 1)),
       maxWidth
