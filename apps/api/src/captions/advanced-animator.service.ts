@@ -95,8 +95,8 @@ export class AdvancedAnimatorService {
 
       framePaths.push(framePath);
 
-      // Force garbage collection every 25 frames to prevent OOM (more aggressive)
-      if (frameNum % 25 === 0 && global.gc) {
+      // Force garbage collection every 10 frames to prevent OOM (very aggressive)
+      if (frameNum % 10 === 0 && global.gc) {
         global.gc();
       }
 
@@ -173,13 +173,22 @@ export class AdvancedAnimatorService {
         }
       }
 
-      // Save frame
-      buffer = canvas.toBuffer('image/png');
+      // Save frame with minimal buffer
+      buffer = canvas.toBuffer('image/png', { compressionLevel: 3, filters: canvas.PNG_FILTER_NONE });
       fs.writeFileSync(outputPath, buffer);
     } finally {
-      // Explicit cleanup to prevent memory leaks
-      buffer = null;
-      canvas = null;
+      // Aggressive cleanup to prevent memory leaks
+      if (buffer) {
+        buffer = null;
+      }
+      if (canvas) {
+        // Clear canvas context before destroying
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, width, height);
+        }
+        canvas = null;
+      }
     }
   }
 
