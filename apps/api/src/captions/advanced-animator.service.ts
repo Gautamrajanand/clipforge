@@ -94,8 +94,8 @@ export class AdvancedAnimatorService {
 
       framePaths.push(framePath);
 
-      // Force garbage collection every 50 frames to prevent OOM
-      if (frameNum % 50 === 0 && global.gc) {
+      // Force garbage collection every 25 frames to prevent OOM (more aggressive)
+      if (frameNum % 25 === 0 && global.gc) {
         global.gc();
       }
 
@@ -152,25 +152,34 @@ export class AdvancedAnimatorService {
     height: number,
     outputPath: string
   ): Promise<void> {
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
+    let canvas: any = null;
+    let buffer: Buffer = null;
+    
+    try {
+      canvas = createCanvas(width, height);
+      const ctx = canvas.getContext('2d');
 
-    // Clear canvas (transparent)
-    ctx.clearRect(0, 0, width, height);
+      // Clear canvas (transparent)
+      ctx.clearRect(0, 0, width, height);
 
-    // Find active caption line(s) at this timestamp
-    for (const line of captionLines) {
-      const lineStart = line[0].start;
-      const lineEnd = line[line.length - 1].end;
+      // Find active caption line(s) at this timestamp
+      for (const line of captionLines) {
+        const lineStart = line[0].start;
+        const lineEnd = line[line.length - 1].end;
 
-      if (timestamp >= lineStart && timestamp <= lineEnd) {
-        await this.renderCaptionLine(ctx, line, style, timestamp, width, height);
+        if (timestamp >= lineStart && timestamp <= lineEnd) {
+          await this.renderCaptionLine(ctx, line, style, timestamp, width, height);
+        }
       }
-    }
 
-    // Save frame
-    const buffer = canvas.toBuffer('image/png');
-    fs.writeFileSync(outputPath, buffer);
+      // Save frame
+      buffer = canvas.toBuffer('image/png');
+      fs.writeFileSync(outputPath, buffer);
+    } finally {
+      // Explicit cleanup to prevent memory leaks
+      buffer = null;
+      canvas = null;
+    }
   }
 
   /**
