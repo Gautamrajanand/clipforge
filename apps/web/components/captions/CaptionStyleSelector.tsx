@@ -94,7 +94,7 @@ export const CAPTION_PRESETS = [
   {
     id: "highlight",
     name: "Highlight",
-    description: "Black text on yellow box - Debate clips",
+    description: "White text on yellow box - Debate clips",
     icon: Highlighter,
     position: "center",
     gradient: "from-yellow-400 to-yellow-600",
