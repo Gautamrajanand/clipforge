@@ -78,33 +78,44 @@ export class AdvancedAnimatorService {
     // Group words into caption lines (based on timing gaps)
     const captionLines = this.groupWordsIntoLines(words, 3.0); // 3 second max per line
 
-    // Generate each frame with memory management
-    for (let frameNum = 0; frameNum < totalFrames; frameNum++) {
-      const timestamp = frameNum / fps;
-      const framePath = path.join(outputDir, `frame_${String(frameNum).padStart(6, '0')}.png`);
+    // Generate frames in batches to prevent memory exhaustion
+    const BATCH_SIZE = 50; // Process 50 frames at a time
+    
+    for (let batchStart = 0; batchStart < totalFrames; batchStart += BATCH_SIZE) {
+      const batchEnd = Math.min(batchStart + BATCH_SIZE, totalFrames);
+      
+      // Generate batch
+      for (let frameNum = batchStart; frameNum < batchEnd; frameNum++) {
+        const timestamp = frameNum / fps;
+        const framePath = path.join(outputDir, `frame_${String(frameNum).padStart(6, '0')}.png`);
 
-      await this.renderFrame(
-        frameNum,
-        timestamp,
-        captionLines,
-        style,
-        videoWidth,
-        videoHeight,
-        framePath
-      );
+        await this.renderFrame(
+          frameNum,
+          timestamp,
+          captionLines,
+          style,
+          videoWidth,
+          videoHeight,
+          framePath
+        );
 
-      framePaths.push(framePath);
+        framePaths.push(framePath);
 
-      // Force garbage collection every 10 frames to prevent OOM (very aggressive)
-      if (frameNum % 10 === 0 && global.gc) {
+        // Progress logging
+        if (frameNum % 100 === 0 || frameNum === totalFrames - 1) {
+          const progress = ((frameNum + 1) / totalFrames * 100).toFixed(1);
+          this.logger.log(`📊 Progress: ${progress}% (${frameNum + 1}/${totalFrames} frames)`);
+        }
+      }
+      
+      // Force aggressive garbage collection after each batch
+      if (global.gc) {
         global.gc();
+        global.gc(); // Run twice for thorough cleanup
       }
-
-      // Progress logging
-      if (frameNum % 100 === 0 || frameNum === totalFrames - 1) {
-        const progress = ((frameNum + 1) / totalFrames * 100).toFixed(1);
-        this.logger.log(`📊 Progress: ${progress}% (${frameNum + 1}/${totalFrames} frames)`);
-      }
+      
+      // Small delay to allow GC to complete
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     this.logger.log(`✅ Generated ${framePaths.length} frames`);
