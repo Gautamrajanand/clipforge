@@ -68,6 +68,7 @@ export class AdvancedAnimatorService {
     this.logger.log(`🎬 Generating ${totalFrames} frames for ${styleId} style`);
     this.logger.log(`📐 Video: ${videoWidth}x${videoHeight} @ ${fps}fps`);
     this.logger.log(`📝 Words: ${words.length}`);
+    this.logger.log(`🎨 Style properties: font=${style.fontFamily}, color=${style.textColor}, hasBackground=${!!style.background}, hasGlow=${!!style.glow}, hasStroke=${!!style.stroke}`);
 
     // Ensure output directory exists
     if (!fs.existsSync(outputDir)) {
