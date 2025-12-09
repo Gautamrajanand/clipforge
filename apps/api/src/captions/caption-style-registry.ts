@@ -676,13 +676,13 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
     id: 'karaoke',
     name: 'Karaoke',
     description: 'Progressive fill synced to audio',
-    fontFamily: 'Montserrat',
-    fontWeight: 800,
+    fontFamily: 'Arial Black',
+    fontWeight: 900,
     fontSize: 68,
     textColor: '#FFFFFF',
     stroke: {
       color: '#000000',
-      width: 5,
+      width: 6,
     },
     karaokeMode: {
       enabled: true,
