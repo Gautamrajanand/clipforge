@@ -622,10 +622,8 @@ export class AdvancedAnimatorService {
     timestamp: number,
     lineState: RenderState
   ): Promise<void> {
-    const lineStart = words[0].start;
     const charDelay = (style.animation.stagger?.delay || 40) / 1000; // Convert to seconds
     
-    let charIndex = 0;
     let currentX = 0;
     
     // Calculate total text width for centering
@@ -635,9 +633,12 @@ export class AdvancedAnimatorService {
 
     // Render each character
     for (const word of words) {
+      // Each word types out based on its own start time
+      const wordStart = word.start;
+      
       for (let i = 0; i < word.text.length; i++) {
         const char = word.text[i];
-        const charStartTime = lineStart + (charIndex * charDelay);
+        const charStartTime = wordStart + (i * charDelay);
         const timeSinceCharStart = timestamp - charStartTime;
 
         // Only render if character should be visible
@@ -673,21 +674,19 @@ export class AdvancedAnimatorService {
         }
 
         currentX += ctx.measureText(char).width;
-        charIndex++;
       }
 
       // Add space between words
       currentX += ctx.measureText(' ').width;
-      charIndex++;
     }
 
-    // Optional blinking cursor
-    const totalChars = fullText.replace(/ /g, '').length;
-    const totalTypingTime = lineStart + (totalChars * charDelay);
+    // Optional blinking cursor at the end of the last word
+    const lastWord = words[words.length - 1];
+    const lastWordEnd = lastWord.end;
     const cursorBlinkInterval = 0.5; // 500ms
     
-    if (timestamp >= totalTypingTime && timestamp < totalTypingTime + 1.0) {
-      const blinkProgress = ((timestamp - totalTypingTime) % cursorBlinkInterval) / cursorBlinkInterval;
+    if (timestamp >= lastWordEnd && timestamp < lastWordEnd + 1.0) {
+      const blinkProgress = ((timestamp - lastWordEnd) % cursorBlinkInterval) / cursorBlinkInterval;
       const cursorOpacity = blinkProgress < 0.5 ? 1 : 0;
 
       ctx.save();
