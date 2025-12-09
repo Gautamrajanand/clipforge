@@ -1,10 +1,10 @@
 # Caption Styles Testing Status
 
-## Overall Progress: 6/18 Complete (33%)
+## Overall Progress: 7/18 Complete (39%)
 
 ---
 
-## ✅ Phase 1: LOCKED (6/6) - 100%
+## ✅ Phase 1: LOCKED (7/7) - 100%
 
 | Style | Status | Notes |
 |-------|--------|-------|
@@ -14,14 +14,14 @@
 | Bounce | ✅ LOCKED | Bold text, proper spacing |
 | Karaoke | ✅ LOCKED | Cyan fill, Arial Black font |
 | Typewriter | ✅ LOCKED | Monospace, blinking cursor |
+| Glitch | ✅ LOCKED | Cyan + red RGB split, black box |
 
 ---
 
-## 🧪 Phase 2: TESTING (0/2) - 0%
+## 🧪 Phase 2: TESTING (0/1) - 0%
 
 | Style | Status | Expected Behavior |
 |-------|--------|-------------------|
-| Glitch | 🔄 PENDING | RGB split effect |
 | Documentary | 🔄 PENDING | Pink boxes (Vox style) |
 
 ---
