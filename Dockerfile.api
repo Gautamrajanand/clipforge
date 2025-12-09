@@ -16,7 +16,33 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libgif-dev \
     librsvg2-dev \
+    fontconfig \
+    fonts-liberation \
+    wget \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Google Fonts for caption styles
+RUN mkdir -p /usr/share/fonts/truetype/google-fonts && \
+    cd /usr/share/fonts/truetype/google-fonts && \
+    # Montserrat (Karaoke, Bounce)
+    wget -q https://github.com/google/fonts/raw/main/ofl/montserrat/Montserrat-Bold.ttf && \
+    wget -q https://github.com/google/fonts/raw/main/ofl/montserrat/Montserrat-ExtraBold.ttf && \
+    wget -q https://github.com/google/fonts/raw/main/ofl/montserrat/Montserrat-Black.ttf && \
+    # Inter (Highlight, Documentary)
+    wget -q https://github.com/google/fonts/raw/main/ofl/inter/Inter-Bold.ttf && \
+    wget -q https://github.com/google/fonts/raw/main/ofl/inter/Inter-ExtraBold.ttf && \
+    wget -q https://github.com/google/fonts/raw/main/ofl/inter/Inter-Black.ttf && \
+    # Bebas Neue (Popline)
+    wget -q https://github.com/google/fonts/raw/main/ofl/bebasneue/BebasNeue-Regular.ttf && \
+    # Oswald (Hormozi)
+    wget -q https://github.com/google/fonts/raw/main/ofl/oswald/Oswald-Bold.ttf && \
+    wget -q https://github.com/google/fonts/raw/main/ofl/oswald/Oswald-ExtraBold.ttf && \
+    # Poppins (Bubble)
+    wget -q https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Bold.ttf && \
+    wget -q https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-ExtraBold.ttf && \
+    # Update font cache
+    fc-cache -f -v
 
 # Install yt-dlp for video URL downloads
 RUN pip3 install --break-system-packages yt-dlp
