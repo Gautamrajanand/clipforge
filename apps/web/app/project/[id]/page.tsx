@@ -255,8 +255,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const loadExportVideoBlob = async (exportId: string) => {
     try {
-      const resp = await fetchWithAuth(`http://localhost:3001/v1/projects/exports/${exportId}/download`, {
+      // Add cache-busting timestamp to prevent browser from showing old cached videos
+      const cacheBuster = Date.now();
+      const resp = await fetchWithAuth(`http://localhost:3001/v1/projects/exports/${exportId}/download?t=${cacheBuster}`, {
         getToken: getClerkToken,
+        cache: 'no-store', // Disable caching
       });
       if (!resp.ok) return null;
       const blob = await resp.blob();
