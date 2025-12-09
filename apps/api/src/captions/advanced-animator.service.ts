@@ -625,11 +625,13 @@ export class AdvancedAnimatorService {
     const charDelay = (style.animation.stagger?.delay || 40) / 1000; // Convert to seconds
     
     let currentX = 0;
+    let lastVisibleX = 0; // Track position of last visible character
     
     // Calculate total text width for centering
     const fullText = words.map(w => w.text).join(' ');
     const totalWidth = ctx.measureText(fullText).width;
     currentX = -totalWidth / 2;
+    const startX = currentX;
 
     // Render each character
     for (const word of words) {
@@ -671,6 +673,9 @@ export class AdvancedAnimatorService {
           ctx.fillText(char, currentX, 0);
 
           ctx.restore();
+          
+          // Update last visible character position
+          lastVisibleX = currentX + ctx.measureText(char).width;
         }
 
         currentX += ctx.measureText(char).width;
@@ -689,12 +694,14 @@ export class AdvancedAnimatorService {
     const lastWord = words[words.length - 1];
     const isTyping = timestamp >= words[0].start && timestamp <= lastWord.end + 0.5;
     
-    if (isTyping) {
+    if (isTyping && lastVisibleX > startX) {
       ctx.save();
       ctx.globalAlpha = cursorOpacity;
       ctx.fillStyle = style.textColor;
-      // Draw a thicker cursor
-      ctx.fillRect(currentX + 4, -style.fontSize / 2, 3, style.fontSize);
+      // Draw cursor right after the last visible character
+      const cursorHeight = style.fontSize * 0.8;
+      const cursorY = -cursorHeight / 2;
+      ctx.fillRect(lastVisibleX + 2, cursorY, 3, cursorHeight);
       ctx.restore();
     }
   }
