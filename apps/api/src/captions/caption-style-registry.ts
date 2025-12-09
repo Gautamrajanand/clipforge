@@ -402,39 +402,46 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
     id: 'glitch',
     name: 'Glitch',
     description: 'Digital glitch effect',
-    fontFamily: 'Courier New',
-    fontWeight: 700,
-    fontSize: 62,
-    textColor: '#FFFFFF',
+    fontFamily: 'monospace',
+    fontWeight: 900,
+    fontSize: 68,
+    textColor: '#00FFFF',
+    stroke: {
+      color: '#FF0000',
+      width: 6,
+    },
+    background: {
+      color: '#000000',
+      opacity: 0.7,
+      padding: { x: 20, y: 12 },
+      borderRadius: 0,
+    },
     glitchEffect: {
       enabled: true,
-      frequency: 1000,
-      duration: 80,
-      intensity: 0.8,
+      frequency: 3000, // Glitch every 3 seconds (less frequent)
+      duration: 150,
+      intensity: 1.0,
     },
     animation: {
       entry: {
-        duration: 120,
+        duration: 150,
         easing: 'linear',
         properties: {
           opacity: { from: 0, to: 1 },
-          rgbSplitX: { from: 4, to: 0 },
         },
       },
-      loop: {
-        duration: 80,
+      perWord: {
+        duration: 100,
         easing: 'linear',
         properties: {
-          translateX: { from: -3, to: 3 },
-          rgbSplitX: { from: 0, to: 5 },
+          scale: { from: 1.0, to: 1.05 },
         },
       },
       exit: {
-        duration: 160,
+        duration: 150,
         easing: 'linear',
         properties: {
           opacity: { from: 1, to: 0 },
-          rgbSplitX: { from: 0, to: 4 },
         },
       },
     },
