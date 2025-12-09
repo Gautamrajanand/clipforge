@@ -719,8 +719,8 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
     name: 'Typewriter',
     description: 'Letter-by-letter typing effect',
     fontFamily: 'Courier New',
-    fontWeight: 400,
-    fontSize: 44,
+    fontWeight: 700,
+    fontSize: 52,
     textColor: '#FFFFFF',
     background: {
       color: '#000000',

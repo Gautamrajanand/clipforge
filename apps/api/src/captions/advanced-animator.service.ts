@@ -680,19 +680,21 @@ export class AdvancedAnimatorService {
       currentX += ctx.measureText(' ').width;
     }
 
-    // Optional blinking cursor at the end of the last word
-    const lastWord = words[words.length - 1];
-    const lastWordEnd = lastWord.end;
+    // Blinking cursor - show while typing and after
     const cursorBlinkInterval = 0.5; // 500ms
-    
-    if (timestamp >= lastWordEnd && timestamp < lastWordEnd + 1.0) {
-      const blinkProgress = ((timestamp - lastWordEnd) % cursorBlinkInterval) / cursorBlinkInterval;
-      const cursorOpacity = blinkProgress < 0.5 ? 1 : 0;
+    const blinkProgress = (timestamp % cursorBlinkInterval) / cursorBlinkInterval;
+    const cursorOpacity = blinkProgress < 0.5 ? 1 : 0;
 
+    // Show cursor if we're currently typing or just finished
+    const lastWord = words[words.length - 1];
+    const isTyping = timestamp >= words[0].start && timestamp <= lastWord.end + 0.5;
+    
+    if (isTyping) {
       ctx.save();
       ctx.globalAlpha = cursorOpacity;
       ctx.fillStyle = style.textColor;
-      ctx.fillText('|', currentX, 0);
+      // Draw a thicker cursor
+      ctx.fillRect(currentX + 4, -style.fontSize / 2, 3, style.fontSize);
       ctx.restore();
     }
   }
