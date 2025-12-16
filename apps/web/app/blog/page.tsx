@@ -9,11 +9,39 @@ export const metadata: Metadata = {
 export default function BlogPage() {
   const posts = [
     {
-      slug: 'welcome-to-clipforge',
-      title: 'Welcome to ClipForge: AI-Powered Video Repurposing',
-      excerpt: 'Discover how ClipForge helps creators turn long-form content into viral social media clips with AI.',
+      slug: 'repurpose-youtube-videos-tiktok',
+      title: 'How to Repurpose YouTube Videos for TikTok (2025 Guide)',
+      excerpt: 'Complete guide to turning YouTube videos into viral TikTok clips. Learn AI-powered methods, best practices, and tools for 2025.',
       date: 'December 17, 2025',
-      readTime: '5 min read',
+      readTime: '12 min read',
+    },
+    {
+      slug: 'opus-clip-alternatives',
+      title: '10 Best Opus Clip Alternatives (Honest Comparison 2025)',
+      excerpt: 'Compare the top 10 Opus Clip alternatives. Honest review of features, pricing, and quality to help you choose the best tool.',
+      date: 'December 17, 2025',
+      readTime: '15 min read',
+    },
+    {
+      slug: 'ai-video-editing-guide',
+      title: 'AI Video Editing: Complete Beginner\'s Guide (2025)',
+      excerpt: 'Learn everything about AI video editing. From basics to advanced techniques. Complete guide for beginners in 2025.',
+      date: 'December 17, 2025',
+      readTime: '18 min read',
+    },
+    {
+      slug: 'add-captions-to-videos',
+      title: 'How to Add Captions to Videos (Free + Paid Tools 2025)',
+      excerpt: 'Complete guide to adding captions to videos. Compare free and paid tools, learn best practices, and boost engagement by 40%.',
+      date: 'December 17, 2025',
+      readTime: '14 min read',
+    },
+    {
+      slug: 'podcast-to-video-tutorial',
+      title: 'Podcast to Video: Step-by-Step Tutorial (2025)',
+      excerpt: 'Complete guide to converting podcast episodes into engaging video content. Learn tools, techniques, and best practices.',
+      date: 'December 17, 2025',
+      readTime: '16 min read',
     },
   ];
 
