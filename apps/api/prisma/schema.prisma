@@ -613,3 +613,17 @@ enum PopupType {
   FEEDBACK
   CUSTOM
 }
+
+// ============ Email Flood Prevention ============
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  userId    String   // Clerk user ID
+  emailType String   // Type of email sent
+  sentAt    DateTime @default(now())
+  
+  @@index([userId])
+  @@index([emailType])
+  @@index([sentAt])
+  @@index([userId, sentAt])
+}
