@@ -26,6 +26,8 @@ import ProgressStats from '@/components/dashboard/ProgressStats';
 import CelebrationToast from '@/components/celebrations/CelebrationToast';
 import WelcomeModal from '@/components/onboarding/WelcomeModal';
 import OnboardingSurvey, { OnboardingData } from '@/components/onboarding/OnboardingSurvey';
+import ProgressChecklist from '@/components/onboarding/ProgressChecklist';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
