@@ -74,30 +74,12 @@ export class TranscriptionProcessor extends WorkerHost {
           );
         } else {
           // Reframe mode - just mark as READY
+          // Note: Email will be sent by reframe processor when reframe job completes
           await this.prisma.project.update({
             where: { id: projectId },
             data: { status: 'READY' },
           });
-
-          // Send email notification for reframe-only projects
-          try {
-            const membership = await this.prisma.membership.findFirst({
-              where: { orgId: project.orgId, role: 'OWNER' },
-              include: { user: true },
-            });
-            if (membership?.user?.email) {
-              await this.resend.sendReframeReadyEmail({
-                to: membership.user.email,
-                userName: membership.user.name || 'there',
-                projectTitle: project.title,
-                projectId,
-                aspectRatio: '9:16',
-              });
-              this.logger.log(`📧 Sent reframe ready email to ${membership.user.email}`);
-            }
-          } catch (emailError) {
-            this.logger.warn(`⚠️ Failed to send reframe ready email for project ${projectId}:`, emailError);
-          }
+          this.logger.log(`✅ Transcription complete for reframe-only project ${projectId}`);
         }
       } else {
         // Normal flow: queue clip detection
