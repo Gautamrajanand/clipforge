@@ -1,4 +1,4 @@
-# ClipForge - Current Status (Nov 29, 2025)
+# ClipForge - Current Status (Dec 16, 2025)
 
 ## 🎯 Where We Are: Day 1 Complete - Production-Ready Scalability Achieved
 
@@ -84,9 +84,23 @@
 
 ---
 
-## 🔄 IN PROGRESS: Week 2 Day 5-6
+**Day 2: Email Notifications (Dec 16, 2025)** ✅ COMPLETE
+- ✅ Switched all project-ready emails from EmailService to ResendService
+- ✅ Added sendClipsReadyEmail, sendReframeReadyEmail, sendSubtitlesReadyEmail
+- ✅ Updated all processors (reframe, subtitle-export, transcription) to use ResendService
+- ✅ Updated projects.service.ts for AI Clips notifications
+- ✅ Added ML worker callback to API (POST /v1/projects/:id/notify-ready)
+- ✅ Created ProjectsInternalController for unauthenticated ML worker endpoints
+- ✅ All emails now use working Resend API (same as welcome/credits emails)
+- ⚠️ Known issue: AI Reframe sends duplicate emails (to be fixed)
+- **Commits:** `654ae14`
+- **Time:** 2 hours
 
-### Watermark Implementation (Next Priority)
+---
+
+## 🔄 IN PROGRESS: Week 3 Day 5-6
+
+### Caption Styles Expansion + AI Reframe Framing Features (Next Priority)
 
 **What's Already Built:**
 - ✅ Backend payment service (100% complete)
@@ -286,6 +300,6 @@ dee205d feat: Add dual payment gateway integration (Stripe + Razorpay)
 
 ---
 
-**Last Updated:** Nov 22, 2025, 12:30 PM IST
+**Last Updated:** Dec 16, 2025, 10:15 PM IST
 **Current Branch:** main
-**Latest Commit:** 50ef089
+**Latest Commit:** 654ae14

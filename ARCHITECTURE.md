@@ -1,5 +1,5 @@
 # ClipForge Architecture
-**Last Updated:** November 29, 2025 (Cluster Mode + Production Scalability)
+**Last Updated:** December 16, 2025 (Email Notifications via ResendService)
 
 ---
 
@@ -949,6 +949,77 @@ ffmpeg -i input.mp4 -framerate 30 -i frames/caption_%06d.png \
 
 ---
 
+## Email Notification System (December 16, 2025)
+
+### Architecture
+
+**Service:** ResendService (Resend API)  
+**Configuration:** `RESEND_API_KEY` in environment  
+**Status:** ✅ Production-ready
+
+### Email Flow for Project Completion
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   EMAIL NOTIFICATION FLOW                    │
+└─────────────────────────────────────────────────────────────┘
+
+AI CLIPS:
+  ML Worker (Python) → Detects clips → Saves to DB → Status = READY
+       ↓
+  ML Worker → POST /v1/projects/:id/notify-ready (clipCount)
+       ↓
+  ProjectsInternalController (no auth) → projectsService.sendProjectReadyEmail()
+       ↓
+  ResendService.sendClipsReadyEmail() → Resend API → ✉️ Email sent
+
+AI REFRAME:
+  Reframe Processor → Completes job → Status = READY
+       ↓
+  ResendService.sendReframeReadyEmail() → Resend API → ✉️ Email sent
+  ⚠️ Known issue: Sends duplicate emails
+
+AI SUBTITLES:
+  Subtitle Export Processor → Completes job → Status = READY
+       ↓
+  ResendService.sendSubtitlesReadyEmail() → Resend API → ✉️ Email sent
+
+REFRAME-ONLY (no clips/subtitles):
+  Transcription Processor → Completes → Status = READY
+       ↓
+  ResendService.sendReframeReadyEmail() → Resend API → ✉️ Email sent
+```
+
+### Email Templates
+
+All use inline HTML templates matching ClipForge branding:
+- **Clips Ready:** "✨ Your AI Clips Are Ready!"
+- **Reframe Ready:** "🎯 Your Reframed Video Is Ready!"
+- **Subtitles Ready:** "📝 Your Subtitles Are Ready!"
+
+### Key Files
+
+**Backend:**
+- `apps/api/src/email/resend.service.ts` - Email sending methods
+- `apps/api/src/queues/processors/reframe.processor.ts` - Reframe emails
+- `apps/api/src/queues/processors/subtitle-export.processor.ts` - Subtitle emails
+- `apps/api/src/queues/processors/transcription.processor.ts` - Reframe-only emails
+- `apps/api/src/projects/projects.service.ts` - AI Clips emails
+- `apps/api/src/projects/projects.controller.ts` - ProjectsInternalController
+
+**ML Worker:**
+- `workers/routers/ranker.py` - API callback after clip detection
+
+### Why ResendService?
+
+- ✅ Already configured with `RESEND_API_KEY`
+- ✅ Used by all other ClipForge emails (welcome, credits, trial)
+- ✅ Proven reliable in production
+- ✅ No SMTP configuration needed
+- ❌ EmailService uses unconfigured SMTP (not working)
+
+---
+
 ## Summary
 
 ClipForge is a modern, scalable platform built with:
@@ -959,5 +1030,6 @@ ClipForge is a modern, scalable platform built with:
 - ✅ **Extensible** - Easy to add features
 - ✅ **Self-Hosted** - Full control
 - ✅ **UI Consistency** - Shared components across AI features
+- ✅ **Email Notifications** - ResendService for all project-ready emails
 
-**Status:** Production-ready for FREE tier, PRO tier core complete, AI Subtitles & Reframe integrated with UI parity.
+**Status:** Production-ready for FREE tier, PRO tier core complete, AI Subtitles & Reframe integrated with UI parity, email notifications working.
