@@ -1,0 +1,17 @@
+# robots.txt for ClipForge
+# Allow all crawlers
+
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+
+# Disallow auth routes
+Disallow: /sign-in
+Disallow: /sign-up
+
+# Sitemap
+Sitemap: https://clipforge.ai/sitemap.xml
