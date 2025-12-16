@@ -225,15 +225,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const loadVideoBlob = async () => {
     try {
-      // Clear old video URL and revoke blob
-      setVideoUrl(prev => {
-        if (prev) {
-          URL.revokeObjectURL(prev);
-          console.log('🗑️  Revoked old video blob URL');
-        }
-        return null; // Clear the URL immediately
-      });
-
       // Add cache-busting parameter to force fresh fetch
       const cacheBuster = Date.now();
       console.log(`📥 Fetching video with cache buster: ${cacheBuster}`);
@@ -246,8 +237,16 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       }
       const blob = await resp.blob();
       console.log(`✅ Received video blob: ${blob.size} bytes, type: ${blob.type}`);
-      const url = URL.createObjectURL(blob);
-      setVideoUrl(url);
+      
+      // Revoke old URL before creating new one
+      setVideoUrl(prev => {
+        if (prev) {
+          URL.revokeObjectURL(prev);
+          console.log('🗑️  Revoked old video blob URL');
+        }
+        const url = URL.createObjectURL(blob);
+        return url;
+      });
     } catch (e) {
       console.error('Error loading video blob:', e);
     }
@@ -780,14 +779,52 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           )}
 
           {/* AI-Detected Clips Grid */}
-          {projectMode === 'clips' && clips.length > 0 && (
+          {projectMode === 'clips' && (
             <div className="mb-8">
-              <ClipsGrid
-                clips={clips}
-                selectedClips={selectedClips}
-                onClipSelect={toggleClip}
-                onClipPlay={(clip: any) => setSelectedClipForPlayback(clip)}
-              />
+              {clips.length > 0 ? (
+                <ClipsGrid
+                  clips={clips}
+                  selectedClips={selectedClips}
+                  onClipSelect={toggleClip}
+                  onClipPlay={(clip: any) => setSelectedClipForPlayback(clip)}
+                />
+              ) : project?.status === 'DETECTING' ? (
+                <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+                  <div className="max-w-2xl mx-auto">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                      <Sparkles className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Detecting Viral Moments...</h2>
+                    <p className="text-gray-600 mb-4">
+                      Our AI is analyzing your video to find the most engaging clips.
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-sm text-blue-600 font-medium">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                </div>
+              ) : (project?.status === 'TRANSCRIBING' || project?.status === 'IMPORTING' || project?.status === 'INGESTING') ? (
+                <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+                  <div className="max-w-2xl mx-auto">
+                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                      <Sparkles className="w-8 h-8 text-purple-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Processing Video...</h2>
+                    <p className="text-gray-600 mb-4">
+                      {project?.status === 'IMPORTING' && 'Importing your video...'}
+                      {project?.status === 'INGESTING' && 'Uploading and processing...'}
+                      {project?.status === 'TRANSCRIBING' && 'Transcribing audio...'}
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-sm text-purple-600 font-medium">
+                      <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
 

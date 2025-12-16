@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, Link as LinkIcon, Wand2 } from 'lucide-react';
+import { X, Upload, Link as LinkIcon, Wand2, Sparkles } from 'lucide-react';
 import AspectRatioSelector from '../export/AspectRatioSelector';
-import CropModeSelector from '../export/CropModeSelector';
-import CropPositionSelector from '../export/CropPositionSelector';
+import FramingModeSelector from '../export/FramingModeSelector';
+import AdvancedLayoutControls from '../export/AdvancedLayoutControls';
 
 interface ReframeModalProps {
   isOpen: boolean;
@@ -18,13 +18,31 @@ interface ReframeModalProps {
   uploadError?: string;
 }
 
+type FramingMode = 'smart_crop' | 'center_crop' | 'pad_blur' | 'pad_color' | 'side_by_side' | 'picture_in_picture' | 'grid' | 'above_below';
+
+interface AdvancedLayout {
+  leftRatio?: number;
+  rightRatio?: number;
+  overlayPosition?: 'top_left' | 'top_right' | 'bottom_left' | 'bottom_right' | 'center';
+  overlaySize?: number;
+  overlayPadding?: number;
+  rows?: number;
+  columns?: number;
+  topRatio?: number;
+  bottomRatio?: number;
+  gap?: number;
+  borderWidth?: number;
+  borderColor?: string;
+}
+
 interface ReframeSettings {
   aspectRatio: '9:16' | '16:9' | '1:1' | '4:5';
-  strategy: 'smart_crop' | 'center_crop' | 'pad_blur' | 'pad_color';
+  strategy: FramingMode;
   backgroundColor?: string;
-  // Extra metadata to stay in sync with Export Clips UI
-  cropMode?: 'crop' | 'pad' | 'smart';
-  cropPosition?: 'center' | 'top' | 'bottom';
+  layout?: AdvancedLayout;
+  enableFaceDetection?: boolean;
+  enableTransitions?: boolean;
+  transitionDuration?: number;
 }
 
 export default function ReframeModal({ 
@@ -43,9 +61,10 @@ export default function ReframeModal({
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1' | '4:5'>('9:16');
-  const [cropMode, setCropMode] = useState<'crop' | 'pad' | 'smart'>('crop');
-  const [cropPosition, setCropPosition] = useState<'center' | 'top' | 'bottom'>('center');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [framingMode, setFramingMode] = useState<FramingMode>('smart_crop');
+  const [layout, setLayout] = useState<AdvancedLayout>({});
+  const [enableFaceDetection, setEnableFaceDetection] = useState(false);
+  const [enableTransitions, setEnableTransitions] = useState(false);
   const [videoDuration, setVideoDuration] = useState<number | null>(null);
   const [estimatedCredits, setEstimatedCredits] = useState<number | null>(null);
 
@@ -79,22 +98,15 @@ export default function ReframeModal({
       return;
     }
 
-    setIsProcessing(true);
     try {
-      // Map UI crop mode to existing framing strategy + background color
-      const strategy: ReframeSettings['strategy'] =
-        cropMode === 'crop'
-          ? 'smart_crop'
-          : cropMode === 'pad'
-          ? 'pad_blur'
-          : 'smart_crop';
-
       const settings: ReframeSettings = {
         aspectRatio,
-        strategy,
+        strategy: framingMode,
         backgroundColor: '#000000',
-        cropMode,
-        cropPosition,
+        layout,
+        enableFaceDetection,
+        enableTransitions,
+        transitionDuration: 0.5,
       };
 
       if (tab === 'url') {
@@ -106,7 +118,6 @@ export default function ReframeModal({
     } catch (error) {
       console.error('Reframe error:', error);
       alert('Failed to start reframe process');
-      setIsProcessing(false);
     }
   };
 
@@ -133,7 +144,7 @@ export default function ReframeModal({
           </div>
           <button
             onClick={onClose}
-            disabled={isProcessing}
+            disabled={isUploading}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -262,20 +273,64 @@ export default function ReframeModal({
           {/* Divider */}
           <div className="border-t border-gray-200" />
 
-          {/* Crop Mode / Framing Strategy */}
-          <CropModeSelector
-            selected={cropMode}
-            onChange={setCropMode}
+          {/* Framing Mode Selector */}
+          <FramingModeSelector
+            selected={framingMode}
+            onChange={setFramingMode}
+            showAdvanced={true}
           />
 
-          {/* Crop Position - only relevant when cropping */}
-          {cropMode === 'crop' && (
+          {/* Advanced Layout Controls */}
+          {['side_by_side', 'picture_in_picture', 'grid', 'above_below'].includes(framingMode) && (
             <>
               <div className="border-t border-gray-200" />
-              <CropPositionSelector
-                selected={cropPosition}
-                onChange={setCropPosition}
+              <AdvancedLayoutControls
+                mode={framingMode}
+                layout={layout}
+                onChange={setLayout}
               />
+            </>
+          )}
+
+          {/* AI Features */}
+          {framingMode === 'smart_crop' && (
+            <>
+              <div className="border-t border-gray-200" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                  <h3 className="font-semibold text-gray-900">AI Features</h3>
+                  <span className="px-2 py-0.5 text-xs font-bold bg-purple-100 text-purple-700 rounded">
+                    BETA
+                  </span>
+                </div>
+                
+                <label className="flex items-center gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={enableFaceDetection}
+                    onChange={(e) => setEnableFaceDetection(e.target.checked)}
+                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">Face Detection</div>
+                    <div className="text-xs text-gray-600">Automatically center on faces</div>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={enableTransitions}
+                    onChange={(e) => setEnableTransitions(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">Smooth Transitions</div>
+                    <div className="text-xs text-gray-600">Animated framing changes</div>
+                  </div>
+                </label>
+              </div>
             </>
           )}
         </div>
@@ -302,17 +357,17 @@ export default function ReframeModal({
             <div className="flex items-center justify-between">
               <button
                 onClick={onClose}
-                disabled={isProcessing}
+                disabled={isUploading}
                 className="px-6 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={isProcessing || (tab === 'url' ? !url : !file)}
+                disabled={isUploading || (tab === 'url' ? !url : !file)}
                 className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg font-semibold hover:from-yellow-600 hover:to-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-yellow-500/30"
               >
-                {isProcessing ? 'Processing...' : 'Reframe Video'}
+                {isUploading ? 'Processing...' : 'Reframe Video'}
               </button>
             </div>
           )}

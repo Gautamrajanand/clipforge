@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { ProjectsService } from './projects.service';
-import { ProjectsController } from './projects.controller';
+import { ProjectsController, ProjectsInternalController } from './projects.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { JobsModule } from '../jobs/jobs.module';
@@ -17,9 +17,9 @@ import { CreditsModule } from '../credits/credits.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { ReferralsModule } from '../referrals/referrals.module';
 import { OnboardingModule } from '../onboarding/onboarding.module';
+import { EmailModule } from '../email/email.module';
 import * as path from 'path';
 import * as fs from 'fs';
-// import { EmailModule } from '../email/email.module'; // TEMPORARILY DISABLED
 
 @Module({
   imports: [
@@ -35,6 +35,7 @@ import * as fs from 'fs';
     AnalyticsModule,
     ReferralsModule,
     OnboardingModule,
+    EmailModule,
     // Configure Multer for streaming uploads (disk storage)
     MulterModule.register({
       storage: diskStorage({
@@ -57,7 +58,7 @@ import * as fs from 'fs';
     }),
   ],
   providers: [ProjectsService, VideoService, FFmpegService],
-  controllers: [ProjectsController],
+  controllers: [ProjectsController, ProjectsInternalController],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}

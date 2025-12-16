@@ -298,17 +298,12 @@ export default function Dashboard() {
         }
       } else {
         console.error('❌ Failed to fetch credits:', response.status);
-        // Set default values for admin or when API fails
-        setCredits(150);
-        setCreditsAllocation(150);
-        setTier('FREE');
+        // Do not override existing credits with fake defaults – just log the issue
+        // and leave the current state so UI can show "..." or previous values.
       }
     } catch (error) {
       console.error('❌ Error fetching credits:', error);
-      // Set default values on error
-      setCredits(150);
-      setCreditsAllocation(150);
-      setTier('FREE');
+      // On error, avoid setting misleading defaults; keep existing state
     }
   };
 
@@ -502,8 +497,11 @@ export default function Dashboard() {
         eta: '',
         error: error.message || 'Failed to import video. Please check the URL and try again.',
       });
-      // Keep modal open to show error
-      // Don't call setIsUploading(false) immediately
+      // Keep modal open to show error. Surface the error to callers so they
+      // can decide whether to close their own modals (e.g. ReframeModal).
+      // Don't call setIsUploading(false) immediately – allow the progress
+      // UI to show the error state for a moment.
+      throw error;
     }
   };
 
@@ -644,6 +642,10 @@ export default function Dashboard() {
       setTimeout(() => {
         setIsUploading(false);
       }, 3000);
+
+      // Surface the error to callers (e.g. ReframeModal) so they don't
+      // treat the upload as successful and close their own modals.
+      throw error;
     }
   };
 
@@ -1035,14 +1037,21 @@ export default function Dashboard() {
         onReframe={async (url, settings) => {
           // Import video with reframe settings
           // Title will be extracted from video URL automatically
-          await handleImportUrl(url, '', {
-            aspectRatio: settings.aspectRatio,
-            // Store reframe-specific settings
-            reframeMode: true,
-            framingStrategy: settings.strategy,
-            backgroundColor: settings.backgroundColor,
-          });
-          setShowReframeModal(false);
+          try {
+            await handleImportUrl(url, '', {
+              aspectRatio: settings.aspectRatio,
+              // Store reframe-specific settings
+              reframeMode: true,
+              framingStrategy: settings.strategy,
+              backgroundColor: settings.backgroundColor,
+            });
+            // Only close modal after a successful import
+            setShowReframeModal(false);
+          } catch (error) {
+            // Error (including insufficient credits) is already reflected
+            // in uploadState and shown inside the modal footer.
+            console.error('Reframe import failed:', error);
+          }
         }}
         onUpload={async (file, settings) => {
           // Upload video with reframe settings

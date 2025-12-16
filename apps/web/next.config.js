@@ -14,6 +14,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/v1/:path*',
+        destination: 'http://clipforge-api:3001/v1/:path*', // Proxy to Backend API
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

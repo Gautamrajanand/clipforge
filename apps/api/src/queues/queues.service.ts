@@ -6,6 +6,7 @@ import { TranscriptionJobData } from './processors/transcription.processor';
 import { ClipDetectionJobData } from './processors/clip-detection.processor';
 import { SubtitleExportJobData } from './processors/subtitle-export.processor';
 import { ClipExportJobData } from './processors/clip-export.processor';
+import { ReframeJobData } from './processors/reframe.processor';
 
 @Injectable()
 export class QueuesService {
@@ -17,6 +18,7 @@ export class QueuesService {
     @InjectQueue('clip-detection') private clipDetectionQueue: Queue<ClipDetectionJobData>,
     @InjectQueue('subtitle-export') private subtitleExportQueue: Queue<SubtitleExportJobData>,
     @InjectQueue('video-export') private clipExportQueue: Queue<ClipExportJobData>,
+    @InjectQueue('reframe') private reframeQueue: Queue<ReframeJobData>,
   ) {}
 
   /**
@@ -150,6 +152,33 @@ export class QueuesService {
     return {
       jobId: job.id,
       projectId,
+      status: 'queued',
+    };
+  }
+
+  /**
+   * Add reframe job to queue
+   */
+  async addReframeJob(data: ReframeJobData) {
+    this.logger.log(`🎬 Adding reframe job for project ${data.projectId}`);
+    
+    const job = await this.reframeQueue.add(
+      'reframe-video',
+      data,
+      {
+        jobId: `reframe-${data.projectId}-${Date.now()}`,
+        priority: 2, // Medium priority
+        attempts: 2,
+        backoff: {
+          type: 'exponential',
+          delay: 3000,
+        },
+      },
+    );
+
+    return {
+      jobId: job.id,
+      projectId: data.projectId,
       status: 'queued',
     };
   }

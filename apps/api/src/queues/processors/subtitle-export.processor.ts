@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { TranscriptionService } from '../../transcription/transcription.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ResendService } from '../../email/resend.service';
 
 export interface SubtitleExportJobData {
   projectId: string;
@@ -18,6 +19,7 @@ export class SubtitleExportProcessor extends WorkerHost {
   constructor(
     private transcription: TranscriptionService,
     private prisma: PrismaService,
+    private resend: ResendService,
   ) {
     super();
   }
@@ -45,10 +47,29 @@ export class SubtitleExportProcessor extends WorkerHost {
       await job.updateProgress(90);
 
       // Update project status to READY
-      await this.prisma.project.update({
+      const updatedProject = await this.prisma.project.update({
         where: { id: projectId },
         data: { status: 'READY' },
       });
+
+      // Send email notification
+      try {
+        const membership = await this.prisma.membership.findFirst({
+          where: { orgId: updatedProject.orgId, role: 'OWNER' },
+          include: { user: true },
+        });
+        if (membership?.user?.email) {
+          await this.resend.sendSubtitlesReadyEmail({
+            to: membership.user.email,
+            userName: membership.user.name || 'there',
+            projectTitle: updatedProject.title,
+            projectId,
+          });
+          this.logger.log(`📧 Sent subtitles ready email to ${membership.user.email}`);
+        }
+      } catch (emailError) {
+        this.logger.warn(`⚠️ Failed to send subtitles ready email for project ${projectId}:`, emailError);
+      }
 
       this.logger.log(`✅ Subtitle export complete for project ${projectId}: ${captionedKey}`);
 

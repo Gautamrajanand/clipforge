@@ -136,6 +136,20 @@ async def _ranker_worker(projectId: str, transcriptId: str, numClips: int = 6, c
             # Update project status to READY
             db.update_project_status(projectId, 'READY')
             logger.info(f"✅ Highlight detection completed for {projectId}")
+            
+            # Notify API to send email notification
+            try:
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    await client.post(
+                        f"http://clipforge-api:3001/v1/projects/{projectId}/notify-ready",
+                        json={"clipCount": len(clips_to_save)},
+                        timeout=5.0
+                    )
+                logger.info(f"📧 Notified API to send clips ready email for {projectId}")
+            except Exception as email_error:
+                logger.warning(f"⚠️ Failed to notify API for email: {email_error}")
+                # Don't fail the whole operation if notification fails
         else:
             db.update_project_status(projectId, 'FAILED')
             logger.error(f"❌ Failed to save moments for {projectId}")

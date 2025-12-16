@@ -12,7 +12,7 @@ import { CreditsService } from '../credits/credits.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { ReferralsService } from '../referrals/referrals.service';
 import { OnboardingProgressService } from '../onboarding/onboarding-progress.service';
-// import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
+import { ResendService } from '../email/resend.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ReframeDto } from './dto/reframe.dto';
 import { SubtitlesDto } from './dto/subtitles.dto';
@@ -43,7 +43,7 @@ export class ProjectsService {
     private analytics: AnalyticsService,
     private referrals: ReferralsService,
     private onboardingProgress: OnboardingProgressService,
-    // private email: EmailService, // TEMPORARILY DISABLED
+    private resend: ResendService,
   ) {}
 
   // Helper to convert BigInt to number for JSON serialization
@@ -441,38 +441,32 @@ export class ProjectsService {
         this.logger.error(`Error stack:`, error.stack);
       }
 
-      // Send email notification - TEMPORARILY DISABLED
-      /* try {
-        const projectWithUser: any = await this.prisma.project.findUnique({
+      // Send email notification
+      try {
+        const projectWithOrg = await this.prisma.project.findUnique({
           where: { id: projectId },
-          include: {
-            org: {
-              include: {
-                // @ts-ignore - Prisma types not updated yet
-                members: {
-                  include: {
-                    user: true,
-                  },
-                },
-              },
-            },
-          },
         });
 
-        if (projectWithUser?.org?.members?.[0]?.user) {
-          const user = projectWithUser.org.members[0].user;
-          await this.email.sendClipsReadyEmail(
-            user.email,
-            user.name || 'there',
-            projectWithUser.title,
-            projectId,
-            momentsWithTitles.length,
-          );
+        if (projectWithOrg) {
+          const membership = await this.prisma.membership.findFirst({
+            where: { orgId: projectWithOrg.orgId, role: 'OWNER' },
+            include: { user: true },
+          });
+
+          if (membership?.user?.email) {
+            await this.resend.sendClipsReadyEmail({
+              to: membership.user.email,
+              userName: membership.user.name || 'there',
+              projectTitle: projectWithOrg.title,
+              projectId,
+              clipCount: momentsWithTitles.length,
+            });
+          }
         }
       } catch (emailError) {
         this.logger.error('Failed to send clips ready email:', emailError);
         // Don't fail the whole operation if email fails
-      } */
+      }
     } catch (error) {
       console.error('Error creating moments:', error);
     }
@@ -522,6 +516,15 @@ export class ProjectsService {
     const hasSufficientCredits = await this.credits.hasSufficientCredits(orgId, creditsNeeded);
     if (!hasSufficientCredits) {
       const currentBalance = await this.credits.getBalance(orgId);
+
+      // Cleanly delete the just-created project so it doesn't appear as a
+      // broken/empty card on the dashboard when credits are insufficient.
+      try {
+        await this.prisma.project.delete({ where: { id: projectId } });
+      } catch (deleteError) {
+        this.logger.warn(`⚠️ Failed to delete project ${projectId} after insufficient credits: ${deleteError}`);
+      }
+
       throw new BadRequestException(
         `Insufficient credits. You need ${creditsNeeded} credits but only have ${currentBalance}. Please upgrade your plan or wait for your monthly renewal.`
       );
@@ -608,31 +611,45 @@ export class ProjectsService {
   }
 
   async importVideoFromUrl(projectId: string, orgId: string, url: string, customTitle?: string) {
-    const project = await this.findOne(projectId, orgId);
+    try {
+      const project = await this.findOne(projectId, orgId);
 
-    this.logger.log(`📥 Importing video from URL for project ${projectId}: ${url}`);
+      this.logger.log(`📥 Importing video from URL for project ${projectId}: ${url}`);
 
-    // Update project status to IMPORTING and save the URL
-    await this.prisma.project.update({
-      where: { id: projectId },
-      data: {
+      // Update project status to IMPORTING and save the URL
+      await this.prisma.project.update({
+        where: { id: projectId },
+        data: {
+          status: 'IMPORTING',
+          sourceUrl: url, // Save the URL so the job can access it
+        },
+      });
+
+      // ✅ SCALE-FIRST: Use job queue instead of fire-and-forget async
+      const job = await this.queues.addVideoImportJob(projectId, url, customTitle);
+
+      this.logger.log(`✅ Video import job queued: ${job.jobId}`);
+
+      // Return immediately with job info
+      return {
+        message: 'Video import started',
+        projectId,
+        jobId: job.jobId,
         status: 'IMPORTING',
-        sourceUrl: url, // Save the URL so the job can access it
-      },
-    });
-
-    // ✅ SCALE-FIRST: Use job queue instead of fire-and-forget async
-    const job = await this.queues.addVideoImportJob(projectId, url, customTitle);
-
-    this.logger.log(`✅ Video import job queued: ${job.jobId}`);
-
-    // Return immediately with job info
-    return {
-      message: 'Video import started',
-      projectId,
-      jobId: job.jobId,
-      status: 'IMPORTING',
-    };
+      };
+    } catch (error) {
+      this.logger.error(`❌ Failed to start video import for project ${projectId}:`, error);
+      
+      // Delete the project so it doesn't show as a failed card on the dashboard
+      try {
+        await this.prisma.project.delete({ where: { id: projectId } });
+        this.logger.log(`🗑️ Deleted failed project ${projectId} from database`);
+      } catch (deleteError) {
+        this.logger.warn(`⚠️ Failed to delete project ${projectId} after import start failure: ${deleteError}`);
+      }
+      
+      throw error;
+    }
   }
 
   private async processUrlImport(projectId: string, url: string, customTitle?: string) {
@@ -677,6 +694,15 @@ export class ProjectsService {
       await downloadService.cleanup(filePath);
       
       const currentBalance = await this.credits.getBalance(project.orgId);
+
+      // Delete the just-created project so it doesn't linger as an empty
+      // or error card on the dashboard when credits are insufficient.
+      try {
+        await this.prisma.project.delete({ where: { id: projectId } });
+      } catch (deleteError) {
+        this.logger.warn(`⚠️ Failed to delete project ${projectId} after insufficient credits (URL import): ${deleteError}`);
+      }
+
       throw new BadRequestException(
         `Insufficient credits. You need ${creditsNeeded} credits but only have ${currentBalance}. Please upgrade your plan or wait for your monthly renewal.`
       );
@@ -1735,16 +1761,42 @@ export class ProjectsService {
     this.logger.log(`✅ Reframe request received for project ${projectId}`);
     this.logger.log(`   Aspect Ratio: ${dto.aspectRatio}`);
     this.logger.log(`   Strategy: ${dto.strategy}`);
+    if (dto.layout) {
+      this.logger.log(`   Advanced Layout: ${JSON.stringify(dto.layout)}`);
+    }
+    if (dto.enableFaceDetection) {
+      this.logger.log(`   Face Detection: ENABLED`);
+    }
 
-    // For MVP: Just return success - actual processing will be triggered by frontend
-    // TODO: Implement dedicated reframe queue processor
+    // Update project status to INGESTING
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        status: 'INGESTING',
+      },
+    });
+
+    // Queue the reframe job
+    const job = await this.queues.addReframeJob({
+      projectId,
+      orgId,
+      settings: dto,
+      sourceUrl: project.sourceUrl,
+    });
+
+    this.logger.log(`📤 Reframe job queued: ${job.jobId}`);
+
     return {
       success: true,
-      message: `Video will be reframed to ${dto.aspectRatio}`,
+      message: `Video reframing started for ${dto.aspectRatio} using ${dto.strategy}`,
+      jobId: job.jobId,
       settings: {
         aspectRatio: dto.aspectRatio,
         strategy: dto.strategy,
         backgroundColor: dto.backgroundColor,
+        layout: dto.layout,
+        enableFaceDetection: dto.enableFaceDetection,
+        enableTransitions: dto.enableTransitions,
       },
       project: this.serializeProject(project),
     };
@@ -1915,5 +1967,58 @@ export class ProjectsService {
     await fs.rm(frameDir, { recursive: true, force: true });
     
     this.logger.log('✅ Advanced animation rendering complete!');
+  }
+
+  async sendProjectReadyEmail(projectId: string, clipCount?: number) {
+    try {
+      this.logger.log(`📧 Sending project ready email for ${projectId}`);
+      
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        include: {
+          org: {
+            include: {
+              memberships: {
+                where: { role: 'OWNER' },
+                include: { user: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        this.logger.warn(`⚠️ Project ${projectId} not found for email notification`);
+        return { success: false, message: 'Project not found' };
+      }
+
+      const ownerMembership = project.org.memberships[0];
+      if (!ownerMembership?.user?.email) {
+        this.logger.warn(`⚠️ No owner email found for project ${projectId}`);
+        return { success: false, message: 'No owner email found' };
+      }
+
+      const userEmail = ownerMembership.user.email;
+      const userName = ownerMembership.user.name || 'there';
+
+      // Send appropriate email based on clip count
+      if (clipCount !== undefined && clipCount > 0) {
+        await this.resend.sendClipsReadyEmail({
+          to: userEmail,
+          userName,
+          projectTitle: project.title,
+          projectId,
+          clipCount,
+        });
+        this.logger.log(`✅ Sent clips ready email to ${userEmail} for project ${projectId}`);
+      } else {
+        this.logger.log(`⚠️ No clips to notify about for project ${projectId}`);
+      }
+
+      return { success: true, message: 'Email sent' };
+    } catch (error) {
+      this.logger.error(`❌ Failed to send project ready email for ${projectId}:`, error);
+      return { success: false, message: error.message };
+    }
   }
 }

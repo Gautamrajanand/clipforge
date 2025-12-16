@@ -7,6 +7,7 @@ import { StorageService } from '../storage/storage.service';
 import { FFmpegService } from '../video/ffmpeg.service';
 import { VideoService } from '../video/video.service';
 import { CaptionsService } from '../captions/captions.service';
+import { QueuesService } from '../queues/queues.service';
 // import { EmailService } from '../email/email.service'; // TEMPORARILY DISABLED
 import * as path from 'path';
 import * as http from 'http';
@@ -23,6 +24,7 @@ export class TranscriptionService {
     private ffmpeg: FFmpegService,
     private video: VideoService,
     private captions: CaptionsService,
+    private queues: QueuesService,
     @InjectQueue('subtitle-export') private subtitleExportQueue: Queue,
     // private email: EmailService, // TEMPORARILY DISABLED
   ) {
@@ -222,16 +224,38 @@ export class TranscriptionService {
         console.log(`   Aspect Ratio: ${clipSettings.aspectRatio || '9:16'}`);
         console.log(`   Strategy: ${clipSettings.framingStrategy || 'Smart Crop'}`);
         
-        // Update status to DETECTING (reusing this status for reframe processing)
-        await this.prisma.project.update({
+        // Get project to get sourceUrl and orgId
+        const project = await this.prisma.project.findUnique({
           where: { id: projectId },
-          data: { status: 'DETECTING' },
         });
         
-        // Trigger reframe processing (async, don't wait)
-        this.processReframe(projectId, clipSettings).catch((error) => {
-          console.error('Failed to process reframe:', error);
+        if (!project || !project.sourceUrl) {
+          throw new Error('Project or source video not found');
+        }
+        
+        // Update status to INGESTING
+        await this.prisma.project.update({
+          where: { id: projectId },
+          data: { status: 'INGESTING' },
         });
+        
+        // Frontend already sends the correct enum values (e.g., 'side_by_side', 'picture_in_picture')
+        // No mapping needed - use the value directly
+        const strategy = clipSettings.framingStrategy || 'smart_crop';
+        
+        // Queue the reframe job using the new processor
+        await this.queues.addReframeJob({
+          projectId,
+          orgId: project.orgId,
+          settings: {
+            aspectRatio: clipSettings.aspectRatio || '9:16',
+            strategy: strategy as any,
+            backgroundColor: clipSettings.backgroundColor || '#000000',
+          },
+          sourceUrl: project.sourceUrl,
+        });
+        
+        console.log(`✅ Reframe job queued for project ${projectId}`);
         return;
       }
       

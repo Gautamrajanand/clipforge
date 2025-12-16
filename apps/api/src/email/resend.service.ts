@@ -378,4 +378,156 @@ export class ResendService {
       this.logger.error(`❌ Failed to send inactivity reengagement email to ${params.to}:`, error);
     }
   }
+
+  async sendClipsReadyEmail(params: {
+    to: string;
+    userName?: string;
+    projectTitle: string;
+    projectId: string;
+    clipCount: number;
+  }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn('Resend not configured. Skipping clips ready email.');
+      return;
+    }
+
+    try {
+      const projectUrl = `${this.configService.get<string>('APP_URL', 'http://localhost:3001')}/project/${params.projectId}`;
+      
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: `✨ Your AI Clips Are Ready! (${params.clipCount} clips)`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
+              <h1 style="color: white; margin: 0;">✨ Your AI Clips Are Ready!</h1>
+            </div>
+            <div style="padding: 32px; background: white;">
+              <p style="font-size: 16px; color: #525f7f;">Hi ${params.userName || 'there'},</p>
+              <p style="font-size: 16px; color: #525f7f;">Great news! We've finished analyzing your video and generated <strong>${params.clipCount} AI-powered clips</strong> for your project:</p>
+              <div style="background: #f6f9fc; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <p style="font-size: 20px; font-weight: bold; color: #32325d; margin: 0 0 12px 0;">🎬 ${params.projectTitle}</p>
+                <p style="font-size: 16px; color: #525f7f; margin: 0;">📊 ${params.clipCount} clips ready to review</p>
+              </div>
+              <p style="font-size: 16px; color: #525f7f;">Your clips are ready to review, edit, and export. Each clip has been carefully selected based on engagement potential, hooks, and viral moments.</p>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${projectUrl}" style="background: #667eea; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Your Clips</a>
+              </div>
+              <p style="font-size: 16px; color: #525f7f;">Happy creating! 🚀</p>
+              <p style="font-size: 16px; color: #8898aa; margin-top: 32px;">The ClipForge Team</p>
+            </div>
+            <div style="padding: 32px; border-top: 1px solid #e6ebf1; text-align: center;">
+              <p style="font-size: 12px; color: #8898aa; margin: 0;">© 2025 ClipForge. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      });
+
+      this.logger.log(`✅ Clips ready email sent to ${params.to}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send clips ready email to ${params.to}:`, error);
+    }
+  }
+
+  async sendReframeReadyEmail(params: {
+    to: string;
+    userName?: string;
+    projectTitle: string;
+    projectId: string;
+    aspectRatio: string;
+  }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn('Resend not configured. Skipping reframe ready email.');
+      return;
+    }
+
+    try {
+      const projectUrl = `${this.configService.get<string>('APP_URL', 'http://localhost:3001')}/project/${params.projectId}`;
+      
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: `🎯 Your Reframed Video Is Ready! (${params.aspectRatio})`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
+              <h1 style="color: white; margin: 0;">🎯 Your Reframed Video Is Ready!</h1>
+            </div>
+            <div style="padding: 32px; background: white;">
+              <p style="font-size: 16px; color: #525f7f;">Hi ${params.userName || 'there'},</p>
+              <p style="font-size: 16px; color: #525f7f;">Your video has been successfully reframed to <strong>${params.aspectRatio}</strong> aspect ratio!</p>
+              <div style="background: #f6f9fc; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <p style="font-size: 20px; font-weight: bold; color: #32325d; margin: 0 0 12px 0;">🎬 ${params.projectTitle}</p>
+                <p style="font-size: 16px; color: #525f7f; margin: 0;">📐 Aspect Ratio: ${params.aspectRatio}</p>
+              </div>
+              <p style="font-size: 16px; color: #525f7f;">Your reframed video is ready to download and share. The AI has intelligently tracked the most important parts of your video.</p>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${projectUrl}" style="background: #667eea; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Your Video</a>
+              </div>
+              <p style="font-size: 16px; color: #525f7f;">Happy creating! 🚀</p>
+              <p style="font-size: 16px; color: #8898aa; margin-top: 32px;">The ClipForge Team</p>
+            </div>
+            <div style="padding: 32px; border-top: 1px solid #e6ebf1; text-align: center;">
+              <p style="font-size: 12px; color: #8898aa; margin: 0;">© 2025 ClipForge. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      });
+
+      this.logger.log(`✅ Reframe ready email sent to ${params.to}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send reframe ready email to ${params.to}:`, error);
+    }
+  }
+
+  async sendSubtitlesReadyEmail(params: {
+    to: string;
+    userName?: string;
+    projectTitle: string;
+    projectId: string;
+  }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn('Resend not configured. Skipping subtitles ready email.');
+      return;
+    }
+
+    try {
+      const projectUrl = `${this.configService.get<string>('APP_URL', 'http://localhost:3001')}/project/${params.projectId}`;
+      
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: `📝 Your Subtitles Are Ready!`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;">
+              <h1 style="color: white; margin: 0;">📝 Your Subtitles Are Ready!</h1>
+            </div>
+            <div style="padding: 32px; background: white;">
+              <p style="font-size: 16px; color: #525f7f;">Hi ${params.userName || 'there'},</p>
+              <p style="font-size: 16px; color: #525f7f;">Your video with AI-generated subtitles is ready to download!</p>
+              <div style="background: #f6f9fc; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <p style="font-size: 20px; font-weight: bold; color: #32325d; margin: 0 0 12px 0;">🎬 ${params.projectTitle}</p>
+                <p style="font-size: 16px; color: #525f7f; margin: 0;">✅ Subtitles generated and burned in</p>
+              </div>
+              <p style="font-size: 16px; color: #525f7f;">Your video now has professional-looking subtitles that will boost engagement and accessibility.</p>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${projectUrl}" style="background: #667eea; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Download Your Video</a>
+              </div>
+              <p style="font-size: 16px; color: #525f7f;">Happy creating! 🚀</p>
+              <p style="font-size: 16px; color: #8898aa; margin-top: 32px;">The ClipForge Team</p>
+            </div>
+            <div style="padding: 32px; border-top: 1px solid #e6ebf1; text-align: center;">
+              <p style="font-size: 12px; color: #8898aa; margin: 0;">© 2025 ClipForge. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      });
+
+      this.logger.log(`✅ Subtitles ready email sent to ${params.to}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send subtitles ready email to ${params.to}:`, error);
+    }
+  }
 }

@@ -582,3 +582,20 @@ export class ProjectsController {
     return this.projectsService.generateSubtitles(id, orgId, dto);
   }
 }
+
+// Separate controller for internal/public endpoints (no auth required)
+@ApiTags('Projects - Internal')
+@Controller('v1/projects')
+export class ProjectsInternalController {
+  constructor(private projectsService: ProjectsService) {}
+
+  @Post(':id/notify-ready')
+  @ApiOperation({ summary: 'Internal endpoint for ML workers to trigger email notifications' })
+  async notifyReady(
+    @Param('id') id: string,
+    @Body() dto: { clipCount?: number },
+  ) {
+    // This endpoint is called by ML workers (no auth required for internal service calls)
+    return this.projectsService.sendProjectReadyEmail(id, dto.clipCount);
+  }
+}

@@ -1052,8 +1052,9 @@ export class AdvancedAnimatorService {
     const bgWidth = metrics.width + padding.x * 2;
     const bgHeight = style.fontSize + padding.y * 2;
 
-    // Calculate slide position
-    const startX = fromDirection === 'left' ? -bgWidth : bgWidth;
+    // Calculate slide position (reduced distance by 50%)
+    const slideDistance = bgWidth * 0.5;
+    const startX = fromDirection === 'left' ? -slideDistance : slideDistance;
     const endX = 0;
     const currentX = startX + (endX - startX) * slideProgress;
 

@@ -8,6 +8,7 @@ import { TranscriptionModule } from '../transcription/transcription.module';
 import { ClipsModule } from '../clips/clips.module';
 import { CreditsModule } from '../credits/credits.module';
 import { ProjectsModule } from '../projects/projects.module';
+import { EmailModule } from '../email/email.module';
 
 // Processors
 import { VideoImportProcessor } from './processors/video-import.processor';
@@ -15,6 +16,7 @@ import { TranscriptionProcessor } from './processors/transcription.processor';
 import { ClipDetectionProcessor } from './processors/clip-detection.processor';
 import { SubtitleExportProcessor } from './processors/subtitle-export.processor';
 import { ClipExportProcessor } from './processors/clip-export.processor';
+import { ReframeProcessor } from './processors/reframe.processor';
 
 // Service
 import { QueuesService } from './queues.service';
@@ -28,10 +30,11 @@ import { QueuesController } from './queues.controller';
     PrismaModule,
     StorageModule,
     VideoModule,
-    TranscriptionModule,
+    forwardRef(() => TranscriptionModule),
     ClipsModule,
     CreditsModule,
     forwardRef(() => ProjectsModule),
+    EmailModule,
     
     // Register BullMQ with Redis connection
     BullModule.forRootAsync({
@@ -76,6 +79,7 @@ import { QueuesController } from './queues.controller';
       { name: 'clip-detection' },
       { name: 'video-export' },
       { name: 'subtitle-export' },
+      { name: 'reframe' },
     ),
   ],
   providers: [
@@ -85,6 +89,7 @@ import { QueuesController } from './queues.controller';
     ClipDetectionProcessor,
     SubtitleExportProcessor,
     ClipExportProcessor,
+    ReframeProcessor,
   ],
   controllers: [QueuesController],
   exports: [BullModule, QueuesService],

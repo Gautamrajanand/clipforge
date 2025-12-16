@@ -487,30 +487,35 @@ export const CaptionStyleRegistry: Record<string, CaptionStyle> = {
     id: 'documentary',
     name: 'Documentary',
     description: 'White text on pink box',
-    fontFamily: 'Inter',
-    fontWeight: 600,
+    fontFamily: 'Arial',
+    fontWeight: 700,
     fontSize: 48,
     textColor: '#FFFFFF',
     background: {
-      color: '#FF6B9D',
+      color: '#FF3DA1',
       opacity: 1.0,
-      padding: { x: 20, y: 10 },
-      borderRadius: 6,
+      padding: { x: 24, y: 12 },
+      borderRadius: 4,
     },
     animation: {
       entry: {
-        duration: 180,
-        easing: 'easeOut',
+        duration: 300,
+        easing: 'easeOutBack',
         properties: {
-          backgroundWidth: { from: 0, to: 1 },
+          scale: { from: 0.9, to: 1 },
           opacity: { from: 0, to: 1 },
         },
       },
+      loop: {
+        duration: 0,
+        easing: 'linear',
+        properties: {}
+      },
       exit: {
-        duration: 160,
+        duration: 200,
         easing: 'easeIn',
         properties: {
-          backgroundWidth: { from: 1, to: 0 },
+          scale: { from: 1, to: 0.95 },
           opacity: { from: 1, to: 0 },
         },
       },

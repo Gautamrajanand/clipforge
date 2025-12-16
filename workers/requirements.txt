@@ -19,3 +19,4 @@ requests==2.31.0
 pydantic-settings==2.0.3
 httpx==0.25.1
 rq==1.14.1
+mediapipe==0.10.8

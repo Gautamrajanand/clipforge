@@ -88,8 +88,17 @@ export class VideoImportProcessor extends WorkerHost {
       if (!hasSufficientCredits) {
         // Cleanup downloaded file before throwing error
         await downloadService.cleanup(filePath);
-        
+
         const currentBalance = await this.credits.getBalance(project.orgId);
+
+        // Delete the just-created project so it doesn't linger as an empty
+        // or error card on the dashboard when credits are insufficient.
+        try {
+          await this.prisma.project.delete({ where: { id: projectId } });
+        } catch (deleteError) {
+          this.logger.warn(`⚠️ Failed to delete project ${projectId} after insufficient credits (queue URL import): ${deleteError}`);
+        }
+
         throw new BadRequestException(
           `Insufficient credits. You need ${creditsNeeded} credits but only have ${currentBalance}. Please upgrade your plan or wait for your monthly renewal.`
         );
@@ -180,11 +189,18 @@ export class VideoImportProcessor extends WorkerHost {
     } catch (error) {
       this.logger.error(`❌ Video import failed for project ${projectId}:`, error);
       
-      // Update project status to ERROR
-      await this.prisma.project.update({
-        where: { id: projectId },
-        data: { status: 'ERROR' },
-      }).catch(err => this.logger.error('Failed to update project status:', err));
+      // Delete the project so it doesn't show as a failed card on the dashboard
+      try {
+        await this.prisma.project.delete({ where: { id: projectId } });
+        this.logger.log(`🗑️ Deleted failed project ${projectId} from database`);
+      } catch (deleteError) {
+        this.logger.warn(`⚠️ Failed to delete project ${projectId} after import failure: ${deleteError}`);
+        // If deletion fails, at least mark it as ERROR
+        await this.prisma.project.update({
+          where: { id: projectId },
+          data: { status: 'ERROR' },
+        }).catch(err => this.logger.error('Failed to update project status:', err));
+      }
 
       throw error;
     }

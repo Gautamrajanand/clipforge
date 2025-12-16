@@ -66,7 +66,8 @@ export default function CelebrationToast({
     } else {
       setIsVisible(false);
     }
-  }, [isOpen, autoClose, autoCloseDelay, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, autoClose, autoCloseDelay]);
 
   if (!isOpen) return null;
 

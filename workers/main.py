@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Import routers
-from routers import asr, ranker, render, publish, health
+from routers import asr, ranker, render, publish, health, framing
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,6 +49,7 @@ app.include_router(asr.router, prefix="/v1/asr", tags=["asr"])
 app.include_router(ranker.router, prefix="/v1/ranker", tags=["ranker"])
 app.include_router(render.router, prefix="/v1/render", tags=["render"])
 app.include_router(publish.router, prefix="/v1/publish", tags=["publish"])
+app.include_router(framing.router, prefix="/v1", tags=["framing"])
 
 @app.get("/")
 async def root():

@@ -4,6 +4,7 @@ import { Job } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../../storage/storage.service';
 import { AdvancedFramingService } from '../../video/advanced-framing.service';
+import { ResendService } from '../../email/resend.service';
 import { ReframeDto } from '../../projects/dto/reframe.dto';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -26,6 +27,7 @@ export class ReframeProcessor extends WorkerHost {
     private prisma: PrismaService,
     private storage: StorageService,
     private advancedFraming: AdvancedFramingService,
+    private resend: ResendService,
   ) {
     super();
   }
@@ -91,12 +93,32 @@ export class ReframeProcessor extends WorkerHost {
       await job.updateProgress(95);
 
       // Update project status to READY
-      await this.prisma.project.update({
+      const updatedProject = await this.prisma.project.update({
         where: { id: projectId },
         data: {
           status: 'READY',
         },
       });
+
+      // Send email notification
+      try {
+        const membership = await this.prisma.membership.findFirst({
+          where: { orgId: updatedProject.orgId, role: 'OWNER' },
+          include: { user: true },
+        });
+        if (membership?.user?.email) {
+          await this.resend.sendReframeReadyEmail({
+            to: membership.user.email,
+            userName: membership.user.name || 'there',
+            projectTitle: updatedProject.title,
+            projectId,
+            aspectRatio: settings.aspectRatio || '9:16',
+          });
+          this.logger.log(`📧 Sent reframe ready email to ${membership.user.email}`);
+        }
+      } catch (emailError) {
+        this.logger.warn(`⚠️ Failed to send reframe ready email for project ${projectId}:`, emailError);
+      }
 
       // Create asset record for reframed video
       // Store the S3 key, not the signed URL (signed URLs expire)
@@ -168,11 +190,45 @@ export class ReframeProcessor extends WorkerHost {
         break;
 
       case 'picture_in_picture':
-        // Main video fills frame with blur, sharp PiP overlay in bottom-right corner
-        const pipSize = Math.floor(width * 0.35); // 35% of width
-        const pipMargin = Math.floor(width * 0.04); // 4% margin
-        // Create blurred background + sharp PiP overlay
-        ffmpegCmd = `ffmpeg -i "${inputPath}" -filter_complex "[0:v]split=2[bg][pip];[bg]scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},boxblur=20:5[bgblur];[pip]scale=${pipSize}:-1:force_original_aspect_ratio=decrease[pipscaled];[bgblur][pipscaled]overlay=W-w-${pipMargin}:H-h-${pipMargin}" -c:a copy "${outputPath}"`;
+        // Main video fills frame with blur, sharp PiP overlay
+        // Respect layout options from frontend when available
+        const overlaySize = settings.layout?.overlaySize ?? 0.3; // 30% of width by default
+        const pipSize = Math.floor(width * overlaySize);
+
+        // Use pixel padding from layout when provided, otherwise fallback to % of width
+        const pipMargin = settings.layout?.overlayPadding ?? Math.floor(width * 0.04); // ~4% margin
+
+        // Position overlay based on layout.overlayPosition
+        const position = settings.layout?.overlayPosition || 'bottom_right';
+        let overlayX = `W-w-${pipMargin}`;
+        let overlayY = `H-h-${pipMargin}`;
+
+        switch (position) {
+          case 'top_left':
+            overlayX = `${pipMargin}`;
+            overlayY = `${pipMargin}`;
+            break;
+          case 'top_right':
+            overlayX = `W-w-${pipMargin}`;
+            overlayY = `${pipMargin}`;
+            break;
+          case 'bottom_left':
+            overlayX = `${pipMargin}`;
+            overlayY = `H-h-${pipMargin}`;
+            break;
+          case 'center':
+            overlayX = '(W-w)/2';
+            overlayY = '(H-h)/2';
+            break;
+          case 'bottom_right':
+          default:
+            overlayX = `W-w-${pipMargin}`;
+            overlayY = `H-h-${pipMargin}`;
+            break;
+        }
+
+        // Create blurred background + sharp PiP overlay with dynamic size/position
+        ffmpegCmd = `ffmpeg -i "${inputPath}" -filter_complex "[0:v]split=2[bg][pip];[bg]scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},boxblur=20:5[bgblur];[pip]scale=${pipSize}:-1:force_original_aspect_ratio=decrease[pipscaled];[bgblur][pipscaled]overlay=${overlayX}:${overlayY}" -c:a copy "${outputPath}"`;
         break;
 
       case 'side_by_side':

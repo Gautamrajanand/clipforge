@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Job, Queue } from 'bullmq';
 import { TranscriptionService } from '../../transcription/transcription.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ResendService } from '../../email/resend.service';
 import { ClipDetectionJobData } from './clip-detection.processor';
 import { SubtitleExportJobData } from './subtitle-export.processor';
 
@@ -19,6 +20,7 @@ export class TranscriptionProcessor extends WorkerHost {
   constructor(
     private transcription: TranscriptionService,
     private prisma: PrismaService,
+    private resend: ResendService,
     @InjectQueue('clip-detection') private clipDetectionQueue: Queue<ClipDetectionJobData>,
     @InjectQueue('subtitle-export') private subtitleExportQueue: Queue<SubtitleExportJobData>,
   ) {
@@ -76,6 +78,26 @@ export class TranscriptionProcessor extends WorkerHost {
             where: { id: projectId },
             data: { status: 'READY' },
           });
+
+          // Send email notification for reframe-only projects
+          try {
+            const membership = await this.prisma.membership.findFirst({
+              where: { orgId: project.orgId, role: 'OWNER' },
+              include: { user: true },
+            });
+            if (membership?.user?.email) {
+              await this.resend.sendReframeReadyEmail({
+                to: membership.user.email,
+                userName: membership.user.name || 'there',
+                projectTitle: project.title,
+                projectId,
+                aspectRatio: '9:16',
+              });
+              this.logger.log(`📧 Sent reframe ready email to ${membership.user.email}`);
+            }
+          } catch (emailError) {
+            this.logger.warn(`⚠️ Failed to send reframe ready email for project ${projectId}:`, emailError);
+          }
         }
       } else {
         // Normal flow: queue clip detection
