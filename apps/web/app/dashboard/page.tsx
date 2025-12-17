@@ -17,18 +17,15 @@ import NPSWidget from '@/components/NPSWidget';
 import MultiStepOnboarding from '@/components/onboarding/MultiStepOnboarding';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import DynamicPopup from '@/components/popups/DynamicPopup';
-// import { UpgradeModal } from '@/components/upgrade-nudges'; // Unused for now
+// import { UpgradeModal } from '@/components/upgrade-nudges'; // Unused
 import { useUpgradeTriggers } from '@/hooks/useUpgradeTriggers';
 import { fetchWithAuth } from '@/lib/api';
 import { useAnalytics, usePageTracking } from '@/hooks/useAnalytics';
 import { AnalyticsEvents } from '@/lib/analytics';
 import ProgressStats from '@/components/dashboard/ProgressStats';
 import CelebrationToast from '@/components/celebrations/CelebrationToast';
-import { triggerCelebration } from '@/lib/celebrations';
 import WelcomeModal from '@/components/onboarding/WelcomeModal';
 import OnboardingSurvey, { OnboardingData } from '@/components/onboarding/OnboardingSurvey';
-import ProgressChecklist from '@/components/onboarding/ProgressChecklist';
-import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -65,9 +62,9 @@ export default function Dashboard() {
   // PLG Components State
   const [showOnboardingSurvey, setShowOnboardingSurvey] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
+  const [_onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [celebrationToast, setCelebrationToast] = useState<{
-    type: 'first_clip' | 'first_export' | 'first_share' | 'milestone_10' | 'milestone_50' | 'first_reframe' | 'first_subtitles' | 'upgraded';
+    type: 'first_clip' | 'first_export' | 'first_share' | 'milestone_10' | 'milestone_50';
     isOpen: boolean;
   } | null>(null);
 
@@ -76,11 +73,8 @@ export default function Dashboard() {
   const { getToken: getClerkToken, isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   
-  // Onboarding tour
-  const { hasSeenTour, startTour, resetTour } = useOnboardingTour();
-  
   // Upgrade triggers
-  const { activeTriger, markAsShown, hasActiveTrigger } = useUpgradeTriggers({
+  useUpgradeTriggers({
     credits: credits || 0,
     tier: tier as 'FREE' | 'STARTER' | 'PRO' | 'BUSINESS',
     monthlyAllocation: creditsAllocation,
@@ -633,8 +627,6 @@ export default function Dashboard() {
       console.error('Upload error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Upload failed. Please try again.';
       
-      // Check if it's an insufficient credits error
-      const isInsufficientCredits = errorMessage.toLowerCase().includes('insufficient credits');
       
       setUploadState({
         stage: 'error',
@@ -841,7 +833,6 @@ export default function Dashboard() {
                 icon={Scissors}
                 color="purple"
                 onClick={handleOpenUploadModal}
-                data-tour="ai-clips"
               />
               <FeatureCard
                 title="AI Text to Speech"
@@ -860,14 +851,12 @@ export default function Dashboard() {
                 icon={Type}
                 color="yellow"
                 onClick={() => setShowSubtitlesModal(true)}
-                data-tour="ai-subtitles"
               />
               <FeatureCard
                 title="AI Reframe"
                 icon={Maximize}
                 color="pink"
                 onClick={() => setShowReframeModal(true)}
-                data-tour="ai-reframe"
               />
               <FeatureCard
                 title="AI Avatar"
@@ -896,7 +885,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                  <NewProjectCard onClick={() => setShowUploadModal(true)} data-tour="upload-button" />
+                  <NewProjectCard onClick={() => setShowUploadModal(true)} />
                   {projects
                     .slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE)
                     .map((project) => (
@@ -1037,29 +1026,92 @@ export default function Dashboard() {
       {/* AI Reframe Modal */}
       <ReframeModal
         isOpen={showReframeModal}
-        onClose={() => setShowReframeModal(false)}
-        onReframe={handleReframe}
-        onUpload={handleReframeUpload}
+        onClose={() => !isUploading && setShowReframeModal(false)}
         isUploading={isUploading}
         uploadProgress={uploadState.progress}
         uploadStage={uploadState.stage}
         uploadMessage={uploadState.message}
         uploadError={uploadState.error}
-        onFirstUse={() => triggerCelebration('first_reframe', setCelebrationToast)}
+        onReframe={async (url, settings) => {
+          // Import video with reframe settings
+          // Title will be extracted from video URL automatically
+          try {
+            await handleImportUrl(url, '', {
+              aspectRatio: settings.aspectRatio,
+              // Store reframe-specific settings
+              reframeMode: true,
+              framingStrategy: settings.strategy,
+              backgroundColor: settings.backgroundColor,
+            });
+            // Only close modal after a successful import
+            setShowReframeModal(false);
+          } catch (error) {
+            // Error (including insufficient credits) is already reflected
+            // in uploadState and shown inside the modal footer.
+            console.error('Reframe import failed:', error);
+          }
+        }}
+        onUpload={async (file, settings) => {
+          // Upload video with reframe settings
+          try {
+            await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
+              aspectRatio: settings.aspectRatio,
+              // Store reframe-specific settings
+              reframeMode: true,
+              framingStrategy: settings.strategy,
+              backgroundColor: settings.backgroundColor,
+            });
+            // Only close modal after successful upload
+            setShowReframeModal(false);
+          } catch (error) {
+            // Keep modal open on error so user can see the error
+            console.error('Upload failed:', error);
+          }
+        }}
       />
 
       {/* AI Subtitles Modal */}
       <SubtitlesModal
         isOpen={showSubtitlesModal}
-        onClose={() => setShowSubtitlesModal(false)}
-        onGenerate={handleSubtitles}
-        onUpload={handleSubtitlesUpload}
+        onClose={() => !isUploading && setShowSubtitlesModal(false)}
         isUploading={isUploading}
         uploadProgress={uploadState.progress}
         uploadStage={uploadState.stage}
         uploadMessage={uploadState.message}
         uploadError={uploadState.error}
-        onFirstUse={() => triggerCelebration('first_subtitles', setCelebrationToast)}
+        onGenerate={async (url, settings) => {
+          // Import video with subtitle settings
+          // Title will be extracted from video URL automatically
+          await handleImportUrl(url, '', {
+            captionStyle: settings.captionStyle,
+            // Store subtitle-specific settings
+            subtitlesMode: true,
+            primaryColor: settings.primaryColor,
+            secondaryColor: settings.secondaryColor,
+            fontSize: settings.fontSize,
+            captionPosition: settings.position,
+          });
+          setShowSubtitlesModal(false);
+        }}
+        onUpload={async (file, settings) => {
+          // Upload video with subtitle settings
+          try {
+            await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
+              captionStyle: settings.captionStyle,
+              // Store subtitle-specific settings
+              subtitlesMode: true,
+              primaryColor: settings.primaryColor,
+              secondaryColor: settings.secondaryColor,
+              fontSize: settings.fontSize,
+              captionPosition: settings.position,
+            });
+            // Only close modal after successful upload
+            setShowSubtitlesModal(false);
+          } catch (error) {
+            // Keep modal open on error so user can see the error
+            console.error('Upload failed:', error);
+          }
+        }}
       />
 
       {/* Low Credits Warning Modal */}

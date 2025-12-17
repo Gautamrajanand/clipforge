@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Sparkles, Scissors, Type, Maximize, Video, ChevronDown } from 'lucide-react';
+import { ArrowRight, Sparkles, Scissors, Type, Video, ChevronDown } from 'lucide-react';
 
 export default function Home() {
   return (

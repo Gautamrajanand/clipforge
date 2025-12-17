@@ -9,7 +9,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import ClipsGrid from '@/components/clips/ClipsGrid';
 import VideoPlayer from '@/components/video/VideoPlayer';
-import ClipSettings from '@/components/clips/ClipSettings';
+// import ClipSettings from '@/components/clips/ClipSettings'; // Unused
 import ExportModal, { ExportOptions } from '@/components/export/ExportModal';
 import SuccessCelebration from '@/components/SuccessCelebration';
 import { fetchWithAuth } from '@/lib/api';
