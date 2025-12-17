@@ -9,21 +9,21 @@ export const metadata: Metadata = {
 export default function BlogPage() {
   const posts = [
     {
-      slug: 'repurpose-youtube-videos-tiktok',
+      slug: 'how-to-repurpose-youtube-videos-for-tiktok',
       title: 'How to Repurpose YouTube Videos for TikTok (2025 Guide)',
       excerpt: 'Complete guide to turning YouTube videos into viral TikTok clips. Learn AI-powered methods, best practices, and tools for 2025.',
       date: 'December 17, 2025',
       readTime: '12 min read',
     },
     {
-      slug: 'opus-clip-alternatives',
+      slug: 'opus-clip-alternatives-comparison',
       title: '10 Best Opus Clip Alternatives (Honest Comparison 2025)',
       excerpt: 'Compare the top 10 Opus Clip alternatives. Honest review of features, pricing, and quality to help you choose the best tool.',
       date: 'December 17, 2025',
       readTime: '15 min read',
     },
     {
-      slug: 'ai-video-editing-guide',
+      slug: 'ai-video-editing-beginners-guide',
       title: 'AI Video Editing: Complete Beginner\'s Guide (2025)',
       excerpt: 'Learn everything about AI video editing. From basics to advanced techniques. Complete guide for beginners in 2025.',
       date: 'December 17, 2025',

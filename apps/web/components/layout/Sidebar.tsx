@@ -62,6 +62,10 @@ const bottomItems: NavItem[] = [
   { name: 'Help center', href: '/help', icon: HelpCircle },
 ];
 
+const resourceItems: NavItem[] = [
+  { name: 'Blog', href: '/blog', icon: GraduationCap },
+];
+
 export default function Sidebar({ credits, creditsAllocation = 60, resetDate, tier = 'FREE', trialInfo, isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -175,6 +179,16 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate, ti
 
         {/* Divider */}
         <div className="my-4 border-t border-gray-200" />
+
+        {/* Resources Section */}
+        <div className="mb-6">
+          <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Resources
+          </div>
+          <div className="space-y-1">
+            {resourceItems.map(renderNavItem)}
+          </div>
+        </div>
 
         {/* Bottom Items */}
         <div className="space-y-1">
