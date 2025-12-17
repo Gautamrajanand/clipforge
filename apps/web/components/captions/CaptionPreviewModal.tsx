@@ -17,9 +17,10 @@ export default function CaptionPreviewModal({
   onClose,
   styleId,
 }: CaptionPreviewModalProps) {
+  if (!isOpen) return null;
+  
   const style = CAPTION_PRESETS.find((p) => p.id === styleId);
-
-  if (!isOpen || !style) return null;
+  if (!style) return null;
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">

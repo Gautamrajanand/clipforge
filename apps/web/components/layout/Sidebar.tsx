@@ -74,7 +74,7 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate, ti
   
   const handleNavClick = (item: NavItem, e: React.MouseEvent) => {
     // If item requires Pro and user is on free plan, redirect to pricing
-    if (item.requiresPro && user?.planType === 'FREE') {
+    if (item.requiresPro && tier === 'FREE') {
       e.preventDefault();
       router.push('/pricing');
     }
@@ -83,7 +83,7 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate, ti
   const renderNavItem = (item: NavItem) => {
     const isActive = pathname === item.href;
     const isPro = item.requiresPro;
-    const isLocked = isPro && user?.planType === 'FREE';
+    const isLocked = isPro && tier === 'FREE';
 
     return (
       <Link
