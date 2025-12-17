@@ -3,13 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import {
-  CreditCard,
   Check,
-  Zap,
   ArrowLeft,
   Globe,
   IndianRupee,
-  DollarSign,
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -66,8 +63,8 @@ const FEATURES = {
 };
 
 export default function BillingPage() {
-  const { user, isLoaded } = useUser();
-  const [token, setToken] = useState<string | null>(null);
+  useUser(); // Keep for future use
+  const [token] = useState<string | null>(null);
   const [pricing, setPricing] = useState<Pricing | null>(null);
   const [loading, setLoading] = useState(true);
   const [gateway, setGateway] = useState<'stripe' | 'razorpay'>('stripe');
@@ -96,20 +93,21 @@ export default function BillingPage() {
     setLoading(false);
   }, []);
 
-  const fetchPricing = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:3000/v1/payments/pricing');
-      if (response.ok) {
-        const data = await response.json();
-        setPricing(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch pricing:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Future: Fetch pricing from API
+  // const fetchPricing = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch('http://localhost:3000/v1/payments/pricing');
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setPricing(data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to fetch pricing:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleSubscribe = async (tier: 'STARTER' | 'PRO' | 'BUSINESS') => {
     if (!token) {
@@ -188,6 +186,8 @@ export default function BillingPage() {
     );
   }
 
+  const currentPlan = 'FREE'; // TODO: Get from user metadata
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -208,7 +208,7 @@ export default function BillingPage() {
                 </p>
               </div>
             </div>
-            {user?.planType !== 'FREE' && (
+            {currentPlan !== 'FREE' && (
               <button
                 onClick={handleManageBilling}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"

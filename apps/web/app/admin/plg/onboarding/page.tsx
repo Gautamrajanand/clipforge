@@ -55,7 +55,8 @@ export default function AdminOnboardingPage() {
   const loadStats = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth('/admin/plg/onboarding/stats', getToken);
+      const response = await fetchWithAuth('/admin/plg/onboarding/stats', { getToken });
+      const data = await response.json();
       setStats(data);
     } catch (err) {
       console.error('Failed to load onboarding stats:', err);
@@ -161,7 +162,7 @@ export default function AdminOnboardingPage() {
             </div>
             <div className="p-6 space-y-4">
               {stats?.dropOffPoints && stats.dropOffPoints.length > 0 ? (
-                stats.dropOffPoints.map((dropOff, index) => (
+                stats.dropOffPoints.map((dropOff) => (
                   <div key={dropOff.step} className="border-l-4 border-red-500 pl-4">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-semibold text-gray-900">

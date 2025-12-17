@@ -73,12 +73,14 @@ export default function ContentManagementPage() {
   const saveBlogPost = async (post: Partial<BlogPost>) => {
     try {
       if (editingBlog) {
-        await fetchWithAuth(`/content/blog-posts/${editingBlog.id}`, getToken, {
+        await fetchWithAuth(`/content/blog-posts/${editingBlog.id}`, {
+          getToken,
           method: 'PUT',
           body: JSON.stringify(post),
         });
       } else {
-        await fetchWithAuth('/content/blog-posts', getToken, {
+        await fetchWithAuth('/content/blog-posts', {
+          getToken,
           method: 'POST',
           body: JSON.stringify(post),
         });
@@ -95,12 +97,14 @@ export default function ContentManagementPage() {
   const saveLandingPage = async (page: Partial<LandingPage>) => {
     try {
       if (editingLanding) {
-        await fetchWithAuth(`/content/landing-pages/${editingLanding.id}`, getToken, {
+        await fetchWithAuth(`/content/landing-pages/${editingLanding.id}`, {
+          getToken,
           method: 'PUT',
           body: JSON.stringify(page),
         });
       } else {
-        await fetchWithAuth('/content/landing-pages', getToken, {
+        await fetchWithAuth('/content/landing-pages', {
+          getToken,
           method: 'POST',
           body: JSON.stringify(page),
         });
@@ -117,7 +121,7 @@ export default function ContentManagementPage() {
   const deleteBlogPost = async (id: string) => {
     if (!confirm('Are you sure you want to delete this blog post?')) return;
     try {
-      await fetchWithAuth(`/content/blog-posts/${id}`, getToken, { method: 'DELETE' });
+      await fetchWithAuth(`/content/blog-posts/${id}`, { getToken, method: 'DELETE' });
       await loadContent();
     } catch (error) {
       console.error('Failed to delete blog post:', error);
@@ -127,7 +131,7 @@ export default function ContentManagementPage() {
   const deleteLandingPage = async (id: string) => {
     if (!confirm('Are you sure you want to delete this landing page?')) return;
     try {
-      await fetchWithAuth(`/content/landing-pages/${id}`, getToken, { method: 'DELETE' });
+      await fetchWithAuth(`/content/landing-pages/${id}`, { getToken, method: 'DELETE' });
       await loadContent();
     } catch (error) {
       console.error('Failed to delete landing page:', error);

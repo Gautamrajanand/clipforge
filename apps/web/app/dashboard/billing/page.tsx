@@ -44,7 +44,7 @@ interface Invoice {
   pdfUrl?: string;
 }
 
-const TIER_FEATURES = {
+const TIER_FEATURES: Record<string, { name: string; price: string; credits: number; features: string[] }> = {
   FREE: {
     name: 'Free',
     price: '$0',
@@ -112,23 +112,25 @@ export default function BillingPage() {
   const loadBillingData = async () => {
     try {
       setLoading(true);
-      const token = await getToken();
+      await getToken();
       
       // Fetch organization data
       const orgResponse = await fetchWithAuth('/v1/organizations/current', {
         method: 'GET',
-        token,
+        getToken,
       });
-      setOrg(orgResponse);
+      const orgData = await orgResponse.json();
+      setOrg(orgData);
 
       // Fetch invoices if user has subscription
-      if (orgResponse.stripeCustomerId || orgResponse.razorpayCustomerId) {
+      if (orgData.stripeCustomerId || orgData.razorpayCustomerId) {
         try {
           const invoicesResponse = await fetchWithAuth('/v1/payments/invoices', {
             method: 'GET',
-            token,
+            getToken,
           });
-          setInvoices(invoicesResponse.invoices || []);
+          const invoicesData = await invoicesResponse.json();
+          setInvoices(invoicesData.invoices || []);
         } catch (err) {
           console.error('Failed to load invoices:', err);
         }
@@ -143,18 +145,19 @@ export default function BillingPage() {
   const handleManageBilling = async () => {
     try {
       setManagingBilling(true);
-      const token = await getToken();
+      await getToken();
       
       const response = await fetchWithAuth('/v1/payments/portal', {
         method: 'POST',
-        token,
+        getToken,
         body: JSON.stringify({
           returnUrl: window.location.href,
         }),
       });
+      const data = await response.json();
 
-      if (response.url) {
-        window.location.href = response.url;
+      if (data.url) {
+        window.location.href = data.url;
       }
     } catch (error) {
       console.error('Failed to open billing portal:', error);
@@ -174,10 +177,10 @@ export default function BillingPage() {
     }
 
     try {
-      const token = await getToken();
+      await getToken();
       await fetchWithAuth('/v1/payments/cancel', {
         method: 'POST',
-        token,
+        getToken,
       });
       
       alert('Subscription canceled successfully. You will retain access until the end of your billing period.');
@@ -265,7 +268,7 @@ export default function BillingPage() {
 
               <div className="space-y-3">
                 <h4 className="font-medium text-gray-900">Plan Features:</h4>
-                {currentTier.features.map((feature, index) => (
+                {currentTier.features.map((feature: string, index: number) => (
                   <div key={index} className="flex items-start">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
                     <span className="text-gray-700">{feature}</span>

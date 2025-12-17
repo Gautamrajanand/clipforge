@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { fetchWithAuth } from '@/lib/api';
-import { Gift, TrendingUp, Users, Award, Clock, CheckCircle, Search } from 'lucide-react';
+import { Gift, TrendingUp, Award, Clock, Search } from 'lucide-react';
 import Link from 'next/link';
 
 interface ReferralData {
@@ -52,11 +52,15 @@ export default function AdminReferralsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [overview, recent, leaderboard] = await Promise.all([
-        fetchWithAuth('/admin/plg/referrals/overview', getToken),
-        fetchWithAuth('/admin/plg/referrals/recent?limit=50', getToken),
-        fetchWithAuth('/admin/plg/referrals/leaderboard?limit=10', getToken),
+      const [overviewRes, recentRes, leaderboardRes] = await Promise.all([
+        fetchWithAuth('/admin/plg/referrals/overview', { getToken }),
+        fetchWithAuth('/admin/plg/referrals/recent?limit=50', { getToken }),
+        fetchWithAuth('/admin/plg/referrals/leaderboard?limit=10', { getToken }),
       ]);
+      
+      const overview = await overviewRes.json();
+      const recent = await recentRes.json();
+      const leaderboard = await leaderboardRes.json();
 
       setStats(overview);
       setReferrals(recent);

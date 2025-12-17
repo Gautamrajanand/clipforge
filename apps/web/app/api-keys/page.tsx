@@ -27,8 +27,8 @@ interface ApiKey {
 }
 
 export default function ApiKeysPage() {
-  const { user, isLoaded } = useUser();
-  const [token, setToken] = useState<string | null>(null);
+  useUser(); // Keep for future tier checking
+  const [token] = useState<string | null>(null);
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewKeyModal, setShowNewKeyModal] = useState(false);
@@ -147,7 +147,7 @@ export default function ApiKeysPage() {
     return limits[tier] || 1;
   };
 
-  const maxKeys = getTierLimits(user?.planType || 'FREE');
+  const maxKeys = getTierLimits('FREE'); // TODO: Get actual tier from user metadata
   const canCreateMore = keys.length < maxKeys;
 
   return (

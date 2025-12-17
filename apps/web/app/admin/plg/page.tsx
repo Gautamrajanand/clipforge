@@ -4,16 +4,14 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { fetchWithAuth } from '@/lib/api';
 import {
-  Users,
   Gift,
-  TrendingUp,
   Award,
-  CheckCircle,
-  XCircle,
   Clock,
-  DollarSign,
   Target,
+  TrendingUp,
   Zap,
+  CheckCircle,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 

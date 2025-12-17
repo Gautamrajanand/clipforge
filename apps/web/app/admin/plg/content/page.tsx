@@ -56,7 +56,7 @@ export default function PLGContentManager() {
     }
   };
 
-  const handleSave = async (step: OnboardingStep) => {
+  const handleSave = async (_step: OnboardingStep) => {
     try {
       // TODO: Implement API endpoint
       // await fetchWithAuth(`${API_URL}/admin/plg/content/onboarding`, {

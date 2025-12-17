@@ -17,7 +17,7 @@ import NPSWidget from '@/components/NPSWidget';
 import MultiStepOnboarding from '@/components/onboarding/MultiStepOnboarding';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import DynamicPopup from '@/components/popups/DynamicPopup';
-import { UpgradeModal } from '@/components/upgrade-nudges';
+// import { UpgradeModal } from '@/components/upgrade-nudges'; // Unused for now
 import { useUpgradeTriggers } from '@/hooks/useUpgradeTriggers';
 import { fetchWithAuth } from '@/lib/api';
 import { useAnalytics, usePageTracking } from '@/hooks/useAnalytics';

@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -20,6 +20,7 @@ export function Button({
     secondary: 'bg-slate-200 text-slate-900 hover:bg-slate-300 focus:ring-slate-500',
     ghost: 'bg-transparent text-slate-900 hover:bg-slate-100 focus:ring-slate-500',
     outline: 'border-2 border-slate-300 text-slate-900 hover:bg-slate-50 focus:ring-slate-500',
+    destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   };
 
   const sizeStyles = {
