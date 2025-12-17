@@ -243,7 +243,7 @@ export default function Sidebar({ credits, creditsAllocation = 60, resetDate, ti
       </div>
 
       {/* Credit Balance Widget */}
-      <Link href="/credits" className="block p-4 mx-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer">
+      <Link href="/credits" className="block p-4 mx-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer" data-tour="credits">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">Credits</span>
           <Zap className="w-4 h-4 text-yellow-500" />

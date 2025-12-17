@@ -840,6 +840,7 @@ export default function Dashboard() {
                 icon={Scissors}
                 color="purple"
                 onClick={handleOpenUploadModal}
+                data-tour="ai-clips"
               />
               <FeatureCard
                 title="AI Text to Speech"
@@ -858,12 +859,14 @@ export default function Dashboard() {
                 icon={Type}
                 color="yellow"
                 onClick={() => setShowSubtitlesModal(true)}
+                data-tour="ai-subtitles"
               />
               <FeatureCard
                 title="AI Reframe"
                 icon={Maximize}
                 color="pink"
                 onClick={() => setShowReframeModal(true)}
+                data-tour="ai-reframe"
               />
               <FeatureCard
                 title="AI Avatar"
@@ -892,7 +895,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                  <NewProjectCard onClick={() => setShowUploadModal(true)} />
+                  <NewProjectCard onClick={() => setShowUploadModal(true)} data-tour="upload-button" />
                   {projects
                     .slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE)
                     .map((project) => (
