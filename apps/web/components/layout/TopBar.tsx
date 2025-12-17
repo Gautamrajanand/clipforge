@@ -92,21 +92,18 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                   {user?.emailAddresses?.[0]?.emailAddress || 'No email'}
                 </p>
               </div>
-              <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+              <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 Profile settings
-              </a>
-              <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                Feature requests
-              </a>
-              <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+              </Link>
+              <Link href="/dashboard/billing" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                Billing
+              </Link>
+              <Link href="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 Help & support
-              </a>
-              <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+              </Link>
+              <Link href="/blog" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 Blog
-              </a>
-              <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                Press
-              </a>
+              </Link>
               {isAdmin && (
                 <div className="border-t border-gray-100 mt-2 pt-2">
                   <Link

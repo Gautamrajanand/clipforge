@@ -75,6 +75,9 @@ export default function Dashboard() {
   const { getToken: getClerkToken, isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   
+  // Onboarding tour
+  const { hasSeenTour, startTour, resetTour } = useOnboardingTour();
+  
   // Upgrade triggers
   const { activeTriger, markAsShown, hasActiveTrigger } = useUpgradeTriggers({
     credits: credits || 0,
