@@ -55,10 +55,12 @@ export default function ContentManagementPage() {
 
   const loadContent = async () => {
     try {
-      const [blogs, pages] = await Promise.all([
-        fetchWithAuth('/content/blog-posts', getToken),
-        fetchWithAuth('/content/landing-pages', getToken),
+      const [blogsRes, pagesRes] = await Promise.all([
+        fetchWithAuth('/content/blog-posts', { getToken }),
+        fetchWithAuth('/content/landing-pages', { getToken }),
       ]);
+      const blogs = await blogsRes.json();
+      const pages = await pagesRes.json();
       setBlogPosts(blogs);
       setLandingPages(pages);
     } catch (error) {
