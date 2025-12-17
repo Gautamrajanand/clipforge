@@ -20,17 +20,19 @@ export default function PodcastersPage() {
       <LandingTemplate
         badge="For Podcasters"
         title="Turn Your Podcast Episodes Into Viral Clips"
-        subtitle="Transform long-form podcast content into engaging social media clips. AI-powered clip generation, automatic captions, and audiograms that drive listeners."
+        subtitle="Your complete post-recording toolkit. Extract viral moments, convert to any aspect ratio, and add professional captions—all powered by AI."
         benefits={[
           { icon: '🎙️', title: 'Audio & Video', description: 'Works with both audio-only and video podcasts. Create audiograms or video clips.' },
           { icon: '⚡', title: '10x Faster', description: 'Create 10 clips in minutes. No more hours of manual editing.' },
           { icon: '📈', title: 'Grow Faster', description: 'Get more listeners with viral clips on TikTok, Instagram, and YouTube.' },
         ]}
         features={[
-          { icon: '✂️', title: 'AI Clip Generation', description: 'Find the most shareable moments automatically' },
+          { icon: '✂️', title: 'AI Clips', description: 'Extract viral moments automatically from episodes' },
+          { icon: '📱', title: 'AI Reframe', description: 'Convert to 9:16, 1:1, 4:5 with smart crop' },
+          { icon: '📝', title: 'AI Subtitles', description: 'Add captions to full videos in 14 styles' },
           { icon: '🎨', title: 'Audiograms', description: 'Animated waveforms with your podcast artwork' },
-          { icon: '💬', title: 'Auto Captions', description: '95%+ accuracy with 14 animated styles' },
-          { icon: '🎯', title: 'Topic Detection', description: 'AI identifies key topics and timestamps' },
+          { icon: '📤', title: 'Smart Export', description: 'Multiple formats for all platforms' },
+          { icon: '⚡', title: 'Batch Processing', description: 'Process multiple episodes simultaneously' },
         ]}
         stats={[
           { value: '50K+', label: 'Podcast Clips' },

@@ -20,13 +20,16 @@ export default function AgenciesPage() {
       <LandingTemplate
         badge="For Agencies"
         title="Scale Your Agency With AI Video Repurposing"
-        subtitle="Deliver more value to clients without hiring more editors. White-label solutions, API access, and multi-client management."
+        subtitle="Your complete post-recording toolkit for agencies. Extract viral moments, convert to any aspect ratio, and add professional captions—all powered by AI. White-label solutions, API access, and multi-client management."
         benefits={[
           { icon: '🚀', title: 'Scale Services', description: 'Handle 10x more clients without increasing headcount or overhead.' },
           { icon: '🏷️', title: 'White-Label', description: 'Rebrand as your own service with custom domains and branding.' },
           { icon: '💼', title: 'Higher Margins', description: 'Increase profit margins by 300% compared to manual editing.' },
         ]}
         features={[
+          { icon: '✂️', title: 'AI Clips', description: 'Extract viral moments for all clients' },
+          { icon: '📱', title: 'AI Reframe', description: 'Convert to any aspect ratio automatically' },
+          { icon: '📝', title: 'AI Subtitles', description: 'Add captions in 14 professional styles' },
           { icon: '🔌', title: 'API Access', description: 'Full API for automation and custom workflows' },
           { icon: '👥', title: 'Multi-Client', description: 'Manage unlimited clients with separate accounts' },
           { icon: '🎨', title: 'Custom Branding', description: 'White-label with your agency branding' },

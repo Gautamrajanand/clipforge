@@ -48,8 +48,7 @@ export default function YouTubeCreatorsPage() {
               Turn Your YouTube Videos<br />Into Viral Shorts
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Transform long-form content into engaging YouTube Shorts, TikToks, and Reels. 
-              AI-powered clip generation, automatic captions, and smart reframing.
+              Your complete post-recording toolkit. Extract viral clips, convert to any aspect ratio, and add professional captions—all powered by AI.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -99,29 +98,43 @@ export default function YouTubeCreatorsPage() {
               <div className="flex gap-4">
                 <div className="text-2xl">✂️</div>
                 <div>
-                  <h3 className="font-bold mb-2">AI Clip Generation</h3>
-                  <p className="text-gray-600">Automatically find the best moments from your videos</p>
+                  <h3 className="font-bold mb-2">AI Clips</h3>
+                  <p className="text-gray-600">Extract viral moments automatically from long videos</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="text-2xl">📱</div>
                 <div>
-                  <h3 className="font-bold mb-2">Smart Reframing</h3>
-                  <p className="text-gray-600">Convert 16:9 to 9:16 with intelligent cropping</p>
+                  <h3 className="font-bold mb-2">AI Reframe</h3>
+                  <p className="text-gray-600">Convert to 9:16, 1:1, 4:5 with smart crop</p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <div className="text-2xl">💬</div>
+                <div className="text-2xl">📝</div>
                 <div>
-                  <h3 className="font-bold mb-2">Auto Captions</h3>
-                  <p className="text-gray-600">14 animated styles with 95%+ accuracy</p>
+                  <h3 className="font-bold mb-2">AI Subtitles</h3>
+                  <p className="text-gray-600">Add captions to full videos in 14 professional styles</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="text-2xl">🎨</div>
                 <div>
-                  <h3 className="font-bold mb-2">Brand Customization</h3>
-                  <p className="text-gray-600">Match your brand colors, fonts, and style</p>
+                  <h3 className="font-bold mb-2">14 Caption Styles</h3>
+                  <p className="text-gray-600">MrBeast, Neon, Highlight, and 11 more styles</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="text-2xl">📤</div>
+                <div>
+                  <h3 className="font-bold mb-2">Smart Export</h3>
+                  <p className="text-gray-600">Multiple formats, resolutions, and frame rates</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="text-2xl">⚡</div>
+                <div>
+                  <h3 className="font-bold mb-2">Batch Processing</h3>
+                  <p className="text-gray-600">Process multiple videos simultaneously</p>
                 </div>
               </div>
             </div>

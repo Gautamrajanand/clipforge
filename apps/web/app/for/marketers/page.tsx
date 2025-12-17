@@ -20,16 +20,18 @@ export default function MarketersPage() {
       <LandingTemplate
         badge="For Marketers"
         title="Scale Your Video Marketing With AI"
-        subtitle="Turn webinars, testimonials, and long-form content into dozens of social media clips. Maximize ROI from every video asset."
+        subtitle="Your complete post-recording toolkit. Extract viral moments, convert to any aspect ratio, and add professional captions—all powered by AI. Maximize ROI from every video asset."
         benefits={[
           { icon: '📊', title: 'Scale Production', description: 'Create 10x more content from existing video assets without hiring more editors.' },
           { icon: '💰', title: 'Lower CAC', description: 'Reduce customer acquisition costs with more engaging social content.' },
           { icon: '🎯', title: 'Brand Consistency', description: 'Maintain brand guidelines across all clips with custom templates.' },
         ]}
         features={[
-          { icon: '✂️', title: 'AI Clip Generation', description: 'Extract key moments from webinars and demos' },
-          { icon: '📱', title: 'Multi-Platform', description: 'Optimize for TikTok, Instagram, LinkedIn, YouTube' },
+          { icon: '✂️', title: 'AI Clips', description: 'Extract key moments from webinars and demos' },
+          { icon: '📱', title: 'AI Reframe', description: 'Convert to 9:16, 1:1, 4:5 for all platforms' },
+          { icon: '📝', title: 'AI Subtitles', description: 'Add captions to full videos in 14 styles' },
           { icon: '💬', title: 'Branded Captions', description: 'Custom colors, fonts, and styles' },
+          { icon: '📤', title: 'Smart Export', description: 'Multiple formats and resolutions' },
           { icon: '📈', title: 'Performance Tracking', description: 'Analytics to optimize your content strategy' },
         ]}
         stats={[
