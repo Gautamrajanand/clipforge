@@ -8,27 +8,24 @@ import { Check, Type, Sparkles, Zap, Mic, Star, Flame, Highlighter, Box, Keyboar
  * Professional styles for social media and content creation
  */
 
-// Preview GIF URLs - Professional examples from viral content
-const PREVIEW_GIFS: Record<string, string> = {
-  // Viral Styles
-  mrbeast: 'https://i.imgur.com/mrbeast-caption-style.gif', // Yellow Impact font, center
-  neon: 'https://i.imgur.com/neon-caption-style.gif', // Green glow effect
-  highlight: 'https://i.imgur.com/highlight-caption-style.gif', // Yellow box emphasis
+// Caption preview images - Using actual style previews
+const PREVIEW_IMAGES: Record<string, string> = {
+  // Based on uploaded preview images
+  mrbeast: '/caption-previews/mrbeast.png',
+  highlight: '/caption-previews/highlight.png',
+  neon: '/caption-previews/neon.png',
   
-  // Professional Styles
-  subtitle: 'https://i.imgur.com/subtitle-caption-style.gif', // Netflix style
-  podcast: 'https://i.imgur.com/podcast-caption-style.gif', // Clean minimal
-  documentary: 'https://i.imgur.com/documentary-caption-style.gif', // Pink box Vox style
-  
-  // Business Styles
-  hormozi: 'https://i.imgur.com/hormozi-caption-style.gif', // Gold keywords
-  
-  // Creative Styles
-  karaoke: 'https://i.imgur.com/karaoke-caption-style.gif', // Progressive fill
-  typewriter: 'https://i.imgur.com/typewriter-caption-style.gif', // Typing effect
-  
-  // Note: These are placeholder URLs. In production, use actual hosted GIFs
-  // or generate them from the caption engine
+  // Will use same previews for similar styles until more are added
+  minimal: '/caption-previews/mrbeast.png',
+  subtitle: '/caption-previews/highlight.png',
+  podcast: '/caption-previews/neon.png',
+  documentary: '/caption-previews/highlight.png',
+  hormozi: '/caption-previews/mrbeast.png',
+  karaoke: '/caption-previews/neon.png',
+  typewriter: '/caption-previews/mrbeast.png',
+  bold: '/caption-previews/mrbeast.png',
+  cinematic: '/caption-previews/highlight.png',
+  popline: '/caption-previews/neon.png',
 };
 
 export const CAPTION_PRESETS = [
