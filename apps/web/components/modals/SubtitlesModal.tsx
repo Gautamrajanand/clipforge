@@ -15,6 +15,7 @@ interface SubtitlesModalProps {
   uploadStage?: string;
   uploadMessage?: string;
   uploadError?: string;
+  onFirstUse?: () => void;
 }
 
 interface SubtitleSettings {
@@ -35,7 +36,8 @@ export default function SubtitlesModal({
   uploadProgress = 0,
   uploadStage = '',
   uploadMessage = '',
-  uploadError = ''
+  uploadError = '',
+  onFirstUse
 }: SubtitlesModalProps) {
   // Default to Upload tab for symmetry with AI Clips
   const [tab, setTab] = useState<'upload' | 'url'>('upload');
@@ -100,28 +102,20 @@ export default function SubtitlesModal({
     }
 
     setIsProcessing(true);
+
     try {
-      // Styles with their own colors (don't override)
-      const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi'];
-      const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
-      
-      // Styles with their own font sizes (don't override)
-      const stylesWithOwnSizes = ['mrbeast', 'neon', 'highlight', 'bold', 'karaoke', 'hormozi'];
-      const shouldUseStyleSize = stylesWithOwnSizes.includes(captionStyle);
-      
-      const settings = {
+      const settings: SubtitleSettings = {
         captionStyle,
-        // Only send color overrides for white/neutral styles
-        ...((!shouldUseStyleColor) && {
-          primaryColor,
-          secondaryColor,
-        }),
-        // Only send fontSize for customizable styles
-        ...((!shouldUseStyleSize) && {
-          fontSize,
-        }),
+        primaryColor,
+        secondaryColor,
+        fontSize,
         position,
       };
+
+      // Trigger first use celebration
+      if (onFirstUse) {
+        onFirstUse();
+      }
 
       console.log('📤 Calling onUpload/onGenerate with settings:', settings);
       

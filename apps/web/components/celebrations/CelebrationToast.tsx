@@ -5,7 +5,7 @@ import { CheckCircle, Sparkles, TrendingUp, Share2, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface CelebrationToastProps {
-  type: 'first_clip' | 'first_export' | 'first_share' | 'milestone_10' | 'milestone_50';
+  type: 'first_clip' | 'first_export' | 'first_share' | 'milestone_10' | 'milestone_50' | 'first_reframe' | 'first_subtitles' | 'upgraded';
   isOpen: boolean;
   onClose: () => void;
   autoClose?: boolean;
@@ -18,6 +18,18 @@ const CELEBRATION_CONTENT = {
     title: '🎉 Your First Clip is Ready!',
     message: 'Amazing! You just created your first viral clip. Time to share it with the world!',
     color: 'from-blue-500 to-purple-500',
+  },
+  first_reframe: {
+    icon: Sparkles,
+    title: '🎬 First Video Reframed!',
+    message: 'Perfect! Your video is now optimized for social media. Ready to post!',
+    color: 'from-pink-500 to-purple-500',
+  },
+  first_subtitles: {
+    icon: Sparkles,
+    title: '📝 First Captions Added!',
+    message: 'Awesome! Your video now has professional captions. Boost that engagement!',
+    color: 'from-cyan-500 to-blue-500',
   },
   first_export: {
     icon: CheckCircle,
@@ -42,6 +54,12 @@ const CELEBRATION_CONTENT = {
     title: '⭐ 50 Clips Milestone!',
     message: 'Incredible! You\'re a ClipForge power user. Keep up the amazing work!',
     color: 'from-yellow-500 to-amber-500',
+  },
+  upgraded: {
+    icon: Sparkles,
+    title: '🎊 Welcome to Premium!',
+    message: 'Thank you for upgrading! Enjoy unlimited access to all features and priority support.',
+    color: 'from-yellow-400 to-orange-500',
   },
 };
 

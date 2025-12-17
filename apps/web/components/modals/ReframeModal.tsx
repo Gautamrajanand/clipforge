@@ -16,6 +16,7 @@ interface ReframeModalProps {
   uploadStage?: string;
   uploadMessage?: string;
   uploadError?: string;
+  onFirstUse?: () => void;
 }
 
 type FramingMode = 'smart_crop' | 'center_crop' | 'pad_blur' | 'pad_color' | 'side_by_side' | 'picture_in_picture' | 'grid' | 'above_below';
@@ -54,7 +55,8 @@ export default function ReframeModal({
   uploadProgress = 0,
   uploadStage = '',
   uploadMessage = '',
-  uploadError = ''
+  uploadError = '',
+  onFirstUse
 }: ReframeModalProps) {
   // Default to Upload tab for symmetry with AI Clips
   const [tab, setTab] = useState<'upload' | 'url'>('upload');
@@ -108,6 +110,11 @@ export default function ReframeModal({
         enableTransitions,
         transitionDuration: 0.5,
       };
+
+      // Trigger first use celebration
+      if (onFirstUse) {
+        onFirstUse();
+      }
 
       if (tab === 'url') {
         await onReframe(url, settings);

@@ -24,6 +24,7 @@ import { useAnalytics, usePageTracking } from '@/hooks/useAnalytics';
 import { AnalyticsEvents } from '@/lib/analytics';
 import ProgressStats from '@/components/dashboard/ProgressStats';
 import CelebrationToast from '@/components/celebrations/CelebrationToast';
+import { triggerCelebration } from '@/lib/celebrations';
 import WelcomeModal from '@/components/onboarding/WelcomeModal';
 import OnboardingSurvey, { OnboardingData } from '@/components/onboarding/OnboardingSurvey';
 import ProgressChecklist from '@/components/onboarding/ProgressChecklist';
@@ -66,7 +67,7 @@ export default function Dashboard() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [celebrationToast, setCelebrationToast] = useState<{
-    type: 'first_clip' | 'first_export' | 'first_share' | 'milestone_10' | 'milestone_50';
+    type: 'first_clip' | 'first_export' | 'first_share' | 'milestone_10' | 'milestone_50' | 'first_reframe' | 'first_subtitles' | 'upgraded';
     isOpen: boolean;
   } | null>(null);
 
@@ -1036,66 +1037,29 @@ export default function Dashboard() {
       {/* AI Reframe Modal */}
       <ReframeModal
         isOpen={showReframeModal}
-        onClose={() => !isUploading && setShowReframeModal(false)}
+        onClose={() => setShowReframeModal(false)}
+        onReframe={handleReframe}
+        onUpload={handleReframeUpload}
         isUploading={isUploading}
         uploadProgress={uploadState.progress}
         uploadStage={uploadState.stage}
         uploadMessage={uploadState.message}
         uploadError={uploadState.error}
-        onReframe={async (url, settings) => {
-          // Import video with reframe settings
-          // Title will be extracted from video URL automatically
-          try {
-            await handleImportUrl(url, '', {
-              aspectRatio: settings.aspectRatio,
-              // Store reframe-specific settings
-              reframeMode: true,
-              framingStrategy: settings.strategy,
-              backgroundColor: settings.backgroundColor,
-            });
-            // Only close modal after a successful import
-            setShowReframeModal(false);
-          } catch (error) {
-            // Error (including insufficient credits) is already reflected
-            // in uploadState and shown inside the modal footer.
-            console.error('Reframe import failed:', error);
-          }
-        }}
-        onUpload={async (file, settings) => {
-          // Upload video with reframe settings
-          try {
-            await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
-              aspectRatio: settings.aspectRatio,
-              // Store reframe-specific settings
-              reframeMode: true,
-              framingStrategy: settings.strategy,
-              backgroundColor: settings.backgroundColor,
-            });
-            // Only close modal after successful upload
-            setShowReframeModal(false);
-          } catch (error) {
-            // Keep modal open on error so user can see the error
-            console.error('Upload failed:', error);
-          }
-        }}
+        onFirstUse={() => triggerCelebration('first_reframe', setCelebrationToast)}
       />
 
       {/* AI Subtitles Modal */}
       <SubtitlesModal
         isOpen={showSubtitlesModal}
-        onClose={() => !isUploading && setShowSubtitlesModal(false)}
+        onClose={() => setShowSubtitlesModal(false)}
+        onGenerate={handleSubtitles}
+        onUpload={handleSubtitlesUpload}
         isUploading={isUploading}
         uploadProgress={uploadState.progress}
         uploadStage={uploadState.stage}
         uploadMessage={uploadState.message}
         uploadError={uploadState.error}
-        onGenerate={async (url, settings) => {
-          // Import video with subtitle settings
-          // Title will be extracted from video URL automatically
-          await handleImportUrl(url, '', {
-            captionStyle: settings.captionStyle,
-            // Store subtitle-specific settings
-            subtitlesMode: true,
+        onFirstUse={() => triggerCelebration('first_subtitles', setCelebrationToast)}
             primaryColor: settings.primaryColor,
             secondaryColor: settings.secondaryColor,
             fontSize: settings.fontSize,
