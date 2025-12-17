@@ -30,6 +30,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
 import { NPSModule } from './nps/nps.module';
 import { PLGContentModule } from './plg-content/plg-content.module';
 import { CacheModule } from './cache/cache.module';
+import { ContentModule } from './content/content.module';
 // import { SentryModule } from './sentry/sentry.module'; // TEMPORARILY DISABLED - missing deps in Docker
 
 @Module({
@@ -78,6 +79,7 @@ import { CacheModule } from './cache/cache.module';
     OnboardingModule, // PLG growth engine - onboarding flow
     NPSModule, // PLG growth engine - NPS & feedback
     PLGContentModule, // PLG growth engine - content management
+    ContentModule, // Admin content management - blog posts & landing pages
   ],
   providers: [
     // Global rate limiting guard

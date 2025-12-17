@@ -184,12 +184,9 @@ export class EmailFloodPreventionService {
    * Get user email preferences
    */
   private async getEmailPreferences(userId: string): Promise<any> {
-    const user = await this.prisma.user.findUnique({
-      where: { clerkId: userId },
-      select: { emailPreferences: true },
-    });
-
-    return user?.emailPreferences || this.getDefaultPreferences();
+    // TODO: Implement email preferences table
+    // For now, return default preferences
+    return this.getDefaultPreferences();
   }
 
   /**
