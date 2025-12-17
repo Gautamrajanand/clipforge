@@ -1060,32 +1060,6 @@ export default function Dashboard() {
         uploadMessage={uploadState.message}
         uploadError={uploadState.error}
         onFirstUse={() => triggerCelebration('first_subtitles', setCelebrationToast)}
-            primaryColor: settings.primaryColor,
-            secondaryColor: settings.secondaryColor,
-            fontSize: settings.fontSize,
-            captionPosition: settings.position,
-          });
-          setShowSubtitlesModal(false);
-        }}
-        onUpload={async (file, settings) => {
-          // Upload video with subtitle settings
-          try {
-            await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
-              captionStyle: settings.captionStyle,
-              // Store subtitle-specific settings
-              subtitlesMode: true,
-              primaryColor: settings.primaryColor,
-              secondaryColor: settings.secondaryColor,
-              fontSize: settings.fontSize,
-              captionPosition: settings.position,
-            });
-            // Only close modal after successful upload
-            setShowSubtitlesModal(false);
-          } catch (error) {
-            // Keep modal open on error so user can see the error
-            console.error('Upload failed:', error);
-          }
-        }}
       />
 
       {/* Low Credits Warning Modal */}
