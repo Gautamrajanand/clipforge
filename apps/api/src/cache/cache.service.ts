@@ -7,14 +7,15 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CacheService.name);
 
   async onModuleInit() {
-    const redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
+    let redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
+    
+    // Convert redis:// to rediss:// for Upstash (requires TLS)
+    if (redisUrl.includes('upstash.io') && redisUrl.startsWith('redis://')) {
+      redisUrl = redisUrl.replace('redis://', 'rediss://');
+    }
     
     this.client = createClient({
       url: redisUrl,
-      socket: {
-        tls: redisUrl.includes('upstash.io'),
-        rejectUnauthorized: false,
-      },
     });
 
     this.client.on('error', (err) => {

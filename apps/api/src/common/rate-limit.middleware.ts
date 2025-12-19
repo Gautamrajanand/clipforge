@@ -8,13 +8,15 @@ export class RateLimitMiddleware implements NestMiddleware {
   private redis: any;
 
   constructor(private prisma: PrismaService) {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    let redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    
+    // Convert redis:// to rediss:// for Upstash (requires TLS)
+    if (redisUrl.includes('upstash.io') && redisUrl.startsWith('redis://')) {
+      redisUrl = redisUrl.replace('redis://', 'rediss://');
+    }
+    
     this.redis = Redis.createClient({
       url: redisUrl,
-      socket: {
-        tls: redisUrl.includes('upstash.io'),
-        rejectUnauthorized: false,
-      },
     });
   }
 
