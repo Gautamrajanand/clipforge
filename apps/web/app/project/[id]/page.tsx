@@ -33,20 +33,18 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [exportVideoUrls, setExportVideoUrls] = useState<Record<string, string>>({});
   const [selectedClipForPlayback, setSelectedClipForPlayback] = useState<any>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [clipSettings, setClipSettings] = useState({
+  const [clipSettings] = useState({
     clipLength: 45,
     clipCount: 5,
     minLength: 15,
     maxLength: 180,
   });
-  const [isDetecting, setIsDetecting] = useState(false);
   const [transcript, setTranscript] = useState<any>(null);
   const [credits, setCredits] = useState(0);
   const [creditsAllocation, setCreditsAllocation] = useState(60);
   const [resetDate, setResetDate] = useState<string>('');
   const [tier, setTier] = useState<string>('FREE');
   const [showCelebration, setShowCelebration] = useState(false);
-  const [isFirstClip, setIsFirstClip] = useState(false);
 
   const fetchExistingExports = async () => {
     try {
@@ -104,7 +102,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         const clerkToken = await getClerkToken();
         if (clerkToken) {
           console.log('✅ Clerk token obtained');
-          setToken(clerkToken);
           fetchProjectData();
         }
       } catch (error) {
@@ -408,7 +405,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   };
 
   const handleDetectClips = async () => {
-    setIsDetecting(true);
     const hadNoClipsBefore = clips.length === 0;
     
     try {
@@ -430,7 +426,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         
         // Check if this was the first clip creation (aha moment!)
         if (hadNoClipsBefore && clips.length > 0) {
-          setIsFirstClip(true);
           setShowCelebration(true);
           
           // Track aha moment
@@ -450,8 +445,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     } catch (error) {
       console.error('Detection error:', error);
       alert('Failed to detect clips');
-    } finally {
-      setIsDetecting(false);
     }
   };
 
