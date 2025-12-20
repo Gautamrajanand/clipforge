@@ -404,51 +404,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     }
   };
 
-  const handleDetectClips = async () => {
-    const hadNoClipsBefore = clips.length === 0;
-    
-    try {
-      const response = await fetchWithAuth(`http://localhost:3001/v1/projects/${params.id}/detect`, {
-        method: 'POST',
-        getToken: getClerkToken,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          clipLength: clipSettings.clipLength,
-          clipCount: clipSettings.clipCount,
-        }),
-      });
-
-      if (response.ok) {
-        // Refresh project data to get new clips
-        await fetchProjectData();
-        
-        // Check if this was the first clip creation (aha moment!)
-        if (hadNoClipsBefore && clips.length > 0) {
-          setShowCelebration(true);
-          
-          // Track aha moment
-          analytics.track(AnalyticsEvents.AHA_MOMENT, {
-            feature: 'ai_clips',
-            projectId: params.id,
-            clipCount: clips.length,
-          });
-          
-          console.log('🎉 First clip created - Aha moment!');
-        } else {
-          alert('Clips detected successfully!');
-        }
-      } else {
-        alert('Failed to detect clips');
-      }
-    } catch (error) {
-      console.error('Detection error:', error);
-      alert('Failed to detect clips');
-    }
-  };
-
-
   const handleDownloadExport = async (exportId: string) => {
     try {
       // Prefer the already-loaded blob URL used for the preview video to avoid
