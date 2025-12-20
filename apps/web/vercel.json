@@ -1,0 +1,18 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://clipforge-api.onrender.com",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dW5iaWFzZWQtbW9zcXVpdG8tNjMuY2xlcmsuYWNjb3VudHMuZGV2JA",
+    "NEXT_PUBLIC_CLERK_SIGN_IN_URL": "/sign-in",
+    "NEXT_PUBLIC_CLERK_SIGN_UP_URL": "/sign-up",
+    "NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL": "/dashboard",
+    "NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL": "/dashboard",
+    "NEXT_PUBLIC_MIXPANEL_TOKEN": "603fc822ee6a3bf68a426ab45a2dc99c",
+    "NEXT_PUBLIC_POSTHOG_KEY": "phc_hAy9bVNlTqE588Ps6iRApdkNgN1xa3D6iqAGshn3Anx",
+    "NEXT_PUBLIC_POSTHOG_HOST": "https://app.posthog.com",
+    "NEXT_PUBLIC_INTERCOM_APP_ID": "fre16aaf"
+  }
+}

@@ -26,7 +26,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [project, setProject] = useState<any>(null);
   const [clips, setClips] = useState<any[]>([]);
   const [selectedClips, setSelectedClips] = useState<string[]>([]);
-  const [token, setToken] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportedClips, setExportedClips] = useState<any[]>([]);
