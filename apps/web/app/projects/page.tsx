@@ -14,11 +14,7 @@ import {
   Video,
   Sparkles,
   ChevronDown,
-  Play,
-  MoreVertical,
-  Trash2,
-  Edit,
-  Download
+  Play
 } from 'lucide-react';
 
 interface Project {
