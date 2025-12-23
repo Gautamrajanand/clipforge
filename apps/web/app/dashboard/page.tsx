@@ -1086,9 +1086,10 @@ export default function Dashboard() {
             captionStyle: settings.captionStyle,
             // Store subtitle-specific settings
             subtitlesMode: true,
-            primaryColor: settings.primaryColor,
-            secondaryColor: settings.secondaryColor,
-            fontSize: settings.fontSize,
+            // Only include color/fontSize if modal provided them (for customizable styles)
+            ...(settings.primaryColor && { primaryColor: settings.primaryColor }),
+            ...(settings.secondaryColor && { secondaryColor: settings.secondaryColor }),
+            ...(settings.fontSize && { fontSize: settings.fontSize }),
             captionPosition: settings.position,
           });
           setShowSubtitlesModal(false);
@@ -1100,9 +1101,10 @@ export default function Dashboard() {
               captionStyle: settings.captionStyle,
               // Store subtitle-specific settings
               subtitlesMode: true,
-              primaryColor: settings.primaryColor,
-              secondaryColor: settings.secondaryColor,
-              fontSize: settings.fontSize,
+              // Only include color/fontSize if modal provided them (for customizable styles)
+              ...(settings.primaryColor && { primaryColor: settings.primaryColor }),
+              ...(settings.secondaryColor && { secondaryColor: settings.secondaryColor }),
+              ...(settings.fontSize && { fontSize: settings.fontSize }),
               captionPosition: settings.position,
             });
             // Only close modal after successful upload

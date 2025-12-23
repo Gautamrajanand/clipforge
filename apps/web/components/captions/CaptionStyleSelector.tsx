@@ -28,6 +28,12 @@ const PREVIEW_IMAGES: Record<string, string> = {
   popline: '/caption-previews/neon.png',
 };
 
+// Caption preview GIFs (animated previews)
+const PREVIEW_GIFS: Record<string, string> = {
+  // Add animated GIF previews here when available
+  // Example: mrbeast: '/caption-previews/mrbeast.gif',
+};
+
 export const CAPTION_PRESETS = [
   // Static Styles
   {

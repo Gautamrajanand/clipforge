@@ -101,8 +101,22 @@ export default function SubtitlesModal({
 
     setIsProcessing(true);
     try {
-      // Styles with their own colors (don't override)
-      const stylesWithOwnColors = ['mrbeast', 'neon', 'highlight', 'popline', 'documentary', 'hormozi'];
+      // Styles with their own colors (don't override with user selections)
+      // These styles have specific color schemes that define their identity
+      const stylesWithOwnColors = [
+        'mrbeast',      // Yellow Impact
+        'neon',         // Bright green glow
+        'highlight',    // Yellow box
+        'popline',      // Green box
+        'documentary',  // Pink box
+        'hormozi',      // Gold keywords
+        'bounce',       // Pink/rose
+        'glitch',       // RGB cyan/blue
+        'karaoke',      // White→Cyan
+        'uppercase',    // White on black
+        'blur',         // Blue frosted
+        'bubble',       // Indigo/purple
+      ];
       const shouldUseStyleColor = stylesWithOwnColors.includes(captionStyle);
       
       // Styles with their own font sizes (don't override)
