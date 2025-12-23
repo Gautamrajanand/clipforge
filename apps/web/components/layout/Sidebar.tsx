@@ -21,7 +21,6 @@ import {
   Shield,
   Gift
 } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
 import { useAdmin } from '@/hooks/useAdmin';
 
 interface SidebarProps {
@@ -69,7 +68,6 @@ const resourceItems: NavItem[] = [
 export default function Sidebar({ credits, creditsAllocation = 60, resetDate, tier = 'FREE', trialInfo, isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useUser();
   const { isAdmin } = useAdmin();
   
   const handleNavClick = (item: NavItem, e: React.MouseEvent) => {

@@ -11,8 +11,6 @@ interface ProgressStatsProps {
 
 export default function ProgressStats({
   totalClips,
-  totalVideos,
-  totalExports,
   weeklyClips,
 }: ProgressStatsProps) {
   // Calculate time saved (assuming 30 min per clip manually)

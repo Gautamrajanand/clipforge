@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -12,7 +11,6 @@ import {
   TrendingUp,
   BarChart3,
   Settings,
-  ChevronRight,
   FileText,
   Book,
 } from 'lucide-react';
@@ -55,15 +53,6 @@ const navItems = [
 
 export default function AdminNav() {
   const pathname = usePathname();
-  const [expandedSections, setExpandedSections] = useState<string[]>(['PLG Growth']);
-
-  const toggleSection = (label: string) => {
-    setExpandedSections(prev =>
-      prev.includes(label)
-        ? prev.filter(item => item !== label)
-        : [...prev, label]
-    );
-  };
 
   return (
     <nav className="w-64 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 min-h-screen p-6 shadow-2xl">

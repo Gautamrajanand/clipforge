@@ -27,7 +27,6 @@ export default function ProjectCard({
   id, 
   title, 
   updatedAt, 
-  thumbnail, 
   videoUrl,
   isEmpty,
   settings,

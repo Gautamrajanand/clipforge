@@ -150,12 +150,6 @@ export default function ClipsGrid({
                         <span className="text-gray-600">✨ Quality</span>
                         <span className="font-medium">{Math.round(clip.score)}%</span>
                       </div>
-                      {clip.features.avg_segment_score !== undefined && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-600">📊 Avg Segment</span>
-                          <span className="font-medium">{Math.round(clip.features.avg_segment_score * 100)}%</span>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     // Regular Clip: Show detailed feature scores

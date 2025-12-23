@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react';
 import { useState } from 'react';
-import { PLATFORM_PRESETS, ASPECT_RATIOS, ClipSettings } from '@/lib/platform-presets';
+import { ClipSettings } from '@/lib/platform-presets';
 
 interface ClipSettingsModalProps {
   isOpen: boolean;
@@ -17,8 +17,8 @@ export default function ClipSettingsModal({
   onSave,
   videoDuration = 300,
 }: ClipSettingsModalProps) {
-  const [selectedPreset, setSelectedPreset] = useState<string>('custom');
-  const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1' | '4:5'>('16:9');
+  const [selectedPreset] = useState<string>('custom');
+  const [aspectRatio] = useState<'9:16' | '16:9' | '1:1' | '4:5'>('16:9');
   const [clipLength, setClipLength] = useState(45);
   const [numberOfClips, setNumberOfClips] = useState(3);
   const [useTimeframe, setUseTimeframe] = useState(false);
@@ -26,16 +26,6 @@ export default function ClipSettingsModal({
   const [timeframeEnd, setTimeframeEnd] = useState(videoDuration);
 
   if (!isOpen) return null;
-
-  const handlePresetSelect = (presetId: string) => {
-    setSelectedPreset(presetId);
-    const preset = PLATFORM_PRESETS.find(p => p.id === presetId);
-    if (preset) {
-      setAspectRatio(preset.aspectRatio);
-      setClipLength(preset.clipLength);
-      setNumberOfClips(preset.numberOfClips);
-    }
-  };
 
   const handleSave = () => {
     const settings: ClipSettings = {

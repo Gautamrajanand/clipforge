@@ -33,7 +33,6 @@ export default function SubtitlesModal({
   onUpload,
   isUploading = false,
   uploadProgress = 0,
-  uploadStage = '',
   uploadMessage = '',
   uploadError = ''
 }: SubtitlesModalProps) {

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from 'react-query';
 import axios from 'axios';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Eye, ThumbsUp, Share2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -39,7 +39,7 @@ interface OrgAnalytics {
 }
 
 export function AnalyticsDashboard({ projectId }: { projectId: string }) {
-  const [days, setDays] = useState(30);
+  const [days] = useState(30);
 
   // Fetch project analytics
   const { data: projectData, isLoading: projectLoading } = useQuery(

@@ -16,7 +16,6 @@ interface ExportBuilderProps {
 
 export function ExportBuilder({
   clipId,
-  projectId,
   onExportCreated,
 }: ExportBuilderProps) {
   const [isExporting, setIsExporting] = useState(false);

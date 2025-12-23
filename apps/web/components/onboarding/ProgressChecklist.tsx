@@ -51,7 +51,7 @@ export default function ProgressChecklist({ onRestartTour }: ProgressChecklistPr
     },
   ]);
   const [isVisible, setIsVisible] = useState(true);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     loadProgress();

@@ -8,7 +8,7 @@ interface SelectClipModalProps {
   onSelect: (clip: any) => void;
 }
 
-export function SelectClipModal({ project, onClose, onSelect }: SelectClipModalProps) {
+export function SelectClipModal({ onClose, onSelect }: SelectClipModalProps) {
   // Mock clip data - replace with actual API call
   const clip = {
     id: '1',

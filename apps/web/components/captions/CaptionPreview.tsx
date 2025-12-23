@@ -67,12 +67,12 @@ export default function CaptionPreview({
 
   // Get position class based on preset
   const getPositionClass = () => {
-    switch (preset.preview) {
-      case "top-center":
+    switch (preset.position) {
+      case "top":
         return "top-8 left-1/2 -translate-x-1/2";
       case "center":
         return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
-      case "bottom-center":
+      case "bottom":
       default:
         return "bottom-8 left-1/2 -translate-x-1/2";
     }
@@ -107,8 +107,7 @@ export default function CaptionPreview({
       <div
         className="caption-text px-4 py-2 transition-all duration-200"
         style={{
-          ...preset.style,
-          fontSize: `clamp(16px, ${preset.style.fontSize}, 32px)`, // Scale down for preview
+          fontSize: "24px",
           lineHeight: "1.2",
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",

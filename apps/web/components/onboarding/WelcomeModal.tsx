@@ -9,7 +9,7 @@ interface WelcomeModalProps {
   userName?: string;
 }
 
-export default function WelcomeModal({ isOpen, onClose, userName }: WelcomeModalProps) {
+export default function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 

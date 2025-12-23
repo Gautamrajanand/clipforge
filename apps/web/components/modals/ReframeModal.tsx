@@ -52,7 +52,6 @@ export default function ReframeModal({
   onUpload,
   isUploading = false,
   uploadProgress = 0,
-  uploadStage = '',
   uploadMessage = '',
   uploadError = ''
 }: ReframeModalProps) {

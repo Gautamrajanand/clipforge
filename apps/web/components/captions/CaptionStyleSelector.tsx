@@ -8,26 +8,6 @@ import { Check, Type, Sparkles, Zap, Mic, Star, Flame, Highlighter, Box, Keyboar
  * Professional styles for social media and content creation
  */
 
-// Caption preview images - Using actual style previews
-const PREVIEW_IMAGES: Record<string, string> = {
-  // Based on uploaded preview images
-  mrbeast: '/caption-previews/mrbeast.png',
-  highlight: '/caption-previews/highlight.png',
-  neon: '/caption-previews/neon.png',
-  
-  // Will use same previews for similar styles until more are added
-  minimal: '/caption-previews/mrbeast.png',
-  subtitle: '/caption-previews/highlight.png',
-  podcast: '/caption-previews/neon.png',
-  documentary: '/caption-previews/highlight.png',
-  hormozi: '/caption-previews/mrbeast.png',
-  karaoke: '/caption-previews/neon.png',
-  typewriter: '/caption-previews/mrbeast.png',
-  bold: '/caption-previews/mrbeast.png',
-  cinematic: '/caption-previews/highlight.png',
-  popline: '/caption-previews/neon.png',
-};
-
 // Caption preview GIFs (animated previews)
 const PREVIEW_GIFS: Record<string, string> = {
   // Add animated GIF previews here when available
