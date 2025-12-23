@@ -1083,14 +1083,9 @@ export default function Dashboard() {
           // Import video with subtitle settings
           // Title will be extracted from video URL automatically
           await handleImportUrl(url, '', {
-            captionStyle: settings.captionStyle,
-            // Store subtitle-specific settings
             subtitlesMode: true,
-            // Only include color/fontSize if modal provided them (for customizable styles)
-            ...(settings.primaryColor && { primaryColor: settings.primaryColor }),
-            ...(settings.secondaryColor && { secondaryColor: settings.secondaryColor }),
-            ...(settings.fontSize && { fontSize: settings.fontSize }),
-            captionPosition: settings.position,
+            // SubtitlesModal already filtered colors/fontSize based on style
+            ...settings,
           });
           setShowSubtitlesModal(false);
         }}
@@ -1098,14 +1093,9 @@ export default function Dashboard() {
           // Upload video with subtitle settings
           try {
             await handleUpload(file, file.name.replace(/\.[^/.]+$/, ''), {
-              captionStyle: settings.captionStyle,
-              // Store subtitle-specific settings
               subtitlesMode: true,
-              // Only include color/fontSize if modal provided them (for customizable styles)
-              ...(settings.primaryColor && { primaryColor: settings.primaryColor }),
-              ...(settings.secondaryColor && { secondaryColor: settings.secondaryColor }),
-              ...(settings.fontSize && { fontSize: settings.fontSize }),
-              captionPosition: settings.position,
+              // SubtitlesModal already filtered colors/fontSize based on style
+              ...settings,
             });
             // Only close modal after successful upload
             setShowSubtitlesModal(false);
