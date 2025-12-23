@@ -2,7 +2,7 @@
 
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { usePathname, useSearchParams } from 'next/navigation';
 
@@ -29,7 +29,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Hook to identify users and track page views
-export function PostHogPageView() {
+function PostHogPageViewInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { isSignedIn } = useAuth();
@@ -62,6 +62,14 @@ export function PostHogPageView() {
   }, [pathname, searchParams]);
 
   return null;
+}
+
+export function PostHogPageView() {
+  return (
+    <Suspense fallback={null}>
+      <PostHogPageViewInner />
+    </Suspense>
+  );
 }
 
 // Export posthog instance for manual tracking
