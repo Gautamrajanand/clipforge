@@ -55,6 +55,7 @@ export async function bootstrap() {
     ? [
         'https://clipforge.ai',
         'https://www.clipforge.ai',
+        'https://clipforge-seven.vercel.app',
         process.env.FRONTEND_URL,
       ].filter(Boolean)
     : true; // Allow all in development
