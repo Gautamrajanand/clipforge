@@ -40,8 +40,14 @@ import { QueuesController } from './queues.controller';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        // Parse REDIS_URL (format: redis://host:port)
-        const redisUrl = configService.get('REDIS_URL') || 'redis://localhost:6379';
+        // Parse REDIS_URL (format: redis://host:port or rediss://host:port)
+        let redisUrl = configService.get('REDIS_URL') || 'redis://localhost:6379';
+        
+        // Convert redis:// to rediss:// for Upstash (requires TLS)
+        if (redisUrl.includes('upstash.io') && redisUrl.startsWith('redis://')) {
+          redisUrl = redisUrl.replace('redis://', 'rediss://');
+        }
+        
         console.log('🔧 BullMQ Redis URL:', redisUrl);
         const url = new URL(redisUrl);
         console.log('🔧 BullMQ connecting to:', url.hostname, ':', url.port);
@@ -51,6 +57,7 @@ import { QueuesController } from './queues.controller';
             host: url.hostname,
             port: parseInt(url.port) || 6379,
             password: url.password || configService.get('REDIS_PASSWORD'),
+            tls: redisUrl.startsWith('rediss://') ? {} : undefined,
           },
           defaultJobOptions: {
             attempts: 3,

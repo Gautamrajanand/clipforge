@@ -19,7 +19,13 @@ export class HealthController {
     private storage: StorageService,
   ) {
     // Initialize Redis client from REDIS_URL
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    let redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    
+    // Convert redis:// to rediss:// for Upstash (requires TLS)
+    if (redisUrl.includes('upstash.io') && redisUrl.startsWith('redis://')) {
+      redisUrl = redisUrl.replace('redis://', 'rediss://');
+    }
+    
     const url = new URL(redisUrl);
     
     this.redis = new Redis({
@@ -28,6 +34,7 @@ export class HealthController {
       password: url.password || process.env.REDIS_PASSWORD,
       maxRetriesPerRequest: 1,
       retryStrategy: () => null, // Don't retry on health checks
+      tls: redisUrl.startsWith('rediss://') ? {} : undefined,
     });
   }
 
