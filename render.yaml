@@ -1,0 +1,40 @@
+services:
+  # ML Worker Service
+  - type: web
+    name: clipforge-ml-worker
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r workers/requirements.txt
+    startCommand: cd workers && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_BUCKET
+        value: clipforge
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: ASR_PROVIDER
+        value: whisper
+      - key: ML_WORKER_PORT
+        value: 8000
+      - key: ML_WORKER_HOST
+        value: 0.0.0.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: WHISPER_MODEL_SIZE
+        value: base
+      - key: WHISPER_DEVICE
+        value: cpu
+      - key: ASSEMBLYAI_API_KEY
+        sync: false
