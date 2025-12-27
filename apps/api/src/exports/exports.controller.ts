@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { ExportsService } from './exports.service';
 
 @ApiTags('exports')
 @ApiBearerAuth()
 @Controller('v1')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkAuthGuard)
 export class ExportsController {
   constructor(private exportsService: ExportsService) {}
 
