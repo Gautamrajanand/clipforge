@@ -5,6 +5,7 @@ import { ExportsController } from './exports.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { StorageModule } from '../storage/storage.module';
 import { OnboardingModule } from '../onboarding/onboarding.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { OnboardingModule } from '../onboarding/onboarding.module';
     StorageModule,
     HttpModule,
     OnboardingModule,
+    AuthModule,
   ],
   providers: [ExportsService],
   controllers: [ExportsController],
