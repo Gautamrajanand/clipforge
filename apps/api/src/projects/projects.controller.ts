@@ -421,14 +421,20 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Queue export job to be processed by ML worker
-    await this.projectsService.queueExport(id, orgId, dto);
-    
-    // Return immediately with accepted status
-    return {
-      status: 'processing',
-      message: 'Export started. Refresh the page in a few minutes to see your exported clips.',
-    };
+    // Process export synchronously (blocking)
+    // Note: This may take 30-60 seconds for video processing
+    try {
+      const result = await this.projectsService.exportMoments(id, orgId, dto);
+      
+      return {
+        status: 'completed',
+        message: 'Export completed successfully',
+        exports: result,
+      };
+    } catch (error) {
+      console.error('Export failed:', error);
+      throw error;
+    }
   }
 
   @Get(':id/exports')

@@ -95,7 +95,7 @@ import { QueuesController } from './queues.controller';
     TranscriptionProcessor,
     ClipDetectionProcessor,
     SubtitleExportProcessor,
-    ClipExportProcessor,
+    // ClipExportProcessor, // Disabled - causes API crashes due to heavy video processing
     ReframeProcessor,
   ],
   controllers: [QueuesController],
