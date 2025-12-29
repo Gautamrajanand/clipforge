@@ -421,14 +421,8 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Start export in background to avoid blocking HTTP response
-    setImmediate(async () => {
-      try {
-        await this.projectsService.exportMoments(id, orgId, dto);
-      } catch (error) {
-        console.error('Background export failed:', error);
-      }
-    });
+    // Queue export job to be processed by ML worker
+    await this.projectsService.queueExport(id, orgId, dto);
     
     // Return immediately with accepted status
     return {
