@@ -20,6 +20,7 @@ export interface ClipExportJobData {
 
 @Processor('video-export', {
   concurrency: 2, // Process 2 exports simultaneously
+  lockDuration: 300000, // 5 minutes lock to prevent stalling during video processing
 })
 export class ClipExportProcessor extends WorkerHost {
   private readonly logger = new Logger(ClipExportProcessor.name);
