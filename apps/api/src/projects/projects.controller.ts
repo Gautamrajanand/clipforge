@@ -421,15 +421,13 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Process export synchronously (blocking)
-    // Note: This may take 30-60 seconds for video processing
+    // Delegate to ML worker for video processing
     try {
-      const result = await this.projectsService.exportMoments(id, orgId, dto);
+      await this.projectsService.delegateExportToMLWorker(id, orgId, dto);
       
       return {
-        status: 'completed',
-        message: 'Export completed successfully',
-        exports: result,
+        status: 'processing',
+        message: 'Export started. Your clips will appear in a few minutes.',
       };
     } catch (error) {
       console.error('Export failed:', error);

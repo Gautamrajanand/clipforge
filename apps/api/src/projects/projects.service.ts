@@ -874,6 +874,107 @@ export class ProjectsService {
     };
   }
 
+  async delegateExportToMLWorker(
+    projectId: string,
+    orgId: string,
+    dto: {
+      momentIds: string[];
+      aspectRatio?: string;
+      cropMode?: 'crop' | 'pad' | 'smart';
+      cropPosition?: 'center' | 'top' | 'bottom' | { x: number; y: number };
+      burnCaptions?: boolean;
+      captionStyle?: string;
+      primaryColor?: string;
+      secondaryColor?: string;
+      fontSize?: number;
+      position?: 'top' | 'center' | 'bottom';
+    },
+  ) {
+    this.logger.log(`🚀 Delegating export to ML worker for project ${projectId}`);
+    
+    const project = await this.findOne(projectId, orgId);
+    
+    if (!project.sourceUrl) {
+      throw new BadRequestException('No source video found');
+    }
+
+    if (!dto.momentIds || dto.momentIds.length === 0) {
+      throw new BadRequestException('No moments selected');
+    }
+
+    // Get the moments
+    const moments = await this.prisma.moment.findMany({
+      where: {
+        id: { in: dto.momentIds },
+        projectId,
+      },
+    });
+
+    if (moments.length === 0) {
+      throw new NotFoundException('No moments found');
+    }
+
+    // Check organization tier for watermark
+    const organization: any = await this.prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { tier: true },
+    });
+    const addWatermark = organization?.tier === 'FREE';
+
+    // Call ML worker for each moment
+    const mlWorkerUrl = process.env.ML_WORKER_URL || 'https://clipforge-ml-worker.onrender.com';
+    const exports = [];
+
+    for (const moment of moments) {
+      try {
+        // Create export record
+        const exportRecord = await this.prisma.export.create({
+          data: {
+            projectId,
+            momentId: moment.id,
+            status: 'RENDERING',
+            aspectRatio: dto.aspectRatio || '9:16',
+            format: 'MP4',
+            artifacts: {},
+            captionStyle: dto.captionStyle || 'minimal',
+            captionsEnabled: dto.burnCaptions || false,
+            burnCaptions: dto.burnCaptions || false,
+          },
+        });
+
+        // Call ML worker
+        const response = await fetch(`${mlWorkerUrl}/render/export`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            exportId: exportRecord.id,
+            projectId,
+            momentId: moment.id,
+            sourceUrl: project.sourceUrl,
+            tStart: moment.tStart,
+            tEnd: moment.tEnd,
+            format: 'MP4',
+            aspectRatio: dto.aspectRatio || '9:16',
+            captionStyle: dto.captionStyle || 'minimal',
+            captionsEnabled: dto.burnCaptions || false,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`ML worker returned ${response.status}`);
+        }
+
+        exports.push(exportRecord);
+        this.logger.log(`✅ Export ${exportRecord.id} delegated to ML worker`);
+      } catch (error) {
+        this.logger.error(`Failed to delegate export for moment ${moment.id}:`, error);
+        throw error;
+      }
+    }
+
+    return exports;
+  }
+
   async exportMoments(
     projectId: string,
     orgId: string,
