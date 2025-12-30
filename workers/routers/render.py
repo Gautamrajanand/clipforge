@@ -216,21 +216,33 @@ def _download_file(url: str, path: str):
             f.write(chunk)
 
 def _upload_to_s3(local_path: str, s3_key: str) -> str:
-    """Upload file to S3 and return URL"""
+    """Upload file to S3/R2 and return URL"""
     import boto3
     from botocore.exceptions import ClientError
     
     try:
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-            region_name=os.getenv('AWS_REGION', 'us-east-1')
-        )
+        # Support both AWS S3 and Cloudflare R2
+        s3_endpoint = os.getenv('S3_ENDPOINT')
+        s3_access_key = os.getenv('S3_ACCESS_KEY_ID') or os.getenv('AWS_ACCESS_KEY_ID')
+        s3_secret_key = os.getenv('S3_SECRET_ACCESS_KEY') or os.getenv('AWS_SECRET_ACCESS_KEY')
+        s3_region = os.getenv('S3_REGION', 'auto')
+        bucket_name = os.getenv('S3_BUCKET') or os.getenv('AWS_S3_BUCKET')
+        cdn_url = os.getenv('CDN_URL')
         
-        bucket_name = os.getenv('AWS_S3_BUCKET')
         if not bucket_name:
-            raise ValueError("AWS_S3_BUCKET environment variable not set")
+            raise ValueError("S3_BUCKET or AWS_S3_BUCKET environment variable not set")
+        
+        # Create S3 client with custom endpoint for R2
+        s3_config = {
+            'aws_access_key_id': s3_access_key,
+            'aws_secret_access_key': s3_secret_key,
+            'region_name': s3_region,
+        }
+        
+        if s3_endpoint:
+            s3_config['endpoint_url'] = s3_endpoint
+            
+        s3_client = boto3.client('s3', **s3_config)
         
         # Upload file
         s3_client.upload_file(
@@ -240,8 +252,16 @@ def _upload_to_s3(local_path: str, s3_key: str) -> str:
             ExtraArgs={'ContentType': _get_content_type(local_path)}
         )
         
-        # Generate URL
-        url = f"https://{bucket_name}.s3.amazonaws.com/{s3_key}"
+        # Generate URL (use CDN if configured, otherwise direct S3/R2)
+        if cdn_url:
+            url = f"{cdn_url}/{s3_key}"
+        elif s3_endpoint:
+            # R2 public URL format
+            url = f"{s3_endpoint}/{bucket_name}/{s3_key}"
+        else:
+            # AWS S3 URL format
+            url = f"https://{bucket_name}.s3.amazonaws.com/{s3_key}"
+            
         logger.info(f"Uploaded {local_path} to {url}")
         return url
         
