@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { ExportsService } from './exports.service';
@@ -48,5 +48,15 @@ export class ExportsController {
       throw new Error('No organization found');
     }
     return this.exportsService.findByProject(projectId, orgId);
+  }
+
+  @Patch('exports/:id')
+  @ApiOperation({ summary: 'Update export status and artifacts (ML worker only)' })
+  async update(
+    @Param('id') id: string,
+    @Body() dto: { status?: string; artifacts?: any },
+  ) {
+    // This endpoint is called by the ML worker, no auth required
+    return this.exportsService.update(id, dto);
   }
 }

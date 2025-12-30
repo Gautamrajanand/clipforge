@@ -185,12 +185,17 @@ async def _render_worker(request: RenderRequest):
         
         # Upload to S3
         logger.info("Uploading to S3")
-        mp4_url = _upload_to_s3(captioned_path, f"{request.exportId}.mp4")
-        srt_url = _upload_to_s3(srt_path, f"{request.exportId}.srt")
-        thumb_url = _upload_to_s3(thumb_path, f"{request.exportId}_thumb.jpg")
+        mp4_url = _upload_to_s3(captioned_path, f"exports/{request.exportId}.mp4")
+        srt_url = _upload_to_s3(srt_path, f"exports/{request.exportId}.srt")
+        thumb_url = _upload_to_s3(thumb_path, f"exports/{request.exportId}_thumb.jpg")
         
-        # TODO: Update export record in DB with artifacts
+        # Update export record in DB with artifacts
         logger.info(f"Export artifacts: MP4={mp4_url}, SRT={srt_url}, Thumb={thumb_url}")
+        _update_export_status(request.exportId, "COMPLETED", {
+            "mp4_url": mp4_url,
+            "srt_url": srt_url,
+            "thumbnail_url": thumb_url
+        })
         
         logger.info(f"Render completed for {request.exportId}")
         
@@ -212,9 +217,69 @@ def _download_file(url: str, path: str):
 
 def _upload_to_s3(local_path: str, s3_key: str) -> str:
     """Upload file to S3 and return URL"""
-    # TODO: Implement S3 upload using boto3
-    logger.info(f"Would upload {local_path} to s3://{s3_key}")
-    return f"https://s3.example.com/{s3_key}"
+    import boto3
+    from botocore.exceptions import ClientError
+    
+    try:
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+            region_name=os.getenv('AWS_REGION', 'us-east-1')
+        )
+        
+        bucket_name = os.getenv('AWS_S3_BUCKET')
+        if not bucket_name:
+            raise ValueError("AWS_S3_BUCKET environment variable not set")
+        
+        # Upload file
+        s3_client.upload_file(
+            local_path,
+            bucket_name,
+            s3_key,
+            ExtraArgs={'ContentType': _get_content_type(local_path)}
+        )
+        
+        # Generate URL
+        url = f"https://{bucket_name}.s3.amazonaws.com/{s3_key}"
+        logger.info(f"Uploaded {local_path} to {url}")
+        return url
+        
+    except ClientError as e:
+        logger.error(f"S3 upload failed: {e}")
+        raise
+
+def _get_content_type(filename: str) -> str:
+    """Get content type from filename"""
+    if filename.endswith('.mp4'):
+        return 'video/mp4'
+    elif filename.endswith('.srt'):
+        return 'text/plain'
+    elif filename.endswith('.jpg') or filename.endswith('.jpeg'):
+        return 'image/jpeg'
+    else:
+        return 'application/octet-stream'
+
+def _update_export_status(export_id: str, status: str, artifacts: dict = None):
+    """Update export status in database"""
+    try:
+        api_url = os.getenv('API_BASE_URL', 'https://clipforge-api.onrender.com')
+        response = requests.patch(
+            f"{api_url}/v1/exports/{export_id}",
+            json={
+                "status": status,
+                "artifacts": artifacts or {}
+            },
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            logger.info(f"Updated export {export_id} status to {status}")
+        else:
+            logger.error(f"Failed to update export status: {response.status_code} - {response.text}")
+            
+    except Exception as e:
+        logger.error(f"Error updating export status: {e}")
 
 @router.get("/status/{exportId}")
 async def get_status(exportId: str):

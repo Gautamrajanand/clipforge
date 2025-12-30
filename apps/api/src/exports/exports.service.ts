@@ -175,4 +175,31 @@ export class ExportsService {
       throw error;
     }
   }
+
+  async update(exportId: string, dto: { status?: string; artifacts?: any }) {
+    this.logger.log(`Updating export ${exportId}: status=${dto.status}`);
+    
+    const updateData: any = {};
+    
+    if (dto.status) {
+      updateData.status = dto.status;
+      updateData.processingStatus = dto.status;
+      
+      if (dto.status === 'COMPLETED') {
+        updateData.processingCompletedAt = new Date();
+      }
+    }
+    
+    if (dto.artifacts) {
+      updateData.artifacts = dto.artifacts;
+    }
+    
+    const exportRecord = await this.prisma.export.update({
+      where: { id: exportId },
+      data: updateData,
+    });
+    
+    this.logger.log(`✅ Export ${exportId} updated successfully`);
+    return exportRecord;
+  }
 }
