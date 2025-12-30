@@ -60,11 +60,20 @@ export class StorageService {
    * Generate presigned download URL
    */
   async generatePresignedDownloadUrl(key: string, expiresIn = 3600): Promise<string> {
-    return this.s3.getSignedUrl('getObject', {
+    // For R2, we need to ensure the key doesn't start with /
+    const cleanKey = key.startsWith('/') ? key.substring(1) : key;
+    
+    const signedUrl = this.s3.getSignedUrl('getObject', {
       Bucket: process.env.S3_BUCKET || 'clipforge',
-      Key: key,
+      Key: cleanKey,
       Expires: expiresIn,
     });
+    
+    // Log for debugging
+    console.log(`Generated signed URL for key: ${cleanKey}`);
+    console.log(`Signed URL (first 100 chars): ${signedUrl.substring(0, 100)}`);
+    
+    return signedUrl;
   }
 
   /**
