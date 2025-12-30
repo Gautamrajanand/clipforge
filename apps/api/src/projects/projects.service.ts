@@ -943,7 +943,7 @@ export class ProjectsService {
         });
 
         // Call ML worker
-        const response = await fetch(`${mlWorkerUrl}/render/export`, {
+        const response = await fetch(`${mlWorkerUrl}/v1/render/export`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
