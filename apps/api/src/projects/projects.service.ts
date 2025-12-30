@@ -925,6 +925,10 @@ export class ProjectsService {
     const mlWorkerUrl = process.env.ML_WORKER_URL || 'https://clipforge-ml-worker.onrender.com';
     const exports = [];
 
+    // Generate signed URL for source video (valid for 2 hours)
+    const sourceVideoUrl = await this.storage.getSignedUrl(project.sourceUrl, 7200);
+    this.logger.log(`Generated signed URL for source video: ${sourceVideoUrl.substring(0, 100)}...`);
+
     for (const moment of moments) {
       try {
         // Create export record
@@ -942,7 +946,7 @@ export class ProjectsService {
           },
         });
 
-        // Call ML worker
+        // Call ML worker with signed URL
         const response = await fetch(`${mlWorkerUrl}/v1/render/export`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -950,7 +954,7 @@ export class ProjectsService {
             exportId: exportRecord.id,
             projectId,
             momentId: moment.id,
-            sourceUrl: project.sourceUrl,
+            sourceUrl: sourceVideoUrl,
             tStart: moment.tStart,
             tEnd: moment.tEnd,
             format: 'MP4',
