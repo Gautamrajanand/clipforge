@@ -14,7 +14,8 @@ export class StorageService {
       region: process.env.S3_REGION || 'us-east-1',
       accessKeyId: process.env.S3_ACCESS_KEY_ID,
       secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-      s3ForcePathStyle: true, // For MinIO compatibility
+      s3ForcePathStyle: true, // For MinIO and R2 compatibility
+      signatureVersion: 'v4', // Required for R2
     });
   }
 
@@ -63,10 +64,16 @@ export class StorageService {
     // For R2, we need to ensure the key doesn't start with /
     const cleanKey = key.startsWith('/') ? key.substring(1) : key;
     
-    const signedUrl = this.s3.getSignedUrl('getObject', {
-      Bucket: process.env.S3_BUCKET || 'clipforge',
-      Key: cleanKey,
-      Expires: expiresIn,
+    // Use getSignedUrlPromise for better R2 compatibility
+    const signedUrl = await new Promise<string>((resolve, reject) => {
+      this.s3.getSignedUrl('getObject', {
+        Bucket: process.env.S3_BUCKET || 'clipforge',
+        Key: cleanKey,
+        Expires: expiresIn,
+      }, (err, url) => {
+        if (err) reject(err);
+        else resolve(url);
+      });
     });
     
     // Log for debugging
