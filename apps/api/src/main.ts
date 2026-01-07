@@ -56,14 +56,23 @@ export async function bootstrap() {
         'https://clipforge.ai',
         'https://www.clipforge.ai',
         'https://clipforge-seven.vercel.app',
+        'https://app.clipforge.ai',
         process.env.FRONTEND_URL,
       ].filter(Boolean)
     : true; // Allow all in development
 
+  console.log('🌐 CORS Configuration:', {
+    nodeEnv: process.env.NODE_ENV,
+    allowedOrigins: Array.isArray(allowedOrigins) ? allowedOrigins : 'all',
+  });
+
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     exposedHeaders: ['Content-Length', 'Content-Type', 'Accept-Ranges'],
+    maxAge: 86400, // 24 hours
   });
 
   // Validation
