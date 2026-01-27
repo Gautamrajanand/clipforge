@@ -1,7 +1,10 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards, Request, SetMetadata } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { ExportsService } from './exports.service';
+
+export const IS_PUBLIC_KEY = 'isPublic';
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 @ApiTags('exports')
 @ApiBearerAuth()
@@ -50,6 +53,7 @@ export class ExportsController {
     return this.exportsService.findByProject(projectId, orgId);
   }
 
+  @Public()
   @Patch('exports/:id')
   @ApiOperation({ summary: 'Update export status and artifacts (ML worker only)' })
   async update(
