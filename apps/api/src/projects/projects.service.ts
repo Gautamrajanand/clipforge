@@ -946,8 +946,8 @@ export class ProjectsService {
           },
         });
 
-        // Call ML worker with signed URL
-        const response = await fetch(`${mlWorkerUrl}/v1/render/export`, {
+        // Call ML worker with signed URL (fire and forget - don't wait for response)
+        fetch(`${mlWorkerUrl}/v1/render/export`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -962,11 +962,9 @@ export class ProjectsService {
             captionStyle: dto.captionStyle || 'minimal',
             captionsEnabled: dto.burnCaptions || false,
           }),
+        }).catch(error => {
+          this.logger.error(`Failed to call ML worker for export ${exportRecord.id}:`, error);
         });
-
-        if (!response.ok) {
-          throw new Error(`ML worker returned ${response.status}`);
-        }
 
         exports.push(exportRecord);
         this.logger.log(`✅ Export ${exportRecord.id} delegated to ML worker`);
