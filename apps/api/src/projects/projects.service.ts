@@ -1797,6 +1797,10 @@ export class ProjectsService {
     }
 
     const artifacts = exportRecord.artifacts as any;
+    if (!artifacts || !artifacts.mp4_url) {
+      throw new NotFoundException('Export video not available yet. Please wait for processing to complete.');
+    }
+    
     const clipUrl = artifacts.mp4_url;
     
     const metadata = await this.storage.getFileMetadata(clipUrl);

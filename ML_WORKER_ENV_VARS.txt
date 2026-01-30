@@ -1,0 +1,28 @@
+# ML Worker Environment Variables - Copy/Paste These
+
+## STEP 1: Copy these 7 values from your clipforge-api service
+## (Open clipforge-api → Environment tab → Copy the VALUES)
+
+DATABASE_URL=<copy from API>
+REDIS_URL=<copy from API>
+S3_ENDPOINT=<copy from API>
+S3_ACCESS_KEY_ID=<copy from API>
+S3_SECRET_ACCESS_KEY=<copy from API>
+OPENAI_API_KEY=<copy from API>
+ASSEMBLYAI_API_KEY=<copy from API>
+
+## STEP 2: Add these 7 new variables (copy exactly as shown)
+
+S3_REGION=auto
+S3_BUCKET=clipforge
+ASR_PROVIDER=whisper
+ML_WORKER_PORT=8000
+ML_WORKER_HOST=0.0.0.0
+WHISPER_MODEL_SIZE=base
+WHISPER_DEVICE=cpu
+
+---
+
+## Total: 14 environment variables needed
+
+After adding all variables, click "Create Web Service"
