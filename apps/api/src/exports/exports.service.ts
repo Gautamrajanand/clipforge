@@ -178,6 +178,7 @@ export class ExportsService {
 
   async update(exportId: string, dto: { status?: string; artifacts?: any }) {
     this.logger.log(`Updating export ${exportId}: status=${dto.status}`);
+    this.logger.log(`Artifacts received: ${JSON.stringify(dto.artifacts)}`);
     
     const updateData: any = {};
     
@@ -192,6 +193,7 @@ export class ExportsService {
     
     if (dto.artifacts) {
       updateData.artifacts = dto.artifacts;
+      this.logger.log(`Setting artifacts in updateData: ${JSON.stringify(updateData.artifacts)}`);
     }
     
     const exportRecord = await this.prisma.export.update({
@@ -200,6 +202,7 @@ export class ExportsService {
     });
     
     this.logger.log(`✅ Export ${exportId} updated successfully`);
+    this.logger.log(`Saved artifacts: ${JSON.stringify(exportRecord.artifacts)}`);
     return exportRecord;
   }
 }
