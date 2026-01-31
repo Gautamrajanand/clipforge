@@ -145,14 +145,27 @@ async def _render_worker(request: RenderRequest):
         srt_path = f"{temp_dir}/captions.srt"
         ass_path = f"{temp_dir}/captions.ass"
         
-        # TODO: Fetch transcript from DB
-        sample_words = [
-            {"text": "Amazing", "start": 0.0, "end": 0.5},
-            {"text": "product", "start": 0.5, "end": 1.0},
-            {"text": "launch.", "start": 1.0, "end": 1.5},
-        ]
-        
-        captions = caption_engine.from_transcript(sample_words, words_per_caption=3)
+        # Use transcript words if available, otherwise skip captions
+        if not transcript_words:
+            logger.warning("No transcript available, skipping captions")
+            # Copy normalized video as final output without captions
+            import shutil
+            shutil.copy(normalized_path, f"{temp_dir}/captioned.mp4")
+            captioned_path = f"{temp_dir}/captioned.mp4"
+        else:
+            # Filter transcript words to only include those within the clip boundaries
+            clip_words = [
+                w for w in transcript_words 
+                if w['start'] >= adjusted_start and w['end'] <= adjusted_end
+            ]
+            # Adjust word timestamps relative to clip start
+            clip_words = [
+                {**w, 'start': w['start'] - adjusted_start, 'end': w['end'] - adjusted_start}
+                for w in clip_words
+            ]
+            logger.info(f"Using {len(clip_words)} words for captions")
+            
+            captions = caption_engine.from_transcript(clip_words, words_per_caption=3)
         
         # Generate SRT
         with open(srt_path, 'w', encoding='utf-8') as f:

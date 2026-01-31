@@ -321,13 +321,12 @@ export class ProjectsController {
     return this.projectsService.streamVideo(id, orgId, res);
   }
 
+  @Public()
   @Get(':id/transcript')
-  @ApiOperation({ summary: 'Get project transcript' })
+  @ApiOperation({ summary: 'Get project transcript (ML worker access)' })
   async getTranscript(@Request() req: any, @Param('id') id: string) {
-    const orgId = req.user.memberships[0]?.org?.id;
-    if (!orgId) {
-      throw new Error('No organization found');
-    }
+    // Allow ML worker to access without auth
+    const orgId = req.user?.memberships?.[0]?.org?.id;
     return this.projectsService.getTranscript(id, orgId);
   }
 
