@@ -798,10 +798,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   
                   return (
                   <div key={exportItem.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
-                    <div className="aspect-video bg-black">
+                    <div className="bg-black flex items-center justify-center" style={{ aspectRatio: '9/16', maxHeight: '600px' }}>
                       <video
                         controls
-                        className="w-full h-full"
+                        className="h-full"
+                        style={{ maxHeight: '600px', objectFit: 'contain' }}
                         src={exportVideoUrls[exportItem.id] || ''}
                         preload="metadata"
                       >
