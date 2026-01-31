@@ -1799,10 +1799,17 @@ export class ProjectsService {
       throw new NotFoundException('Export video not available yet. Please wait for processing to complete.');
     }
     
+    // Extract the S3 key from the full URL
+    // URL format: https://<account-id>.r2.cloudflarestorage.com/<bucket>/exports/<export-id>.mp4
     const clipUrl = artifacts.mp4_url;
+    const urlParts = clipUrl.split('/');
+    const bucketIndex = urlParts.findIndex(part => part === process.env.S3_BUCKET || part === 'clipforge-production');
+    const s3Key = bucketIndex >= 0 ? urlParts.slice(bucketIndex + 1).join('/') : `exports/${exportRecord.id}.mp4`;
     
-    const metadata = await this.storage.getFileMetadata(clipUrl);
-    const stream = this.storage.getFileStream(clipUrl);
+    this.logger.log(`Downloading export ${exportRecord.id} from S3 key: ${s3Key}`);
+    
+    const metadata = await this.storage.getFileMetadata(s3Key);
+    const stream = this.storage.getFileStream(s3Key);
 
     // Create a safe filename from the moment's title
     const safeTitle = exportRecord.moment?.title
