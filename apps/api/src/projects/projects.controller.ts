@@ -13,12 +13,16 @@ import {
   UploadedFile,
   Res,
   StreamableFile,
+  SetMetadata,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiResponse, ApiQuery, ApiBody, ApiParam } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 import { ProjectsService } from './projects.service';
+
+export const IS_PUBLIC_KEY = 'isPublic';
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 import { ExportMomentsDto } from './dto/export-moments.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { DetectClipsDto } from './dto/clip-settings.dto';
@@ -420,18 +424,8 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Delegate to ML worker for video processing
-    try {
-      await this.projectsService.delegateExportToMLWorker(id, orgId, dto);
-      
-      return {
-        status: 'processing',
-        message: 'Export started. Your clips will appear in a few minutes.',
-      };
-    } catch (error) {
-      console.error('Export failed:', error);
-      throw error;
-    }
+    // Use synchronous export with real captions (working local version)
+    return this.projectsService.exportMoments(id, orgId, dto);
   }
 
   @Get(':id/exports')
