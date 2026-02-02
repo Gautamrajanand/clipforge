@@ -424,8 +424,13 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Use synchronous export with real captions (working local version)
-    return this.projectsService.exportMoments(id, orgId, dto);
+    // Delegate to ML worker (async, non-blocking)
+    await this.projectsService.delegateExportToMLWorker(id, orgId, dto);
+    
+    return {
+      status: 'processing',
+      message: 'Export started. Your clips will appear in a few minutes.',
+    };
   }
 
   @Get(':id/exports')

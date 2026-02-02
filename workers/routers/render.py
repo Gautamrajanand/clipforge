@@ -145,14 +145,8 @@ async def _render_worker(request: RenderRequest):
         srt_path = f"{temp_dir}/captions.srt"
         ass_path = f"{temp_dir}/captions.ass"
         
-        # Use transcript words if available, otherwise skip captions
-        if not transcript_words:
-            logger.warning("No transcript available, skipping captions")
-            # Copy normalized video as final output without captions
-            import shutil
-            shutil.copy(normalized_path, f"{temp_dir}/captioned.mp4")
-            captioned_path = f"{temp_dir}/captioned.mp4"
-        else:
+        # Use transcript words if available
+        if transcript_words:
             # Filter transcript words to only include those within the clip boundaries
             clip_words = [
                 w for w in transcript_words 
@@ -163,9 +157,16 @@ async def _render_worker(request: RenderRequest):
                 {**w, 'start': w['start'] - adjusted_start, 'end': w['end'] - adjusted_start}
                 for w in clip_words
             ]
-            logger.info(f"Using {len(clip_words)} words for captions")
-            
-            captions = caption_engine.from_transcript(clip_words, words_per_caption=3)
+            logger.info(f"Using {len(clip_words)} words from transcript for captions")
+        else:
+            logger.warning("No transcript available, using clip boundaries as fallback")
+            # Use a simple placeholder based on clip duration
+            clip_duration = adjusted_end - adjusted_start
+            clip_words = [
+                {"text": "Clip", "start": 0.0, "end": min(0.5, clip_duration)},
+            ]
+        
+        captions = caption_engine.from_transcript(clip_words, words_per_caption=3)
         
         # Generate SRT
         with open(srt_path, 'w', encoding='utf-8') as f:
@@ -182,7 +183,7 @@ async def _render_worker(request: RenderRequest):
             f.write(caption_engine.generate_ass_with_preset(
                 captions, 
                 preset=preset,
-                brand_font=None,  # TODO: Get from brandKitId
+                brand_font=None,
                 keyword_paint=True
             ))
         
