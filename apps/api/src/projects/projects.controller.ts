@@ -424,13 +424,8 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Delegate to ML worker (async, non-blocking)
-    await this.projectsService.delegateExportToMLWorker(id, orgId, dto);
-    
-    return {
-      status: 'processing',
-      message: 'Export started. Your clips will appear in a few minutes.',
-    };
+    // Queue export job (async, uses API's advanced animator)
+    return this.projectsService.queueExport(id, orgId, dto);
   }
 
   @Get(':id/exports')
