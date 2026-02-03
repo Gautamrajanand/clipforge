@@ -30,8 +30,8 @@ export default function ExportModal({ isOpen, onClose, selectedClips, onExport }
   const [aspectRatio, setAspectRatio] = useState('9:16');
   const [cropMode, setCropMode] = useState<'crop' | 'pad' | 'smart'>('crop');
   const [cropPosition, setCropPosition] = useState<'center' | 'top' | 'bottom'>('center');
-  const [burnCaptions, setBurnCaptions] = useState(false);
-  const [captionStyle, setCaptionStyle] = useState('minimal');
+  const [burnCaptions, setBurnCaptions] = useState(true);
+  const [captionStyle, setCaptionStyle] = useState('mrbeast');
   const [primaryColor, setPrimaryColor] = useState('#FFFFFF');
   const [secondaryColor, setSecondaryColor] = useState('#FFD700');
   const [fontSize, setFontSize] = useState(48);
