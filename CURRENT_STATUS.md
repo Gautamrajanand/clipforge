@@ -1,16 +1,51 @@
-# ClipForge - Current Status (Dec 17, 2025 - 12:03 AM IST)
+# ClipForge - Current Status (Feb 4, 2026 - 3:30 PM IST)
 
-## 🎯 Where We Are: Sprint 95% Complete - Ready for Final Testing
+## 📋 WORKING PROCESS (Read This First)
 
-### 🎉 **EPIC SESSION: 23 Major Deliverables + 5 Critical PLG Systems**
+### Memory Update Cadence
+1. **After every work session** - Update this file with what was done
+2. **Before starting work** - Read CURRENT_STATUS.md + ACTUAL_SPRINT_STATUS.md
+3. **End of day** - Create memory with key decisions/blockers
+4. **Never** - Create new .md files (use PRIMARY docs only)
 
-**Session:** Dec 16, 2025 (4 hours: 8 PM - 12 AM)  
-**Deliverables:** 23 complete (18 docs + 5 systems)  
-**Code:** ~8,000 lines production-ready  
-**Documentation:** ~22,000 words  
-**Commits:** 28 commits pushed  
-**Database:** 1 migration applied  
-**Status:** 95% sprint complete, all critical systems implemented
+### Single Source of Truth
+- **Current state:** CURRENT_STATUS.md (this file)
+- **Real completion:** ACTUAL_SPRINT_STATUS.md (75%, not 95%)
+- **Mission:** MISSION_CORE_PRINCIPLES.md
+- **Benchmarks:** INDUSTRY_PARITY_BENCHMARK.md
+
+### Rules
+1. ✅ Update PRIMARY docs only (11 total)
+2. ❌ Never create new docs
+3. ✅ Test on production before marking complete
+4. ❌ Local working ≠ production working
+5. ✅ Update CURRENT_STATUS.md after every session
+
+---
+
+## 🚨 CRITICAL ISSUE: Export Captions Broken in Production
+
+### **Current Reality Check**
+
+**What Works on Local:** ✅
+- Upload, transcription, clip detection, preview
+- AdvancedAnimatorService with 14 caption styles
+- MrBeast yellow captions with animations
+- 9:16 aspect ratio exports
+- All features working perfectly
+
+**What's Broken in Production:** ❌
+- Export captions not styled correctly (white instead of yellow)
+- Wrong aspect ratio (horizontal instead of 9:16)
+- Root cause: Production using ML worker (basic ASS) instead of API's AdvancedAnimatorService
+
+**Status:** Fixing now - commits d5645ba, 86c59d2 deployed, waiting for verification
+
+### Render Limitation Issue
+- **Problem:** Render has 30-second timeout for web services
+- **Impact:** Synchronous export processing times out
+- **Solution:** Using queue-based async processing with API's AdvancedAnimatorService
+- **Lesson:** Should have verified production constraints before choosing Render
 
 ## 🎯 Where We Are: Production-Ready Scalability Achieved
 

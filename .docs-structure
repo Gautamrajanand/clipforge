@@ -1,34 +1,26 @@
 # ClipForge Documentation Structure
 
-## PRIMARY DOCS (10 - Always Refer & Iterate)
-1. MISSION_CORE_PRINCIPLES.md ✅
-2. INDUSTRY_PARITY_BENCHMARK.md ✅
-3. PRODUCT_ROADMAP.md ✅
-4. ARCHITECTURE.md ✅
-5. API_DOCUMENTATION.md ✅
-6. SCALABILITY_PLAN.md ✅
-7. PLG_STRATEGY.md ✅
-8. QA_MATRIX.md ✅
-9. DEPLOYMENT.md ✅
-10. CURRENT_STATUS.md ✅
+**Last Cleanup:** Feb 4, 2026 - Archived 363 docs
 
-## SUPPORTING DOCS (Reference Only)
-- AI_REFRAME_SUBTITLES_PLAN.md
-- ASYNC_SUBTITLE_EXPORT.md
-- AI_SUBTITLES_ISSUES.md
-- BUG_FIXES_NOV16.md
-- SESSION_NOTES_*.md
-- ROLLBACK_INSTRUCTIONS.md
-- All other *.md files
+## PRIMARY DOCS (11 - ONLY These Exist)
+1. MISSION_CORE_PRINCIPLES.md ✅ - Core mission, non-negotiable principles
+2. INDUSTRY_PARITY_BENCHMARK.md ✅ - Competitive benchmarks vs Opus Clip, Podcastle
+3. PRODUCT_ROADMAP.md ✅ - Feature roadmap, PLG strategy
+4. ARCHITECTURE.md ✅ - System architecture, tech stack
+5. API_DOCUMENTATION.md ✅ - API endpoints documentation
+6. SCALABILITY_PLAN.md ✅ - Performance, scaling strategy
+7. PLG_STRATEGY.md ✅ - Product-led growth tactics
+8. QA_MATRIX.md ✅ - Testing checklist, quality standards
+9. DEPLOYMENT.md ✅ - Deployment process, environments
+10. CURRENT_STATUS.md ✅ - **SINGLE SOURCE OF TRUTH** for current state
+11. ACTUAL_SPRINT_STATUS.md ✅ - Real completion % (75%, not 95%)
 
-## ARCHIVED (Keep for reference)
-- *.old.md files
-- COMPLETE_PRODUCT_ROADMAP.md (merged into PRODUCT_ROADMAP.md)
-- CURRENT_STATUS_AND_FIXES.md (merged into CURRENT_STATUS.md)
-- LIVE_PRODUCT_STATUS.md (merged into CURRENT_STATUS.md)
-- SCALABILITY_AUDIT.md (merged into SCALABILITY_PLAN.md)
-- PHASE_1_DEPLOYMENT_GUIDE.md (merged into DEPLOYMENT.md)
-- API_VERIFICATION.md (merged into API_DOCUMENTATION.md)
+## ARCHIVED (.archive/ - 363 files)
+All other .md files moved to .archive/ on Feb 4, 2026
 
-## RULE: Never create new PRIMARY docs without approval
-## RULE: Always update PRIMARY docs, create SUPPORTING docs for tactical details
+## RULES
+1. **NEVER create new docs** - Update PRIMARY docs only
+2. **ALWAYS check CURRENT_STATUS.md first** - Single source of truth
+3. **ALWAYS update CURRENT_STATUS.md** - After every session
+4. **NO tactical docs** - Everything goes in PRIMARY docs
+5. **Archive immediately** - Any doc not in PRIMARY list
