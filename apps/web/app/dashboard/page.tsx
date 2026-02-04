@@ -383,6 +383,13 @@ export default function Dashboard() {
         attempts++;
       } catch (error) {
         console.error('Polling error:', error);
+        // Retry on 404 - project might not be available yet
+        if (error instanceof Error && error.message.includes('404')) {
+          console.log('⏳ Project not found yet, retrying...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          attempts++;
+          continue;
+        }
         throw error;
       }
     }
@@ -487,6 +494,8 @@ export default function Dashboard() {
       });
       
       console.log('⏳ Polling for project status...');
+      // Wait 1 second before polling to ensure database commit
+      await new Promise(resolve => setTimeout(resolve, 1000));
       // Poll for project completion
       await pollProjectStatus(project.id);
       
