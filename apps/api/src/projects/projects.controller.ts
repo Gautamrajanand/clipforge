@@ -424,9 +424,8 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Use synchronous export with real captions (working local version)
-    // TODO: Re-enable queue-based export after fixing BullMQ on Render
-    return this.projectsService.exportMoments(id, orgId, dto);
+    // Use ML worker delegation (works on Render, uses real transcript for captions)
+    return this.projectsService.delegateExportToMLWorker(id, orgId, dto);
   }
 
   @Get(':id/exports')
