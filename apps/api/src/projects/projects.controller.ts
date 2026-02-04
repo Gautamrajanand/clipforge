@@ -425,7 +425,13 @@ export class ProjectsController {
     }
     
     // Queue export job (async, uses API's advanced animator)
-    return this.projectsService.queueExport(id, orgId, dto);
+    await this.projectsService.queueExport(id, orgId, dto);
+    
+    // Return backward-compatible response for frontend polling
+    return {
+      status: 'processing',
+      message: 'Export started. Your clips will appear in a few minutes.',
+    };
   }
 
   @Get(':id/exports')
