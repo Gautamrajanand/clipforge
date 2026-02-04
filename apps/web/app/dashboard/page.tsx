@@ -313,6 +313,14 @@ export default function Dashboard() {
 
     while (attempts < maxAttempts) {
       try {
+        // Wait for auth to be ready
+        if (!isLoaded || !isSignedIn) {
+          console.log('⏳ Waiting for auth to be ready...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          attempts++;
+          continue;
+        }
+
         const response = await fetchWithAuth(`${API_URL}/v1/projects/${projectId}`, {
           getToken: getClerkToken,
         });
