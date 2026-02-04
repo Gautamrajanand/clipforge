@@ -424,14 +424,9 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Queue export job (async, uses API's advanced animator)
-    await this.projectsService.queueExport(id, orgId, dto);
-    
-    // Return backward-compatible response for frontend polling
-    return {
-      status: 'processing',
-      message: 'Export started. Your clips will appear in a few minutes.',
-    };
+    // Use synchronous export with real captions (working local version)
+    // TODO: Re-enable queue-based export after fixing BullMQ on Render
+    return this.projectsService.exportMoments(id, orgId, dto);
   }
 
   @Get(':id/exports')
