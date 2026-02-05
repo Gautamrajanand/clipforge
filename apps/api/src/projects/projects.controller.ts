@@ -424,8 +424,18 @@ export class ProjectsController {
       throw new Error('No organization found');
     }
     
-    // Use ML worker delegation (works on Render, uses real transcript for captions)
-    return this.projectsService.delegateExportToMLWorker(id, orgId, dto);
+    // Environment-based export strategy
+    // Local: Use synchronous export (no timeout, direct processing)
+    // Production: Use ML worker delegation (async, no timeout issues)
+    const useMLWorker = process.env.USE_ML_WORKER_EXPORT === 'true';
+    
+    if (useMLWorker) {
+      // Production: Delegate to ML worker (async processing)
+      return this.projectsService.delegateExportToMLWorker(id, orgId, dto);
+    } else {
+      // Local: Synchronous export (direct processing)
+      return this.projectsService.exportMoments(id, orgId, dto);
+    }
   }
 
   @Get(':id/exports')
