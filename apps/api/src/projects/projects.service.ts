@@ -974,7 +974,10 @@ export class ProjectsService {
       }
     }
 
-    return exports;
+    return {
+      message: `Exporting ${exports.length} clips (processing in background)`,
+      exports,
+    };
   }
 
   async exportMoments(
