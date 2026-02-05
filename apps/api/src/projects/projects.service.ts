@@ -1802,8 +1802,17 @@ export class ProjectsService {
       throw new NotFoundException('Export video not available yet. Please wait for processing to complete.');
     }
     
-    // Use the S3 key directly from artifacts (it's already a key, not a full URL)
-    const s3Key = artifacts.mp4_url;
+    // Extract S3 key from artifacts.mp4_url (could be full URL or just key)
+    let s3Key = artifacts.mp4_url;
+    if (s3Key.startsWith('http://') || s3Key.startsWith('https://')) {
+      // Extract key from full URL (e.g., https://domain.com/bucket/exports/id.mp4 -> exports/id.mp4)
+      const url = new URL(s3Key);
+      s3Key = url.pathname.substring(1); // Remove leading slash
+      // If it includes bucket name, remove it
+      if (s3Key.startsWith('clipforge-production/')) {
+        s3Key = s3Key.substring('clipforge-production/'.length);
+      }
+    }
     
     this.logger.log(`Downloading export ${exportRecord.id} from S3 key: ${s3Key}`);
     
