@@ -1781,64 +1781,90 @@ export class ProjectsService {
   }
 
   async downloadExport(exportId: string, orgId: string, res: Response) {
-    const exportRecord = await this.prisma.export.findUnique({
-      where: { id: exportId },
-      include: { 
-        project: true,
-        moment: true, // Include moment to get title
-      },
-    });
+    try {
+      this.logger.log(`📥 Download request: exportId=${exportId}, orgId=${orgId}`);
+      
+      const exportRecord = await this.prisma.export.findUnique({
+        where: { id: exportId },
+        include: { 
+          project: true,
+          moment: true, // Include moment to get title
+        },
+      });
 
-    if (!exportRecord) {
-      throw new NotFoundException('Export not found');
-    }
-
-    if (exportRecord.project.orgId !== orgId) {
-      throw new ForbiddenException('Access denied');
-    }
-
-    const artifacts = exportRecord.artifacts as any;
-    if (!artifacts || !artifacts.mp4_url) {
-      throw new NotFoundException('Export video not available yet. Please wait for processing to complete.');
-    }
-    
-    // Extract S3 key from artifacts.mp4_url (could be full URL or just key)
-    let s3Key = artifacts.mp4_url;
-    if (s3Key.startsWith('http://') || s3Key.startsWith('https://')) {
-      // Extract key from full URL (e.g., https://domain.com/bucket/exports/id.mp4 -> exports/id.mp4)
-      const url = new URL(s3Key);
-      s3Key = url.pathname.substring(1); // Remove leading slash
-      // If it includes bucket name, remove it
-      if (s3Key.startsWith('clipforge-production/')) {
-        s3Key = s3Key.substring('clipforge-production/'.length);
+      if (!exportRecord) {
+        this.logger.error(`❌ Export not found: ${exportId}`);
+        throw new NotFoundException('Export not found');
       }
+
+      if (exportRecord.project.orgId !== orgId) {
+        this.logger.error(`❌ Access denied: ${orgId} != ${exportRecord.project.orgId}`);
+        throw new ForbiddenException('Access denied');
+      }
+
+      const artifacts = exportRecord.artifacts as any;
+      this.logger.log(`📦 Artifacts: ${JSON.stringify(artifacts)}`);
+      
+      if (!artifacts || !artifacts.mp4_url) {
+        this.logger.error(`❌ No mp4_url in artifacts`);
+        throw new NotFoundException('Export video not available yet. Please wait for processing to complete.');
+      }
+      
+      // Extract S3 key from artifacts.mp4_url (could be full URL or just key)
+      let s3Key = artifacts.mp4_url;
+      this.logger.log(`🔗 Original URL: ${s3Key}`);
+      
+      if (s3Key.startsWith('http://') || s3Key.startsWith('https://')) {
+        // Extract key from full URL (e.g., https://domain.com/bucket/exports/id.mp4 -> exports/id.mp4)
+        const url = new URL(s3Key);
+        s3Key = url.pathname.substring(1); // Remove leading slash
+        this.logger.log(`🔑 Pathname extracted: ${s3Key}`);
+        
+        // If it includes bucket name, remove it
+        if (s3Key.startsWith('clipforge-production/')) {
+          s3Key = s3Key.substring('clipforge-production/'.length);
+          this.logger.log(`🔑 Bucket prefix removed: ${s3Key}`);
+        }
+      }
+      
+      this.logger.log(`✅ Final S3 key: ${s3Key}`);
+      
+      const metadata = await this.storage.getFileMetadata(s3Key);
+      this.logger.log(`📊 Metadata: ${JSON.stringify(metadata)}`);
+      
+      const stream = this.storage.getFileStream(s3Key);
+      this.logger.log(`🌊 Stream created`);
+
+      // Create a safe filename from the moment's title
+      const safeTitle = exportRecord.moment?.title
+        ? exportRecord.moment.title
+            .replace(/[^a-z0-9\s-]/gi, '') // Remove special characters
+            .replace(/\s+/g, '-') // Replace spaces with hyphens
+            .toLowerCase()
+            .substring(0, 50) // Limit length
+        : `clip-${exportRecord.momentId}`;
+
+      res.set({
+        'Content-Type': 'video/mp4',
+        'Content-Length': metadata.ContentLength,
+        'Content-Disposition': `attachment; filename="${safeTitle}.mp4"`,
+      });
+
+      return new Promise((resolve, reject) => {
+        stream.pipe(res);
+        stream.on('error', (err) => {
+          this.logger.error(`❌ Stream error: ${err.message}`, err.stack);
+          reject(err);
+        });
+        stream.on('end', () => {
+          this.logger.log(`✅ Download complete: ${exportId}`);
+          resolve(null);
+        });
+      });
+    } catch (error) {
+      this.logger.error(`❌ Download failed: ${error.message}`, error.stack);
+      throw error;
     }
-    
-    this.logger.log(`Downloading export ${exportRecord.id} from S3 key: ${s3Key}`);
-    
-    const metadata = await this.storage.getFileMetadata(s3Key);
-    const stream = this.storage.getFileStream(s3Key);
-
-    // Create a safe filename from the moment's title
-    const safeTitle = exportRecord.moment?.title
-      ? exportRecord.moment.title
-          .replace(/[^a-z0-9\s-]/gi, '') // Remove special characters
-          .replace(/\s+/g, '-') // Replace spaces with hyphens
-          .toLowerCase()
-          .substring(0, 50) // Limit length
-      : `clip-${exportRecord.momentId}`;
-
-    res.set({
-      'Content-Type': 'video/mp4',
-      'Content-Length': metadata.ContentLength,
-      'Content-Disposition': `attachment; filename="${safeTitle}.mp4"`,
-    });
-
-    return new Promise((resolve, reject) => {
-      stream.pipe(res);
-      stream.on('error', reject);
-      stream.on('end', resolve);
-    });
   }
 
   async delete(projectId: string, orgId: string) {
