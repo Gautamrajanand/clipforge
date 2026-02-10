@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 interface PricingPlan {
   stripe: {
     monthly: { amount: number; currency: string };
@@ -97,7 +99,7 @@ export default function BillingPage() {
   // const fetchPricing = async () => {
   //   try {
   //     setLoading(true);
-  //     const response = await fetch('http://localhost:3000/v1/payments/pricing');
+  //     const response = await fetch(`${API_URL}/v1/payments/pricing`);
   //     if (response.ok) {
   //       const data = await response.json();
   //       setPricing(data);
@@ -117,7 +119,7 @@ export default function BillingPage() {
 
     try {
       setProcessingPlan(tier);
-      const response = await fetch('http://localhost:3000/v1/payments/checkout', {
+      const response = await fetch(`${API_URL}/v1/payments/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +152,7 @@ export default function BillingPage() {
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:3000/v1/payments/portal', {
+      const response = await fetch(`${API_URL}/v1/payments/portal`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

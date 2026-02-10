@@ -8,6 +8,8 @@ import { fetchWithAuth } from '@/lib/api';
 import { usePageTracking } from '@/hooks/useAnalytics';
 import { trackCheckoutInitiated } from '@/lib/analytics';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 // Note: Since this is a client component, metadata should be set in layout or use next/head
 // For now, we'll add it via the parent layout's template feature
 
@@ -95,7 +97,7 @@ export default function PricingPage() {
       const tierPrices = { STARTER: 29, PRO: 79, BUSINESS: 99 };
       trackCheckoutInitiated(tier, tierPrices[tier]);
       
-      const response = await fetchWithAuth('http://localhost:3000/v1/payments/checkout', {
+      const response = await fetchWithAuth(`${API_URL}/v1/payments/checkout`, {
         method: 'POST',
         getToken: getClerkToken,
         headers: {

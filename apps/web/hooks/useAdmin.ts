@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { fetchWithAuth } from '@/lib/api';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export function useAdmin() {
   const { getToken: getClerkToken, isLoaded, isSignedIn } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -20,7 +22,7 @@ export function useAdmin() {
   const checkAdminStatus = async () => {
     try {
       // Try to access admin dashboard endpoint
-      const response = await fetchWithAuth('http://localhost:3000/admin/dashboard', {
+      const response = await fetchWithAuth(`${API_URL}/admin/dashboard`, {
         method: 'GET',
         getToken: getClerkToken,
       });

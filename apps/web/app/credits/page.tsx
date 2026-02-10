@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 interface CreditTransaction {
   id: string;
   amount: number;
@@ -56,7 +58,7 @@ export default function CreditsPage() {
       setLoading(true);
 
       // Fetch balance
-      const balanceRes = await fetchWithAuth('http://localhost:3000/v1/credits/balance', {
+      const balanceRes = await fetchWithAuth(`${API_URL}/v1/credits/balance`, {
         getToken: getClerkToken,
       });
       
@@ -71,7 +73,7 @@ export default function CreditsPage() {
 
       // Fetch history
       const historyRes = await fetchWithAuth(
-        `http://localhost:3000/v1/credits/history?limit=${pagination.limit}&offset=${pagination.offset}`,
+        `${API_URL}/v1/credits/history?limit=${pagination.limit}&offset=${pagination.offset}`,
         {
           getToken: getClerkToken,
         }
