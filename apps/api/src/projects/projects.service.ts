@@ -946,25 +946,40 @@ export class ProjectsService {
           },
         });
 
-        // Call ML worker with signed URL (fire and forget - don't wait for response)
+        // Call ML worker with signed URL
+        const mlWorkerPayload = {
+          exportId: exportRecord.id,
+          projectId,
+          momentId: moment.id,
+          sourceUrl: sourceVideoUrl,
+          tStart: moment.tStart,
+          tEnd: moment.tEnd,
+          format: 'MP4',
+          aspectRatio: dto.aspectRatio || '9:16',
+          captionStyle: dto.captionStyle || 'minimal',
+          captionsEnabled: dto.burnCaptions || false,
+        };
+        
+        this.logger.log(`🚀 Calling ML worker for export ${exportRecord.id}`);
+        this.logger.log(`📦 Payload: ${JSON.stringify(mlWorkerPayload)}`);
+        this.logger.log(`🔗 ML Worker URL: ${mlWorkerUrl}/v1/render/export`);
+        
         fetch(`${mlWorkerUrl}/v1/render/export`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            exportId: exportRecord.id,
-            projectId,
-            momentId: moment.id,
-            sourceUrl: sourceVideoUrl,
-            tStart: moment.tStart,
-            tEnd: moment.tEnd,
-            format: 'MP4',
-            aspectRatio: dto.aspectRatio || '9:16',
-            captionStyle: dto.captionStyle || 'minimal',
-            captionsEnabled: dto.burnCaptions || false,
-          }),
-        }).catch(error => {
-          this.logger.error(`Failed to call ML worker for export ${exportRecord.id}:`, error);
-        });
+          body: JSON.stringify(mlWorkerPayload),
+        })
+          .then(async (response) => {
+            this.logger.log(`✅ ML worker response status: ${response.status}`);
+            const responseText = await response.text();
+            this.logger.log(`📄 ML worker response: ${responseText}`);
+            if (!response.ok) {
+              this.logger.error(`❌ ML worker returned error: ${response.status} - ${responseText}`);
+            }
+          })
+          .catch(error => {
+            this.logger.error(`❌ Failed to call ML worker for export ${exportRecord.id}:`, error);
+          });
 
         exports.push(exportRecord);
         this.logger.log(`✅ Export ${exportRecord.id} delegated to ML worker`);
