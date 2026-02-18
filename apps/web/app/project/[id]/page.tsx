@@ -795,20 +795,31 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   // Or use the provided title (for AI Subtitles)
                   const moment = clips.find(c => c.id === exportItem.momentId);
                   const clipTitle = exportItem.title || moment?.title || `Clip ${exportItem.momentId?.slice(-6)}`;
+                  const videoUrl = exportVideoUrls[exportItem.id];
+                  const aspectRatio = exportItem.aspectRatio || '9:16';
                   
                   return (
                   <div key={exportItem.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
-                    <div className="bg-black flex items-center justify-center" style={{ aspectRatio: '9/16', maxHeight: '600px' }}>
-                      <video
-                        controls
-                        className="h-full"
-                        style={{ maxHeight: '600px', objectFit: 'contain' }}
-                        src={exportVideoUrls[exportItem.id] || ''}
-                        preload="metadata"
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                    </div>
+                    {videoUrl ? (
+                      <div className="bg-black flex items-center justify-center" style={{ aspectRatio: aspectRatio === '9:16' ? '9/16' : aspectRatio === '1:1' ? '1/1' : '16/9' }}>
+                        <video
+                          controls
+                          className="w-full h-full"
+                          style={{ objectFit: 'contain' }}
+                          src={videoUrl}
+                          preload="metadata"
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-100 flex items-center justify-center" style={{ aspectRatio: aspectRatio === '9:16' ? '9/16' : aspectRatio === '1:1' ? '1/1' : '16/9', minHeight: '200px' }}>
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                          <p className="text-gray-600 text-sm">Loading video...</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="p-4">
                       <div className="flex flex-col gap-2 mb-3">
                         <span className="text-sm font-semibold text-gray-800">
@@ -824,7 +835,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       </div>
                       <button
                         onClick={() => handleDownloadExport(exportItem.id)}
-                        className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        disabled={!videoUrl}
+                        className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Download className="w-4 h-4" />
                         Download
