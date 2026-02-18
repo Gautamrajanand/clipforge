@@ -331,7 +331,7 @@ export class ProjectsController {
   async getTranscript(@Request() req: any, @Param('id') id: string) {
     // Allow ML worker to access without auth
     const orgId = req.user?.memberships?.[0]?.org?.id;
-    return this.projectsService.getTranscript(id, orgId);
+    return this.projectsService.getTranscript(id, orgId || null);
   }
 
   @Get(':id/download-captioned')

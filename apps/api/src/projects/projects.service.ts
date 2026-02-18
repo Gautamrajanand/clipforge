@@ -1889,13 +1889,18 @@ export class ProjectsService {
     });
   }
 
-  async getTranscript(projectId: string, orgId: string) {
-    // Verify org owns project
+  async getTranscript(projectId: string, orgId: string | null) {
+    // Verify project exists
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
     });
 
-    if (!project || project.orgId !== orgId) {
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    // Verify org owns project (only if orgId provided)
+    if (orgId && project.orgId !== orgId) {
       throw new NotFoundException('Project not found');
     }
 
