@@ -346,8 +346,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 // Stop polling if we have new exports
                 if (pollData.exports && pollData.exports.length > initialExportCount) {
                   clearInterval(pollInterval);
-                  // Refresh exports one final time
+                  console.log('✅ New exports detected, refreshing...');
+                  // Refresh exports and load video URLs
                   await fetchExistingExports();
+                  // Force a re-render to show the new videos
+                  setExportedClips(pollData.exports);
                 }
               }
             } catch (error) {
@@ -813,7 +816,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                         </video>
                       </div>
                     ) : (
-                      <div className="bg-gray-100 flex items-center justify-center" style={{ aspectRatio: aspectRatio === '9:16' ? '9/16' : aspectRatio === '1:1' ? '1/1' : '16/9', minHeight: '200px' }}>
+                      <div className="bg-gray-100 flex items-center justify-center" style={{ aspectRatio: aspectRatio === '9:16' ? '9/16' : aspectRatio === '1:1' ? '1/1' : '16/9', maxHeight: '500px' }}>
                         <div className="text-center">
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                           <p className="text-gray-600 text-sm">Loading video...</p>
