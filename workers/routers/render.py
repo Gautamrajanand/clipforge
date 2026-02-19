@@ -179,6 +179,15 @@ async def _render_worker(request: RenderRequest):
             logger.warning(f"Invalid preset {request.captionStyle}, using karaoke")
             preset = CaptionPreset.KARAOKE
         
+        # Get the actual style to log its values
+        from services.caption_presets import get_preset
+        style = get_preset(preset)
+        logger.info(f"Caption preset: {preset.value}")
+        logger.info(f"Font size: {style.font_size}")
+        logger.info(f"Karaoke effect: {style.karaoke_effect}")
+        logger.info(f"Alignment: {style.alignment}")
+        logger.info(f"Keyword paint: {style.keyword_paint}")
+        
         with open(ass_path, 'w', encoding='utf-8') as f:
             f.write(caption_engine.generate_ass_with_preset(
                 captions, 
