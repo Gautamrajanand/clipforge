@@ -5,7 +5,7 @@ services:
     env: python
     region: oregon
     plan: starter
-    buildCommand: pip install -r workers/requirements.txt
+    buildCommand: find workers -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && find workers -name "*.pyc" -delete 2>/dev/null || true && pip install -r workers/requirements.txt
     startCommand: cd workers && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
